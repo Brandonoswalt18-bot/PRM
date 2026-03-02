@@ -17,6 +17,7 @@ export default async function PartnerPayoutsPage() {
         title="Statements"
         subtitle="Review your month-by-month recurring revenue statements and see which periods are still open versus finalized."
         primaryLabel="Download latest statement"
+        primaryHref="/portal/payouts"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
@@ -25,6 +26,7 @@ export default async function PartnerPayoutsPage() {
             title="Monthly statements"
             description="A simple statement history for recurring vendor revenue."
             actionLabel="Export statement"
+            actionHref="/portal/payouts"
             headers={["Month", "Amount", "Type", "Status"]}
             rows={data.payouts}
             renderRow={PayoutRow}

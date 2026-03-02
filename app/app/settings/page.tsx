@@ -8,6 +8,7 @@ export default function VendorSettingsPage() {
         title="Settings"
         subtitle="Configure HubSpot access, vendor application settings, NDA delivery, credentialing rules, and admin permissions."
         primaryLabel="Manage settings"
+        primaryHref="/app/settings"
       />
       <div className="app-content">
         <article className="workspace-card">

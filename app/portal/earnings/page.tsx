@@ -17,6 +17,7 @@ export default async function EarningsPage() {
         title="Monthly RMR"
         subtitle="See the recurring monthly revenue tied to your approved GoAccess accounts and understand what is forecasted versus already posted."
         primaryLabel="Download statement"
+        primaryHref="/portal/payouts"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
@@ -25,6 +26,7 @@ export default async function EarningsPage() {
             title="Recurring revenue ledger"
             description="A vendor-facing monthly RMR view tied back to approved accounts."
             actionLabel="Open support"
+            actionHref="/portal/support"
             headers={["Month", "Account", "Monthly RMR", "Status"]}
             rows={data.ledger}
             renderRow={LedgerRow}

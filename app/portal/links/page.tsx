@@ -18,6 +18,7 @@ export default async function LinksPage() {
         title="Register a deal"
         subtitle="Submit a structured GoAccess opportunity with company, contact, value, and notes before it is reviewed for HubSpot sync."
         primaryLabel="Start registration"
+        primaryHref="/portal/links"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
@@ -30,6 +31,7 @@ export default async function LinksPage() {
             title="Recent registrations"
             description="A simple view of the opportunities you have already submitted through the portal."
             actionLabel="View submission rules"
+            actionHref="/portal/support"
             headers={["Account", "Domain", "Submitted", "Status"]}
             rows={data.links}
             renderRow={LinkRow}

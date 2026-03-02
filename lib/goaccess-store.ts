@@ -14,6 +14,7 @@ import type {
   VendorApplication,
   VendorApplicationStatus,
   VendorStatus,
+  UpdateVendorProfileInput,
 } from "@/types/goaccess";
 
 const STORE_FILENAME = "goaccess-vendor-portal.json";
@@ -544,6 +545,27 @@ export async function updateVendorApplicationStatus(
   return application;
 }
 
+export function canTransitionApplicationStatus(
+  currentStatus: VendorApplicationStatus,
+  nextStatus: VendorApplicationStatus
+) {
+  if (currentStatus === nextStatus) {
+    return false;
+  }
+
+  const allowedTransitions: Record<VendorApplicationStatus, VendorApplicationStatus[]> = {
+    submitted: ["under_review", "approved", "rejected"],
+    under_review: ["approved", "rejected"],
+    approved: ["nda_sent", "rejected"],
+    nda_sent: ["nda_signed", "rejected"],
+    nda_signed: ["credentials_issued", "rejected"],
+    credentials_issued: [],
+    rejected: [],
+  };
+
+  return allowedTransitions[currentStatus].includes(nextStatus);
+}
+
 export async function acceptVendorInvite(inviteToken: string) {
   const store = await readStore();
   const vendor = store.approvedVendors.find((item) => item.inviteToken === inviteToken);
@@ -600,6 +622,24 @@ export async function submitDealForVendor(vendorId: string, input: CreateDealInp
   return deal;
 }
 
+export function canTransitionDealStatus(currentStatus: DealStatus, nextStatus: DealStatus) {
+  if (currentStatus === nextStatus) {
+    return false;
+  }
+
+  const allowedTransitions: Record<DealStatus, DealStatus[]> = {
+    submitted: ["under_review", "approved", "rejected"],
+    under_review: ["approved", "rejected"],
+    approved: ["synced_to_hubspot", "rejected"],
+    synced_to_hubspot: ["closed_won", "closed_lost"],
+    closed_won: ["closed_lost"],
+    closed_lost: ["closed_won"],
+    rejected: [],
+  };
+
+  return allowedTransitions[currentStatus].includes(nextStatus);
+}
+
 export async function recordDealSyncEvent(input: Omit<DealSyncEvent, "id" | "createdAt">) {
   const store = await readStore();
   const event: DealSyncEvent = {
@@ -649,6 +689,38 @@ export async function updateDealStatus(
 
   await writeStore(store);
   return deal;
+}
+
+export async function updateVendorProfile(vendorId: string, input: UpdateVendorProfileInput) {
+  const store = await readStore();
+  const vendor = store.approvedVendors.find((item) => item.id === vendorId);
+
+  if (!vendor) {
+    throw new Error("Approved vendor not found.");
+  }
+
+  vendor.companyName = input.companyName;
+  vendor.website = input.website;
+  vendor.region = input.region;
+  vendor.vendorType = input.vendorType;
+  vendor.primaryContactName = input.primaryContactName;
+  vendor.primaryContactEmail = input.primaryContactEmail;
+  vendor.updatedAt = nowIso();
+
+  const application = store.vendorApplications.find((item) => item.id === vendor.applicationId);
+
+  if (application) {
+    application.companyName = input.companyName;
+    application.website = input.website;
+    application.region = input.region;
+    application.vendorType = input.vendorType;
+    application.primaryContactName = input.primaryContactName;
+    application.primaryContactEmail = input.primaryContactEmail;
+    application.updatedAt = vendor.updatedAt;
+  }
+
+  await writeStore(store);
+  return vendor;
 }
 
 export async function getVendorById(vendorId: string) {

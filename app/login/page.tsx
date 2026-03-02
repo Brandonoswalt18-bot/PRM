@@ -15,11 +15,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <main className="login-shell">
       <div className="login-card">
-        <span className="eyebrow">PROTOTYPE ACCESS</span>
-        <h1>Choose the GoAccess portal workspace.</h1>
+        <span className="eyebrow">GOACCESS ACCESS</span>
+        <h1>Choose the portal workspace.</h1>
         <p>
-          This prototype uses a cookie-backed mock session. Pick the GoAccess admin
-          workspace or the approved vendor workspace to enter the correct protected portal.
+          Select the GoAccess admin workspace or the approved vendor workspace to enter the
+          correct protected portal.
         </p>
         <div className="login-actions">
           <Link

@@ -144,3 +144,12 @@ export type DealStatusUpdateOptions = {
   syncStatus?: SyncEventStatus;
   syncReference?: string;
 };
+
+export type UpdateVendorProfileInput = {
+  companyName: string;
+  website: string;
+  region: string;
+  vendorType: string;
+  primaryContactName: string;
+  primaryContactEmail: string;
+};

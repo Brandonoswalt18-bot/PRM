@@ -17,6 +17,7 @@ export default async function VendorAssetsPage() {
         title="Documents"
         subtitle="Manage NDAs, onboarding guides, deal registration rules, and internal review documents in one place."
         primaryLabel="Upload document"
+        primaryHref="/app/assets"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
@@ -25,6 +26,7 @@ export default async function VendorAssetsPage() {
             title="Document library"
             description="A GoAccess-controlled source for legal, onboarding, and operating documents."
             actionLabel="Publish document"
+            actionHref="/app/assets"
             headers={["Document", "Type", "Audience", "Status"]}
             rows={data.assets}
             renderRow={AssetRow}

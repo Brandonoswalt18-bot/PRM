@@ -5,6 +5,7 @@ type WorkspacePageHeaderProps = {
   title: string;
   subtitle: string;
   primaryLabel: string;
+  primaryHref?: string;
 };
 
 export function WorkspacePageHeader({
@@ -12,6 +13,7 @@ export function WorkspacePageHeader({
   title,
   subtitle,
   primaryLabel,
+  primaryHref,
 }: WorkspacePageHeaderProps) {
   return (
     <header className="app-topbar">
@@ -24,9 +26,9 @@ export function WorkspacePageHeader({
         <Link className="button button-secondary" href="/">
           Marketing site
         </Link>
-        <a className="button button-primary" href="#">
+        <Link className="button button-primary" href={primaryHref ?? "#"}>
           {primaryLabel}
-        </a>
+        </Link>
       </div>
     </header>
   );

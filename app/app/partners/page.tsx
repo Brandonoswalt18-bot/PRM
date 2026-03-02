@@ -17,6 +17,7 @@ export default async function PartnersPage() {
         title="Approved vendors"
         subtitle="Manage active vendor profiles, status, access, and current monthly recurring revenue contribution."
         primaryLabel="Open vendor profile"
+        primaryHref="/app/partners"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
@@ -25,6 +26,7 @@ export default async function PartnersPage() {
             title="Vendor roster"
             description="A current view of every approved or in-progress GoAccess vendor."
             actionLabel="Review status"
+            actionHref="/app/programs"
             headers={["Vendor", "Type", "Status", "Portal state", "Monthly RMR"]}
             rows={data.partners}
             renderRow={PartnerRow}

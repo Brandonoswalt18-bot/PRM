@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getVendorDashboardData } from "@/lib/mock-data";
 import { MetricGrid } from "@/components/product/product-page-sections";
@@ -12,6 +13,7 @@ export default async function VendorDashboardPage() {
         title="GoAccess vendor operations command center"
         subtitle="Review vendor applications, track NDA and credential status, approve deal registrations, sync to HubSpot, and monitor monthly RMR."
         primaryLabel="Review applications"
+        primaryHref="/app/programs"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
@@ -23,9 +25,9 @@ export default async function VendorDashboardPage() {
                 <h3>Application and onboarding pipeline</h3>
                 <p>One queue for vendor approval, NDA status, credential issue, and activation.</p>
               </div>
-              <a href="#" className="button button-secondary">
+              <Link href="/app/programs" className="button button-secondary">
                 Export applications
-              </a>
+              </Link>
             </div>
             <div className="data-table">
               <div className="table-head">
@@ -64,9 +66,9 @@ export default async function VendorDashboardPage() {
                 <h3>HubSpot sync activity</h3>
                 <p>Each admin decision should show whether the deal was created, linked, held, or needs review.</p>
               </div>
-              <a href="#" className="button button-secondary">
+              <Link href="/app/commissions" className="button button-secondary">
                 Open sync queue
-              </a>
+              </Link>
             </div>
             <div className="data-table">
               <div className="table-head">

@@ -17,6 +17,7 @@ export default async function PartnerAssetsPage() {
         title="Documents"
         subtitle="Access the NDA, onboarding guides, and GoAccess operating documents tied to your approved vendor account."
         primaryLabel="Download NDA"
+        primaryHref="/portal/assets"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
@@ -25,6 +26,7 @@ export default async function PartnerAssetsPage() {
             title="Available documents"
             description="Vendor-facing legal, onboarding, and operating files."
             actionLabel="Open file"
+            actionHref="/portal/assets"
             headers={["Document", "Type", "Audience", "Status"]}
             rows={data.assets}
             renderRow={AssetRow}

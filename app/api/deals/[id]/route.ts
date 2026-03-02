@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { syncDealRegistrationToHubSpot } from "@/lib/hubspot";
-import { getDealById, getVendorById, recordDealSyncEvent, updateDealStatus } from "@/lib/goaccess-store";
+import {
+  canTransitionDealStatus,
+  getDealById,
+  getVendorById,
+  recordDealSyncEvent,
+  updateDealStatus,
+} from "@/lib/goaccess-store";
 import type { DealStatus } from "@/types/goaccess";
 
 const allowedStatuses: DealStatus[] = [
@@ -31,21 +37,28 @@ export async function PATCH(
   }
 
   try {
+    const existingDeal = await getDealById(id);
+
+    if (!existingDeal) {
+      return NextResponse.json({ message: "Deal not found." }, { status: 404 });
+    }
+
+    if (!canTransitionDealStatus(existingDeal.status, body.status)) {
+      return NextResponse.json(
+        { message: `Cannot move a deal from ${existingDeal.status.replaceAll("_", " ")} to ${body.status.replaceAll("_", " ")}.` },
+        { status: 409 }
+      );
+    }
+
     if (body.status === "synced_to_hubspot") {
-      const deal = await getDealById(id);
-
-      if (!deal) {
-        return NextResponse.json({ message: "Deal not found." }, { status: 404 });
-      }
-
-      const vendor = await getVendorById(deal.vendorId);
+      const vendor = await getVendorById(existingDeal.vendorId);
 
       if (!vendor) {
         return NextResponse.json({ message: "Approved vendor not found for this deal." }, { status: 404 });
       }
 
       try {
-        const hubspot = await syncDealRegistrationToHubSpot({ vendor, deal });
+        const hubspot = await syncDealRegistrationToHubSpot({ vendor, deal: existingDeal });
         const updatedDeal = await updateDealStatus(id, body.status, {
           hubspotCompanyId: hubspot.companyId,
           hubspotContactId: hubspot.contactId,
@@ -58,8 +71,8 @@ export async function PATCH(
         return NextResponse.json({ ok: true, deal: updatedDeal });
       } catch (error) {
         await recordDealSyncEvent({
-          dealId: deal.id,
-          vendorId: deal.vendorId,
+          dealId: existingDeal.id,
+          vendorId: existingDeal.vendorId,
           action: "HubSpot sync failed during admin review",
           status: "failed",
           reference: error instanceof Error ? error.message : "HubSpot sync failed",

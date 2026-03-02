@@ -17,6 +17,7 @@ export default async function CommissionsPage() {
         title="HubSpot sync"
         subtitle="Review approved vendor-submitted deals before they create or update companies, contacts, and deals in HubSpot."
         primaryLabel="Review sync queue"
+        primaryHref="/app/deal-registrations"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
@@ -25,6 +26,7 @@ export default async function CommissionsPage() {
             title="Sync activity"
             description="Every CRM write should explain what was reviewed, created, linked, or held."
             actionLabel="Export sync log"
+            actionHref="/app/deal-registrations"
             headers={["Vendor", "Queue", "Event", "Reference", "Status"]}
             rows={data.commissions}
             renderRow={CommissionRow}

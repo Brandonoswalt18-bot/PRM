@@ -17,6 +17,7 @@ export default async function VendorPayoutsPage() {
         title="Monthly RMR ledger"
         subtitle="Track recurring monthly revenue by approved vendor and keep month-over-month totals tied back to underlying deals."
         primaryLabel="Export RMR report"
+        primaryHref="/app/payouts"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
@@ -25,6 +26,7 @@ export default async function VendorPayoutsPage() {
             title="RMR reporting periods"
             description="A month-by-month summary of forecasted and recognized recurring vendor revenue."
             actionLabel="Download statement"
+            actionHref="/app/payouts"
             headers={["Month", "RMR total", "Basis", "Status"]}
             rows={data.payouts}
             renderRow={PayoutRow}

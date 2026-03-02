@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import type {
   AssetRecord,
   CommissionActivity,
@@ -48,6 +49,7 @@ type TableSectionProps<T> = {
   title: string;
   description: string;
   actionLabel: string;
+  actionHref?: string;
   headers: string[];
   rows: T[];
   renderRow: (row: T) => ReactNode;
@@ -57,6 +59,7 @@ export function TableSection<T>({
   title,
   description,
   actionLabel,
+  actionHref,
   headers,
   rows,
   renderRow,
@@ -68,9 +71,9 @@ export function TableSection<T>({
           <h3>{title}</h3>
           <p>{description}</p>
         </div>
-        <a href="#" className="button button-secondary">
+        <Link href={actionHref ?? "#"} className="button button-secondary">
           {actionLabel}
-        </a>
+        </Link>
       </div>
       <div className="data-table">
         <div className={`table-head table-cols-${headers.length}`}>

@@ -12,6 +12,7 @@ export default async function DealRegistrationsPage() {
         title="Deal registrations"
         subtitle="Review approved vendor submissions before they are written into HubSpot or assigned to pipeline owners."
         primaryLabel="Open review queue"
+        primaryHref="/app/deal-registrations"
       />
       <div className="app-content">
         <AdminDealManager deals={deals} />

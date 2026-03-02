@@ -17,6 +17,16 @@ const actions: Array<{ label: string; status: DealStatus }> = [
   { label: "Reject", status: "rejected" },
 ];
 
+const allowedTransitions: Record<DealStatus, DealStatus[]> = {
+  submitted: ["under_review", "approved", "rejected"],
+  under_review: ["approved", "rejected"],
+  approved: ["synced_to_hubspot", "rejected"],
+  synced_to_hubspot: ["closed_won", "closed_lost"],
+  closed_won: ["closed_lost"],
+  closed_lost: ["closed_won"],
+  rejected: [],
+};
+
 export function AdminDealManager({ deals }: AdminDealManagerProps) {
   const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -88,7 +98,7 @@ export function AdminDealManager({ deals }: AdminDealManagerProps) {
                   className="button button-secondary"
                   key={action.status}
                   type="button"
-                  disabled={busyId === deal.id}
+                  disabled={busyId === deal.id || !allowedTransitions[deal.status].includes(action.status)}
                   onClick={() => updateStatus(deal.id, action.status)}
                 >
                   {action.label}

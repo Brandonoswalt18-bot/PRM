@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getPartnerDashboardData } from "@/lib/mock-data";
 import { MetricGrid } from "@/components/product/product-page-sections";
@@ -12,6 +13,7 @@ export default async function PartnerPortalPage() {
         title="Approved vendor dashboard"
         subtitle="Manage your GoAccess vendor profile, register deals, track HubSpot-backed statuses, and see the monthly recurring revenue tied to your accounts."
         primaryLabel="Register a deal"
+        primaryHref="/portal/links"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
@@ -23,9 +25,9 @@ export default async function PartnerPortalPage() {
                 <h3>Recent deal registrations</h3>
                 <p>Every submission should show exactly when it was sent and whether GoAccess approved it for HubSpot.</p>
               </div>
-              <a href="#" className="button button-secondary">
+              <Link href="/portal/links" className="button button-secondary">
                 Register new deal
-              </a>
+              </Link>
             </div>
             <div className="data-table">
               <div className="table-head">
@@ -64,9 +66,9 @@ export default async function PartnerPortalPage() {
                 <h3>Monthly RMR ledger</h3>
                 <p>Vendors should see which active accounts are contributing recurring monthly revenue and what is still forecasted.</p>
               </div>
-              <a href="#" className="button button-secondary">
+              <Link href="/portal/payouts" className="button button-secondary">
                 Download statement
-              </a>
+              </Link>
             </div>
             <div className="data-table">
               <div className="table-head">

@@ -22,6 +22,7 @@ export default async function ProgramsPage() {
         title="Vendor applications"
         subtitle="Track the GoAccess approval lifecycle from application review through NDA and credential issuance."
         primaryLabel="Review application"
+        primaryHref="/app/programs"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />

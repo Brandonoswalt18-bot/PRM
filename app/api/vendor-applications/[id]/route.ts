@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { updateVendorApplicationStatus } from "@/lib/goaccess-store";
+import {
+  canTransitionApplicationStatus,
+  listVendorApplications,
+  updateVendorApplicationStatus,
+} from "@/lib/goaccess-store";
 import type { VendorApplicationStatus } from "@/types/goaccess";
 
 const allowedStatuses: VendorApplicationStatus[] = [
@@ -30,6 +34,20 @@ export async function PATCH(
   }
 
   try {
+    const applications = await listVendorApplications();
+    const current = applications.find((item) => item.id === id);
+
+    if (!current) {
+      return NextResponse.json({ message: "Application not found." }, { status: 404 });
+    }
+
+    if (!canTransitionApplicationStatus(current.status, body.status)) {
+      return NextResponse.json(
+        { message: `Cannot move an application from ${current.status.replaceAll("_", " ")} to ${body.status.replaceAll("_", " ")}.` },
+        { status: 409 }
+      );
+    }
+
     const application = await updateVendorApplicationStatus(id, body.status);
     return NextResponse.json({ ok: true, application });
   } catch (error) {

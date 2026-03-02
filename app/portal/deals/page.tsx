@@ -16,6 +16,7 @@ export default async function PartnerDealsPage() {
         title="My deals"
         subtitle="Track every GoAccess deal you registered, whether it is under review, in HubSpot, or already closed won."
         primaryLabel="Register new deal"
+        primaryHref="/portal/links"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
@@ -24,6 +25,7 @@ export default async function PartnerDealsPage() {
             title="Deal history"
             description="Your full GoAccess deal list, including records still under review and deals already synced to HubSpot."
             actionLabel="Register another deal"
+            actionHref="/portal/links"
             headers={["Account", "Domain", "Submitted", "Status"]}
             rows={data.links}
             renderRow={LinkRow}

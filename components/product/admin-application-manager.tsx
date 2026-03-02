@@ -24,6 +24,16 @@ const actions: Array<{ label: string; status: VendorApplicationStatus }> = [
   { label: "Reject", status: "rejected" },
 ];
 
+const allowedTransitions: Record<VendorApplicationStatus, VendorApplicationStatus[]> = {
+  submitted: ["under_review", "approved", "rejected"],
+  under_review: ["approved", "rejected"],
+  approved: ["nda_sent", "rejected"],
+  nda_sent: ["nda_signed", "rejected"],
+  nda_signed: ["credentials_issued", "rejected"],
+  credentials_issued: [],
+  rejected: [],
+};
+
 export function AdminApplicationManager({
   applications,
   vendors,
@@ -93,7 +103,7 @@ export function AdminApplicationManager({
                 </div>
                 <div className="stack-meta-grid">
                   <span>{application.primaryContactEmail}</span>
-                  <span>{application.website}</span>
+                  <span>{application.website || "Website not provided"}</span>
                   <span>Created {new Date(application.createdAt).toLocaleDateString()}</span>
                 </div>
                 {application.notes ? <p className="stack-note">{application.notes}</p> : null}
@@ -127,7 +137,10 @@ export function AdminApplicationManager({
                       className="button button-secondary"
                       key={action.status}
                       type="button"
-                      disabled={busyId === application.id}
+                      disabled={
+                        busyId === application.id ||
+                        !allowedTransitions[application.status].includes(action.status)
+                      }
                       onClick={() => updateStatus(application.id, action.status)}
                     >
                       {action.label}
