@@ -1,19 +1,24 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { buildInviteUrl, sendVendorEmail } from "@/lib/email";
 import type {
   ApprovedVendor,
   CreateDealInput,
   CreateVendorApplicationInput,
   DealRegistration,
   DealStatus,
+  DealStatusUpdateOptions,
   DealSyncEvent,
   PortalStore,
+  VendorNotification,
   VendorApplication,
   VendorApplicationStatus,
   VendorStatus,
 } from "@/types/goaccess";
 
 const STORE_FILENAME = "goaccess-vendor-portal.json";
+const DEFAULT_NDA_DOCUMENT_NAME = "GoAccess Vendor NDA";
+const DEFAULT_NDA_DOCUMENT_URL = "https://docs.google.com/document/d/goaccess-vendor-nda";
 
 const seedStore: PortalStore = {
   vendorApplications: [
@@ -40,6 +45,7 @@ const seedStore: PortalStore = {
       primaryContactEmail: "evan@summitsecuritygroup.com",
       notes: "Approved pending NDA completion.",
       status: "nda_sent",
+      ndaSentAt: "2026-02-28T08:45:00.000Z",
       createdAt: "2026-02-27T14:10:00.000Z",
       updatedAt: "2026-02-28T08:45:00.000Z",
     },
@@ -53,7 +59,10 @@ const seedStore: PortalStore = {
       primaryContactEmail: "jordan@bluehavenintegrators.com",
       notes: "Active GoAccess vendor with live accounts.",
       status: "credentials_issued",
+      ndaSentAt: "2026-02-26T17:30:00.000Z",
       ndaSignedAt: "2026-02-27T13:00:00.000Z",
+      approvalEmailSentAt: "2026-02-25T09:00:00.000Z",
+      credentialsIssuedAt: "2026-02-27T13:20:00.000Z",
       createdAt: "2026-02-20T12:00:00.000Z",
       updatedAt: "2026-02-27T13:20:00.000Z",
     },
@@ -70,8 +79,16 @@ const seedStore: PortalStore = {
       primaryContactEmail: "jordan@bluehavenintegrators.com",
       status: "active",
       ndaStatus: "signed",
+      ndaSentAt: "2026-02-26T17:30:00.000Z",
+      ndaSignedAt: "2026-02-27T13:00:00.000Z",
+      ndaDocumentName: DEFAULT_NDA_DOCUMENT_NAME,
+      ndaDocumentUrl: DEFAULT_NDA_DOCUMENT_URL,
       credentialsIssued: true,
+      credentialsIssuedAt: "2026-02-27T13:20:00.000Z",
       portalAccess: "active",
+      inviteToken: "invite-blue-haven",
+      inviteSentAt: "2026-02-27T13:20:00.000Z",
+      inviteAcceptedAt: "2026-02-27T15:05:00.000Z",
       hubspotPartnerId: "GA-VENDOR-018",
       createdAt: "2026-02-20T12:00:00.000Z",
       updatedAt: "2026-02-27T13:20:00.000Z",
@@ -87,6 +104,9 @@ const seedStore: PortalStore = {
       primaryContactEmail: "evan@summitsecuritygroup.com",
       status: "pending_nda",
       ndaStatus: "sent",
+      ndaSentAt: "2026-02-28T08:45:00.000Z",
+      ndaDocumentName: DEFAULT_NDA_DOCUMENT_NAME,
+      ndaDocumentUrl: DEFAULT_NDA_DOCUMENT_URL,
       credentialsIssued: false,
       portalAccess: "not_ready",
       hubspotPartnerId: "GA-VENDOR-021",
@@ -198,6 +218,40 @@ const seedStore: PortalStore = {
       createdAt: "2026-03-24T15:00:00.000Z",
     },
   ],
+  notifications: [
+    {
+      id: "notif-app-blue-haven",
+      applicationId: "app-blue-haven",
+      vendorId: "vendor-blue-haven",
+      recipientEmail: "jordan@bluehavenintegrators.com",
+      subject: "Your GoAccess vendor application has been approved",
+      category: "application_approved",
+      status: "sent",
+      createdAt: "2026-02-25T09:00:00.000Z",
+    },
+    {
+      id: "notif-nda-blue-haven",
+      applicationId: "app-blue-haven",
+      vendorId: "vendor-blue-haven",
+      recipientEmail: "jordan@bluehavenintegrators.com",
+      subject: "GoAccess vendor NDA ready for signature",
+      category: "nda_sent",
+      status: "sent",
+      reference: "GoAccess Vendor NDA v1",
+      createdAt: "2026-02-26T17:30:00.000Z",
+    },
+    {
+      id: "notif-invite-blue-haven",
+      applicationId: "app-blue-haven",
+      vendorId: "vendor-blue-haven",
+      recipientEmail: "jordan@bluehavenintegrators.com",
+      subject: "Your GoAccess vendor portal credentials are ready",
+      category: "credentials_issued",
+      status: "sent",
+      reference: "invite-blue-haven",
+      createdAt: "2026-02-27T13:20:00.000Z",
+    },
+  ],
 };
 
 function getStorePath() {
@@ -273,6 +327,68 @@ export async function listSyncEvents() {
   return [...store.syncEvents].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+export async function listVendorNotifications() {
+  const store = await readStore();
+  return [...store.notifications].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function getDealById(dealId: string) {
+  const store = await readStore();
+  return store.deals.find((item) => item.id === dealId) ?? null;
+}
+
+export async function getVendorByInviteToken(inviteToken: string) {
+  const store = await readStore();
+  return store.approvedVendors.find((item) => item.inviteToken === inviteToken) ?? null;
+}
+
+function buildInviteToken(companyName: string) {
+  return `invite-${slugify(companyName)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function getNdaDocumentUrl() {
+  return process.env.GOACCESS_NDA_DOCUMENT_URL || DEFAULT_NDA_DOCUMENT_URL;
+}
+
+function buildNotification(
+  input: Omit<VendorNotification, "id" | "createdAt"> & { status?: VendorNotification["status"] }
+): VendorNotification {
+  return {
+    ...input,
+    id: makeId("notif"),
+    status: input.status ?? "logged",
+    createdAt: nowIso(),
+  };
+}
+
+async function recordWorkflowEmail(input: {
+  applicationId?: string;
+  vendorId?: string;
+  recipientEmail: string;
+  subject: string;
+  category: VendorNotification["category"];
+  reference?: string;
+  text: string;
+  html: string;
+}) {
+  const result = await sendVendorEmail({
+    to: input.recipientEmail,
+    subject: input.subject,
+    text: input.text,
+    html: input.html,
+  });
+
+  return buildNotification({
+    applicationId: input.applicationId,
+    vendorId: input.vendorId,
+    recipientEmail: input.recipientEmail,
+    subject: input.subject,
+    category: input.category,
+    reference: result.reference ?? input.reference,
+    status: result.status,
+  });
+}
+
 export async function submitVendorApplication(input: CreateVendorApplicationInput) {
   const store = await readStore();
   const timestamp = nowIso();
@@ -291,6 +407,17 @@ export async function submitVendorApplication(input: CreateVendorApplicationInpu
   };
 
   store.vendorApplications.unshift(application);
+  store.notifications.unshift(
+    await recordWorkflowEmail({
+      applicationId: application.id,
+      recipientEmail: application.primaryContactEmail,
+      subject: "We received your GoAccess vendor application",
+      category: "application_received",
+      reference: application.companyName,
+      text: `Hi ${application.primaryContactName},\n\nWe received your GoAccess vendor application for ${application.companyName}. Our team will review it and follow up with next steps.\n\nGoAccess`,
+      html: `<p>Hi ${application.primaryContactName},</p><p>We received your GoAccess vendor application for <strong>${application.companyName}</strong>. Our team will review it and follow up with next steps.</p><p>GoAccess</p>`,
+    })
+  );
   await writeStore(store);
   return application;
 }
@@ -334,22 +461,72 @@ export async function updateVendorApplicationStatus(
   }
 
   if (vendor) {
+    if (nextStatus === "approved") {
+      application.approvalEmailSentAt = nowIso();
+      store.notifications.unshift(
+        await recordWorkflowEmail({
+          applicationId: application.id,
+          vendorId: vendor.id,
+          recipientEmail: application.primaryContactEmail,
+          subject: "Your GoAccess vendor application has been approved",
+          category: "application_approved",
+          reference: vendor.hubspotPartnerId,
+          text: `Hi ${application.primaryContactName},\n\nYour company ${application.companyName} has been approved as a GoAccess vendor candidate. The next step is NDA review.\n\nVendor ID: ${vendor.hubspotPartnerId}\n\nGoAccess`,
+          html: `<p>Hi ${application.primaryContactName},</p><p>Your company <strong>${application.companyName}</strong> has been approved as a GoAccess vendor candidate. The next step is NDA review.</p><p><strong>Vendor ID:</strong> ${vendor.hubspotPartnerId}</p><p>GoAccess</p>`,
+        })
+      );
+    }
+
     if (nextStatus === "nda_sent") {
       vendor.status = "pending_nda";
       vendor.ndaStatus = "sent";
+      vendor.ndaSentAt = nowIso();
+      vendor.ndaDocumentName = DEFAULT_NDA_DOCUMENT_NAME;
+      vendor.ndaDocumentUrl = getNdaDocumentUrl();
+      application.ndaSentAt = vendor.ndaSentAt;
+      store.notifications.unshift(
+        await recordWorkflowEmail({
+          applicationId: application.id,
+          vendorId: vendor.id,
+          recipientEmail: application.primaryContactEmail,
+          subject: "GoAccess vendor NDA Google Doc ready for signature",
+          category: "nda_sent",
+          reference: vendor.ndaDocumentUrl,
+          text: `Hi ${application.primaryContactName},\n\nYour GoAccess vendor NDA is ready. Please review and sign the Google Doc here:\n${vendor.ndaDocumentUrl}\n\nAfter it is signed, we will issue your portal credentials.\n\nGoAccess`,
+          html: `<p>Hi ${application.primaryContactName},</p><p>Your GoAccess vendor NDA is ready. Please review and sign the Google Doc here:</p><p><a href="${vendor.ndaDocumentUrl}">${vendor.ndaDocumentUrl}</a></p><p>After it is signed, we will issue your portal credentials.</p><p>GoAccess</p>`,
+        })
+      );
     }
 
     if (nextStatus === "nda_signed") {
       vendor.status = "onboarding";
       vendor.ndaStatus = "signed";
-      application.ndaSignedAt = nowIso();
+      vendor.ndaSignedAt = nowIso();
+      application.ndaSignedAt = vendor.ndaSignedAt;
     }
 
     if (nextStatus === "credentials_issued") {
       vendor.status = "active";
       vendor.ndaStatus = "signed";
       vendor.credentialsIssued = true;
-      vendor.portalAccess = "active";
+      vendor.credentialsIssuedAt = nowIso();
+      vendor.portalAccess = "invited";
+      vendor.inviteToken = vendor.inviteToken ?? buildInviteToken(application.companyName);
+      vendor.inviteSentAt = vendor.credentialsIssuedAt;
+      application.credentialsIssuedAt = vendor.credentialsIssuedAt;
+      const inviteUrl = buildInviteUrl(vendor.inviteToken);
+      store.notifications.unshift(
+        await recordWorkflowEmail({
+          applicationId: application.id,
+          vendorId: vendor.id,
+          recipientEmail: application.primaryContactEmail,
+          subject: "Your GoAccess vendor portal credentials are ready",
+          category: "credentials_issued",
+          reference: inviteUrl,
+          text: `Hi ${application.primaryContactName},\n\nYour GoAccess vendor portal access is ready.\n\nActivate your account here:\n${inviteUrl}\n\nAfter logging in, you can complete your vendor profile and register deals.\n\nGoAccess`,
+          html: `<p>Hi ${application.primaryContactName},</p><p>Your GoAccess vendor portal access is ready.</p><p><a href="${inviteUrl}">Activate your account</a></p><p>After logging in, you can complete your vendor profile and register deals.</p><p>GoAccess</p>`,
+        })
+      );
     }
 
     if (nextStatus === "approved" && vendor.status === "pending_nda") {
@@ -365,6 +542,21 @@ export async function updateVendorApplicationStatus(
 
   await writeStore(store);
   return application;
+}
+
+export async function acceptVendorInvite(inviteToken: string) {
+  const store = await readStore();
+  const vendor = store.approvedVendors.find((item) => item.inviteToken === inviteToken);
+
+  if (!vendor) {
+    return null;
+  }
+
+  vendor.portalAccess = "active";
+  vendor.inviteAcceptedAt = vendor.inviteAcceptedAt ?? nowIso();
+  vendor.updatedAt = nowIso();
+  await writeStore(store);
+  return vendor;
 }
 
 export async function submitDealForVendor(vendorId: string, input: CreateDealInput) {
@@ -408,7 +600,24 @@ export async function submitDealForVendor(vendorId: string, input: CreateDealInp
   return deal;
 }
 
-export async function updateDealStatus(dealId: string, nextStatus: DealStatus) {
+export async function recordDealSyncEvent(input: Omit<DealSyncEvent, "id" | "createdAt">) {
+  const store = await readStore();
+  const event: DealSyncEvent = {
+    id: makeId("sync"),
+    createdAt: nowIso(),
+    ...input,
+  };
+
+  store.syncEvents.unshift(event);
+  await writeStore(store);
+  return event;
+}
+
+export async function updateDealStatus(
+  dealId: string,
+  nextStatus: DealStatus,
+  options: DealStatusUpdateOptions = {}
+) {
   const store = await readStore();
   const deal = store.deals.find((item) => item.id === dealId);
 
@@ -419,22 +628,22 @@ export async function updateDealStatus(dealId: string, nextStatus: DealStatus) {
   deal.status = nextStatus;
   deal.updatedAt = nowIso();
 
-  if (nextStatus === "synced_to_hubspot" && !deal.hubspotDealId) {
-    deal.hubspotCompanyId = deal.hubspotCompanyId ?? `HS-COMP-${Math.floor(Math.random() * 9000) + 1000}`;
-    deal.hubspotContactId = deal.hubspotContactId ?? `HS-CON-${Math.floor(Math.random() * 9000) + 1000}`;
-    deal.hubspotDealId = deal.hubspotDealId ?? `${Math.floor(Math.random() * 90000) + 10000}`;
-  }
+  deal.hubspotCompanyId = options.hubspotCompanyId ?? deal.hubspotCompanyId;
+  deal.hubspotContactId = options.hubspotContactId ?? deal.hubspotContactId;
+  deal.hubspotDealId = options.hubspotDealId ?? deal.hubspotDealId;
 
   const syncStatus: DealSyncEvent["status"] =
-    nextStatus === "rejected" ? "failed" : nextStatus === "under_review" ? "held" : "synced";
+    options.syncStatus ??
+    (nextStatus === "rejected" ? "failed" : nextStatus === "under_review" ? "held" : "synced");
 
   store.syncEvents.unshift({
     id: makeId("sync"),
     dealId: deal.id,
     vendorId: deal.vendorId,
-    action: `Deal status changed to ${nextStatus.replaceAll("_", " ")}`,
+    action: options.syncAction ?? `Deal status changed to ${nextStatus.replaceAll("_", " ")}`,
     status: syncStatus,
-    reference: deal.hubspotDealId ? `HS Deal #${deal.hubspotDealId}` : deal.companyName,
+    reference:
+      options.syncReference ?? (deal.hubspotDealId ? `HS Deal #${deal.hubspotDealId}` : deal.companyName),
     createdAt: nowIso(),
   });
 

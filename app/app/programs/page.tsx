@@ -4,13 +4,15 @@ import {
 } from "@/components/product/product-page-sections";
 import { AdminApplicationManager } from "@/components/product/admin-application-manager";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
-import { listVendorApplications } from "@/lib/goaccess-store";
+import { listApprovedVendors, listVendorApplications, listVendorNotifications } from "@/lib/goaccess-store";
 import { getProgramsPageData } from "@/lib/mock-data";
 
 export default async function ProgramsPage() {
-  const [data, applications] = await Promise.all([
+  const [data, applications, vendors, notifications] = await Promise.all([
     getProgramsPageData(),
     listVendorApplications(),
+    listApprovedVendors(),
+    listVendorNotifications(),
   ]);
 
   return (
@@ -24,7 +26,11 @@ export default async function ProgramsPage() {
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
         <section className="dashboard-grid">
-          <AdminApplicationManager applications={applications} />
+          <AdminApplicationManager
+            applications={applications}
+            vendors={vendors}
+            notifications={notifications}
+          />
           <SideSections sections={data.sections} />
         </section>
       </div>

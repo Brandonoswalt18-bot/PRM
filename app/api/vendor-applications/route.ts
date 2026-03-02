@@ -12,21 +12,6 @@ type VendorApplicationPayload = {
   notes?: string;
 };
 
-function isWorkEmail(email: string) {
-  const blockedDomains = new Set([
-    "gmail.com",
-    "yahoo.com",
-    "hotmail.com",
-    "outlook.com",
-    "icloud.com",
-    "proton.me",
-    "protonmail.com",
-  ]);
-
-  const domain = email.split("@")[1]?.toLowerCase();
-  return Boolean(domain && !blockedDomains.has(domain));
-}
-
 export async function GET() {
   const applications = await listVendorApplications();
   return NextResponse.json({ items: applications });
@@ -49,19 +34,15 @@ export async function POST(request: Request) {
   const primaryContactEmail = body.primaryContactEmail?.trim().toLowerCase() ?? "";
   const notes = body.notes?.trim() ?? "";
 
-  if (!companyName || !website || !region || !vendorType || !primaryContactName || !primaryContactEmail) {
+  if (!companyName || !region || !vendorType || !primaryContactName || !primaryContactEmail) {
     return NextResponse.json(
-      { message: "Company, website, region, vendor type, contact name, and work email are required." },
+      { message: "Company, region, vendor type, contact name, and email are required." },
       { status: 400 }
     );
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(primaryContactEmail)) {
-    return NextResponse.json({ message: "Enter a valid work email address." }, { status: 400 });
-  }
-
-  if (!isWorkEmail(primaryContactEmail)) {
-    return NextResponse.json({ message: "Use a work email for GoAccess vendor review." }, { status: 400 });
+    return NextResponse.json({ message: "Enter a valid email address." }, { status: 400 });
   }
 
   const application = await submitVendorApplication({
@@ -80,7 +61,16 @@ export async function POST(request: Request) {
         name: primaryContactName,
         email: primaryContactEmail,
         company: companyName,
-        notes: `Vendor application\nWebsite: ${website}\nRegion: ${region}\nVendor type: ${vendorType}\n\n${notes}`.trim(),
+        notes: [
+          "Vendor application",
+          website ? `Website: ${website}` : "",
+          `Region: ${region}`,
+          `Vendor type: ${vendorType}`,
+          "",
+          notes,
+        ]
+          .filter(Boolean)
+          .join("\n"),
         receivedAt: application.createdAt,
       });
     } catch (error) {

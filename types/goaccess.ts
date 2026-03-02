@@ -30,7 +30,10 @@ export type VendorApplication = {
   primaryContactEmail: string;
   notes: string;
   status: VendorApplicationStatus;
+  ndaSentAt?: string;
   ndaSignedAt?: string;
+  approvalEmailSentAt?: string;
+  credentialsIssuedAt?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -46,8 +49,16 @@ export type ApprovedVendor = {
   primaryContactEmail: string;
   status: VendorStatus;
   ndaStatus: "not_sent" | "sent" | "signed";
+  ndaSentAt?: string;
+  ndaSignedAt?: string;
+  ndaDocumentName?: string;
+  ndaDocumentUrl?: string;
   credentialsIssued: boolean;
+  credentialsIssuedAt?: string;
   portalAccess: "not_ready" | "invited" | "active";
+  inviteToken?: string;
+  inviteSentAt?: string;
+  inviteAcceptedAt?: string;
   hubspotPartnerId: string;
   createdAt: string;
   updatedAt: string;
@@ -83,11 +94,24 @@ export type DealSyncEvent = {
   createdAt: string;
 };
 
+export type VendorNotification = {
+  id: string;
+  applicationId?: string;
+  vendorId?: string;
+  recipientEmail: string;
+  subject: string;
+  category: "application_received" | "application_approved" | "nda_sent" | "credentials_issued";
+  status: "sent" | "failed" | "logged";
+  reference?: string;
+  createdAt: string;
+};
+
 export type PortalStore = {
   vendorApplications: VendorApplication[];
   approvedVendors: ApprovedVendor[];
   deals: DealRegistration[];
   syncEvents: DealSyncEvent[];
+  notifications: VendorNotification[];
 };
 
 export type CreateVendorApplicationInput = {
@@ -110,4 +134,13 @@ export type CreateDealInput = {
   monthlyRmr: number;
   productInterest: string;
   notes: string;
+};
+
+export type DealStatusUpdateOptions = {
+  hubspotCompanyId?: string;
+  hubspotContactId?: string;
+  hubspotDealId?: string;
+  syncAction?: string;
+  syncStatus?: SyncEventStatus;
+  syncReference?: string;
 };

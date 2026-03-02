@@ -91,13 +91,12 @@ export function DemoRequestForm() {
         required
       />
       <input
-        type="url"
-        placeholder="Website"
+        type="text"
+        placeholder="Website (optional)"
         aria-label="Website"
         value={form.website}
         onFocus={() => trackEvent("vendor_application_field_focused", { field: "website" })}
         onChange={(event) => update("website", event.target.value)}
-        required
       />
       <div className="inline-form-grid">
         <input
@@ -132,8 +131,8 @@ export function DemoRequestForm() {
       />
       <input
         type="email"
-        placeholder="Work email"
-        aria-label="Work email"
+        placeholder="Email address"
+        aria-label="Email address"
         value={form.primaryContactEmail}
         onFocus={() =>
           trackEvent("vendor_application_field_focused", { field: "primaryContactEmail" })

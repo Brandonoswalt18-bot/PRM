@@ -1,8 +1,7 @@
+import { SESSION_COOKIE, VENDOR_ID_COOKIE } from "@/lib/auth-constants";
 import type { WorkspaceSession } from "@/types/prm";
 
 export type WorkspaceRole = "vendor" | "partner";
-
-export const SESSION_COOKIE = "relay_role";
 
 export async function getWorkspaceRole(): Promise<WorkspaceRole | null> {
   const { cookies } = await import("next/headers");
@@ -18,6 +17,9 @@ export async function getWorkspaceRole(): Promise<WorkspaceRole | null> {
 
 export async function getWorkspaceSession(): Promise<WorkspaceSession | null> {
   const role = await getWorkspaceRole();
+  const { cookies } = await import("next/headers");
+  const cookieStore = await cookies();
+  const vendorId = cookieStore.get(VENDOR_ID_COOKIE)?.value;
 
   if (role === "vendor") {
     return {
@@ -29,12 +31,15 @@ export async function getWorkspaceSession(): Promise<WorkspaceSession | null> {
   }
 
   if (role === "partner") {
+    const { getVendorById } = await import("@/lib/goaccess-store");
+    const vendor = await getVendorById(vendorId ?? "vendor-blue-haven");
+
     return {
-      fullName: "Jordan Lee",
-      email: "jordan@bluehavenintegrators.com",
+      fullName: vendor?.primaryContactName ?? "Jordan Lee",
+      email: vendor?.primaryContactEmail ?? "jordan@bluehavenintegrators.com",
       role: "Approved vendor",
-      organization: "Blue Haven Integrators",
-      vendorId: "vendor-blue-haven",
+      organization: vendor?.companyName ?? "Blue Haven Integrators",
+      vendorId: vendor?.id ?? "vendor-blue-haven",
     };
   }
 
