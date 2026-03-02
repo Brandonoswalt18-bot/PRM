@@ -1,8 +1,8 @@
 export const navItems = [
-  { href: "#platform", label: "Portal" },
-  { href: "#workflows", label: "Lifecycle" },
+  { href: "#platform", label: "Features" },
+  { href: "#workflows", label: "How It Works" },
   { href: "#integrations", label: "HubSpot" },
-  { href: "#roadmap", label: "Rollout" },
+  { href: "#cta", label: "Apply" },
 ] as const;
 
 export const heroMetrics = [

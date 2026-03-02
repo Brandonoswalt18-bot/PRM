@@ -199,10 +199,10 @@ span {
 
 .hero {
   grid-template-columns: 1fr;
-  gap: 34px;
+  gap: 28px;
   align-items: center;
   min-height: auto;
-  padding: 88px 0 40px;
+  padding: 96px 0 26px;
   text-align: center;
 }
 
@@ -210,6 +210,8 @@ span {
   display: grid;
   justify-items: center;
   gap: 0;
+  max-width: 840px;
+  margin: 0 auto;
 }
 
 .lede,
@@ -241,11 +243,17 @@ span {
   justify-content: center;
 }
 
+.hero-kicker {
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 0.96rem;
+}
+
 .hero-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
-  margin-top: 34px;
+  margin: 0 0 18px;
   width: min(960px, 100%);
 }
 
@@ -421,6 +429,49 @@ span {
 
 section {
   margin-top: 110px;
+}
+
+.proof-band {
+  display: grid;
+  gap: 26px;
+  margin-top: 58px;
+}
+
+.proof-intro {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  text-align: center;
+}
+
+.proof-intro p {
+  max-width: 700px;
+  margin: 0;
+  color: var(--muted);
+}
+
+.proof-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.proof-card {
+  padding: 22px 20px;
+  border-radius: 22px;
+  border: 1px solid var(--line-strong);
+  background: linear-gradient(180deg, rgba(16, 16, 16, 0.98), rgba(10, 10, 10, 0.98));
+}
+
+.proof-card strong {
+  display: block;
+  margin-top: 10px;
+  font-size: 1.55rem;
+}
+
+.proof-card small,
+.proof-card .label {
+  color: var(--muted);
 }
 
 .logo-strip {
@@ -939,6 +990,7 @@ li + li {
   .architecture-grid,
   .roadmap-grid,
   .pricing-grid,
+  .proof-grid,
   .product-stats,
   .product-columns {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -973,6 +1025,7 @@ li + li {
   .architecture-grid,
   .roadmap-grid,
   .pricing-grid,
+  .proof-grid,
   .product-stats,
   .product-columns,
   .stack-meta-grid,

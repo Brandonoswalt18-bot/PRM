@@ -41,12 +41,15 @@ export function MarketingPage() {
         <section className="hero" id="hero">
           <div className="hero-copy">
             <div className="eyebrow">GOACCESS APPROVED VENDOR PORTAL</div>
-            <h1>Give approved GoAccess vendors one place to apply, sign an NDA, register deals, and track monthly RMR.</h1>
+            <h1>
+              One GoAccess portal
+              <br />
+              for approved vendors.
+            </h1>
             <p className="lede">
-              This portal is designed specifically for GoAccess vendor operations:
-              approve vendors, collect NDA completion, issue credentials, review
-              deal registrations, sync approved records into HubSpot, and show
-              each vendor the recurring monthly revenue tied to their accounts.
+              Approve vendors, collect NDA completion, issue credentials,
+              review deal registrations, sync approved records into HubSpot,
+              and show each vendor the recurring monthly revenue tied to their accounts.
             </p>
             <div className="hero-actions">
               <Link className="button button-primary" href="#cta">
@@ -56,6 +59,12 @@ export function MarketingPage() {
                 Approved Vendor Login
               </Link>
             </div>
+            <div className="hero-kicker">
+              <span>Built for onboarding, deal registration, HubSpot sync, and monthly RMR reporting.</span>
+            </div>
+          </div>
+
+          <div className="hero-panel">
             <div className="hero-metrics">
               {heroMetrics.map((metric) => (
                 <div key={metric.label}>
@@ -64,9 +73,6 @@ export function MarketingPage() {
                 </div>
               ))}
             </div>
-          </div>
-
-          <div className="hero-panel">
             <div className="panel-frame">
               <div className="panel-header">
                 <span className="dot" />
@@ -100,8 +106,26 @@ export function MarketingPage() {
           </div>
         </section>
 
+        <section className="proof-band">
+          <div className="proof-intro">
+            <span className="eyebrow">BUILT FOR GOACCESS CHANNEL OPERATIONS</span>
+            <p>
+              A focused vendor portal for onboarding, deal operations, and recurring revenue visibility.
+            </p>
+          </div>
+          <div className="proof-grid">
+            {heroStats.map((stat) => (
+              <article className="proof-card" key={stat.label}>
+                <span className="label">{stat.label}</span>
+                <strong>{stat.value}</strong>
+                {"detail" in stat && stat.detail ? <small>{stat.detail}</small> : null}
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="logo-strip">
-          <span>Built for the GoAccess team and its approved vendor ecosystem across</span>
+          <span>Designed for GoAccess-approved vendors across</span>
           <div className="logo-list">
             {partnerModels.map((model) => (
               <span key={model}>{model}</span>
