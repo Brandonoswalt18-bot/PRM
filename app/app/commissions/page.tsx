@@ -14,18 +14,18 @@ export default async function CommissionsPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
-        title="Commissions"
-        subtitle="A finance-safe ledger for payout eligibility, clawbacks, holds, and recurring revenue share."
-        primaryLabel="Run recalculation"
+        title="HubSpot sync"
+        subtitle="Review approved vendor-submitted deals before they create or update companies, contacts, and deals in HubSpot."
+        primaryLabel="Review sync queue"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
         <section className="dashboard-grid">
           <TableSection
-            title="Commission ledger"
-            description="Commission entries should always explain themselves through source event, amount basis, and status."
-            actionLabel="Export ledger"
-            headers={["Partner", "Program", "Event", "Amount", "Status"]}
+            title="Sync activity"
+            description="Every CRM write should explain what was reviewed, created, linked, or held."
+            actionLabel="Export sync log"
+            headers={["Vendor", "Queue", "Event", "Reference", "Status"]}
             rows={data.commissions}
             renderRow={CommissionRow}
           />

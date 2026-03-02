@@ -14,18 +14,18 @@ export default async function VendorAssetsPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
-        title="Assets"
-        subtitle="Enablement content should be organized by program, audience, and publication state."
-        primaryLabel="Upload asset"
+        title="Documents"
+        subtitle="Manage NDAs, onboarding guides, deal registration rules, and internal review documents in one place."
+        primaryLabel="Upload document"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
         <section className="dashboard-grid">
           <TableSection
-            title="Asset library"
-            description="A vendor-controlled content library for partner-facing materials."
-            actionLabel="Publish draft"
-            headers={["Asset", "Type", "Audience", "Status"]}
+            title="Document library"
+            description="A GoAccess-controlled source for legal, onboarding, and operating documents."
+            actionLabel="Publish document"
+            headers={["Document", "Type", "Audience", "Status"]}
             rows={data.assets}
             renderRow={AssetRow}
           />

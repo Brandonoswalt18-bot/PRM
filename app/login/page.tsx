@@ -15,11 +15,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <main className="login-shell">
       <div className="login-card">
-        <span className="eyebrow">MOCK AUTH</span>
-        <h1>Choose a workspace role.</h1>
+        <span className="eyebrow">PROTOTYPE ACCESS</span>
+        <h1>Choose the GoAccess portal workspace.</h1>
         <p>
-          This prototype uses a cookie-backed mock session. Pick the vendor admin
-          or partner portal role to enter the correct protected workspace.
+          This prototype uses a cookie-backed mock session. Pick the GoAccess admin
+          workspace or the approved vendor workspace to enter the correct protected portal.
         </p>
         <div className="login-actions">
           <Link
@@ -28,7 +28,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             }`}
             href={`/auth/mock-login?role=vendor${nextPath ? `&next=${encodeURIComponent(nextPath)}` : ""}`}
           >
-            Enter Vendor Admin
+            Enter GoAccess Admin
           </Link>
           <Link
             className={`button ${
@@ -36,7 +36,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             }`}
             href={`/auth/mock-login?role=partner${nextPath ? `&next=${encodeURIComponent(nextPath)}` : ""}`}
           >
-            Enter Partner Portal
+            Enter Approved Vendor Portal
           </Link>
         </div>
         <div className="login-footer">

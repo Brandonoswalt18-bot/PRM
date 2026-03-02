@@ -1,99 +1,108 @@
 export const navItems = [
-  { href: "#platform", label: "Platform" },
-  { href: "#workflows", label: "Workflows" },
-  { href: "#integrations", label: "Integrations" },
-  { href: "#roadmap", label: "Roadmap" },
+  { href: "#platform", label: "Portal" },
+  { href: "#workflows", label: "Lifecycle" },
+  { href: "#integrations", label: "HubSpot" },
+  { href: "#roadmap", label: "Rollout" },
 ] as const;
 
 export const heroMetrics = [
-  { value: "Partner signup", label: "application and approval flow" },
-  { value: "HubSpot-backed", label: "deal registration workflow" },
-  { value: "GoAccess only", label: "focused product, faster to ship" },
+  { value: "Approved vendor", label: "application, NDA, and credential flow" },
+  { value: "HubSpot-backed", label: "deal registration and review" },
+  { value: "Monthly RMR", label: "visible per vendor profile" },
 ];
 
 export const heroStats = [
-  { label: "Pending partner applications", value: "7", detail: "ready for review" },
-  { label: "Approved partners", value: "42" },
-  { label: "Submitted deals", value: "118" },
-  { label: "HubSpot sync mode", value: "Review then create" },
-  { label: "Source of truth", value: "HubSpot deal pipeline" },
+  { label: "Pending vendor applications", value: "11", detail: "GoAccess review queue" },
+  { label: "NDAs out for signature", value: "5" },
+  { label: "Active vendor profiles", value: "42" },
+  { label: "HubSpot sync mode", value: "Review before create" },
+  { label: "Projected monthly RMR", value: "$42.8k" },
 ] as const;
 
 export const workflowTimeline = [
-  { step: "1", text: "Partner application approved by GoAccess admin", state: "complete" },
-  { step: "2", text: "Partner submitted a deal registration in the portal", state: "complete" },
-  { step: "3", text: "Approved deal created and tracked in HubSpot", state: "current" },
+  { step: "1", text: "Vendor application reviewed by the GoAccess team", state: "complete" },
+  { step: "2", text: "NDA signed and portal credentials issued", state: "complete" },
+  { step: "3", text: "Deal registration approved and written to HubSpot", state: "current" },
+  { step: "4", text: "Vendor profile shows current monthly RMR totals", state: "current" },
 ] as const;
 
-export const partnerModels = ["MSP", "Reseller", "Agency", "Referral", "Strategic partner"] as const;
+export const partnerModels = ["MSP", "Integrator", "Regional reseller", "Dealer", "Strategic vendor"] as const;
 
 export const problemPoints = [
-  "Partner applications get buried in email",
-  "Deal registrations arrive with no consistent structure",
-  "Sales has no clean way to review partner-submitted opportunities",
-  "Partners cannot see where their deals stand",
-  "HubSpot and partner operations are disconnected",
+  "Vendor onboarding lives in scattered email threads",
+  "NDAs and profile activation are hard to track",
+  "Deal registrations arrive with inconsistent information",
+  "HubSpot gets updated manually or too late",
+  "Vendors have no clean view of their open deals or monthly recurring revenue",
 ];
 
 export const solutionPoints = [
-  "A GoAccess-specific partner application and approval flow",
-  "A partner portal for account access and deal registration",
-  "An internal review queue before deals reach HubSpot",
-  "HubSpot-backed deal creation and status tracking",
-  "A partner-facing view of submitted and reviewed deals",
+  "A GoAccess-only vendor application and approval workflow",
+  "NDA tracking and credential issue in the same portal",
+  "Structured deal registration with internal review before HubSpot sync",
+  "Partner-facing deal management and status visibility",
+  "Monthly RMR totals visible directly inside each vendor profile",
 ];
 
 export const platformFeatures = [
   {
-    title: "Partner application",
-    body: "Give GoAccess partners a branded place to apply, get approved, and activate their portal access.",
+    title: "Vendor application",
+    body: "Give prospective GoAccess vendors one clear place to apply with company fit, territory, and contact details.",
   },
   {
-    title: "Partner accounts",
-    body: "Approved partners can create an account, log in, and manage their profile inside a dedicated portal.",
+    title: "NDA workflow",
+    body: "Track legal status inside the onboarding process so GoAccess knows which vendors are approved, pending, or ready for credentials.",
+  },
+  {
+    title: "Credential issue",
+    body: "After approval and signed NDA, issue portal credentials so the vendor can create a profile and start submitting deals.",
+  },
+  {
+    title: "Vendor profile",
+    body: "Each approved vendor gets a profile with company details, status, key contacts, and current monthly recurring revenue totals.",
   },
   {
     title: "Deal registration",
-    body: "Partners submit structured deals with company, contact, value, notes, and product interest instead of emailing sales ad hoc.",
-  },
-  {
-    title: "Admin review",
-    body: "GoAccess reviews partner-submitted deals, checks for duplicates, and decides which records should be created in HubSpot.",
+    body: "Vendors submit structured opportunities with company, contact, value, notes, and product context instead of emailing sales ad hoc.",
   },
   {
     title: "HubSpot mapping",
-    body: "Approved deals create or update HubSpot companies, contacts, and deals while storing partner metadata on the deal record.",
+    body: "Approved registrations create or update HubSpot companies, contacts, and deals while preserving vendor metadata and sync history.",
   },
   {
-    title: "Deal tracking",
-    body: "Partners can return to the portal to see whether their registered deals are under review, approved, in pipeline, or closed.",
+    title: "Deal management",
+    body: "Vendors can return to the portal to see whether a deal is under review, synced to HubSpot, active in pipeline, or closed won.",
+  },
+  {
+    title: "Monthly RMR visibility",
+    body: "The portal surfaces the monthly recurring revenue each vendor will collect, tied back to the underlying accounts and deals.",
   },
 ];
 
 export const workspaces = [
   {
-    title: "Vendor Admin",
-    body: "Built for the GoAccess team managing partner applications, deal reviews, and HubSpot sync decisions.",
+    title: "GoAccess Admin",
+    body: "Built for the internal GoAccess team managing vendor applications, NDAs, credentialing, deal review, HubSpot sync, and recurring revenue reporting.",
     items: [
-      "Partner application approvals and status controls",
-      "Deal registration review queue",
-      "HubSpot sync review and duplicate checking",
-      "Partner list and account management",
-      "Internal notes and audit visibility",
-      "Settings for portal and HubSpot connection",
+      "Review vendor applications and legal readiness",
+      "Track NDA status and issue credentials",
+      "Review deal registrations before HubSpot creation",
+      "Manage approved vendor profiles",
+      "Monitor HubSpot sync outcomes",
+      "Track vendor-level monthly RMR totals",
     ],
     className: "",
   },
   {
-    title: "Partner Portal",
-    body: "Built for approved GoAccess partners who need a simple place to log in and register deals.",
+    title: "Approved Vendor Portal",
+    body: "Built for approved GoAccess vendors who need a simple place to complete onboarding, register deals, and monitor their revenue.",
     items: [
-      "Create an account after approval",
-      "Log in and submit deal registrations",
-      "Track deal review and pipeline status",
-      "See all deals I submitted",
-      "Maintain profile and partner details",
-      "Contact GoAccess support",
+      "Complete profile after approval",
+      "See NDA and credential status",
+      "Register and manage deals",
+      "Track HubSpot-backed status updates",
+      "Review monthly RMR totals",
+      "Access operating documents and support",
     ],
     className: "partner-workspace",
   },
@@ -102,142 +111,148 @@ export const workspaces = [
 export const operatingModel = [
   {
     step: "01",
-    title: "Partner applies",
-    body: "A prospective GoAccess partner submits an application and waits for approval.",
+    title: "Vendor applies",
+    body: "A prospective GoAccess vendor submits an application with company, market, and contact details.",
   },
   {
     step: "02",
-    title: "GoAccess approves the partner",
-    body: "An admin reviews the application and enables account creation for approved partners.",
+    title: "GoAccess reviews and approves",
+    body: "The internal team evaluates fit, approves the vendor, and sends the NDA.",
   },
   {
     step: "03",
-    title: "Partner registers a deal",
-    body: "The partner submits a structured deal with company, contact, value, and notes.",
+    title: "NDA signed and credentials issued",
+    body: "Once legal requirements are complete, the vendor receives portal credentials and creates a profile.",
   },
   {
     step: "04",
-    title: "Admin reviews and syncs",
-    body: "GoAccess checks for duplicates and, if approved, creates or links the deal in HubSpot.",
+    title: "Vendor registers a deal",
+    body: "The vendor submits a structured opportunity with company, contact, value, and supporting notes.",
   },
   {
     step: "05",
-    title: "Partner tracks status",
-    body: "The portal reflects the HubSpot-backed deal status so the partner knows what is happening.",
+    title: "GoAccess reviews and syncs",
+    body: "GoAccess checks duplicates, approves the record, and creates or links the deal in HubSpot.",
+  },
+  {
+    step: "06",
+    title: "Vendor tracks deals and RMR",
+    body: "The portal shows deal status and the monthly recurring revenue the vendor will collect from active accounts.",
   },
 ];
 
 export const integrations = [
   {
     title: "HubSpot",
-    body: "HubSpot is the system of record for approved partner-submitted deals. The portal should create or link companies, contacts, and deals only after review.",
+    body: "HubSpot remains the sales system of record for approved vendor deals. The portal should only create or update CRM records after GoAccess review.",
     items: [
-      "Create or update company, contact, and deal",
-      "Store partner metadata on the HubSpot deal",
-      "Use HubSpot stage as the external pipeline status",
+      "Create or update company, contact, and deal records",
+      "Stamp vendor metadata and registration IDs on the deal",
+      "Reflect HubSpot stage changes back in the portal",
     ],
   },
   {
-    title: "Portal database",
-    body: "The app still needs its own database so GoAccess can preserve submissions, approvals, notes, sync attempts, and partner-visible history.",
+    title: "Portal system of record",
+    body: "The portal still keeps its own onboarding, NDA, vendor profile, deal review, and monthly RMR history so GoAccess is not dependent on CRM state alone.",
     items: [
-      "Keep a local record before pushing to HubSpot",
-      "Store HubSpot IDs after sync",
-      "Show partner-facing deal history independent of CRM failures",
+      "Keep every application and NDA event locally",
+      "Store HubSpot references after sync",
+      "Show vendors their full operating history in one place",
     ],
   },
 ];
 
 export const architectureModules = [
   {
-    title: "Partner auth",
-    body: "Approved GoAccess partners need real account creation, login, and protected access to the portal.",
+    title: "Vendor auth and credentialing",
+    body: "Approved vendors need real account creation, secure login, and profile activation after NDA completion.",
   },
   {
-    title: "Deal intake service",
-    body: "Deal registrations should be stored first in the app, then reviewed and synced into HubSpot.",
+    title: "Application and NDA workflow",
+    body: "GoAccess needs a controlled process for vendor approval, legal readiness, and credential issue.",
   },
   {
-    title: "HubSpot sync service",
-    body: "Approved deals should create or link HubSpot companies, contacts, and deals and record sync outcomes.",
+    title: "Deal intake and review",
+    body: "Every deal registration should be stored locally, reviewed internally, and only then synced to HubSpot.",
   },
   {
-    title: "Admin review workflow",
-    body: "GoAccess needs an internal queue for duplicates, approval decisions, and status updates.",
+    title: "Revenue visibility layer",
+    body: "The portal should track vendor-level monthly RMR and show how recurring revenue maps back to approved deals.",
   },
 ];
 
 export const roadmap = [
   {
-    title: "MVP",
+    title: "Foundation",
     items: [
-      "Partner application and approval",
-      "Partner account creation and login",
+      "Vendor application form",
+      "Approval workflow",
+      "NDA status tracking",
+      "Credential issue and login",
+      "Profile creation",
+    ],
+  },
+  {
+    title: "Deal operations",
+    items: [
       "Deal registration form",
-      "Admin review queue",
-      "HubSpot create/update/link flow",
+      "Internal review queue",
+      "HubSpot company/contact/deal sync",
+      "Vendor-facing deal status",
+      "Admin duplicate checks",
     ],
   },
   {
-    title: "Phase 2",
+    title: "Revenue layer",
     items: [
-      "Duplicate detection improvements",
-      "Partner deal history and comments",
-      "Email notifications",
-      "Export and reporting",
-      "Improved admin notes and audit trail",
-    ],
-  },
-  {
-    title: "Phase 3",
-    items: [
-      "Real role-based access control",
-      "Advanced HubSpot workflow automation",
-      "Partner document collection",
-      "Expanded dashboard analytics",
-      "Future commission support if GoAccess needs it",
+      "Monthly RMR reporting by vendor",
+      "Profile-level revenue totals",
+      "Simple statements and exports",
+      "Account-level recurring revenue visibility",
+      "Future payout or commission support only if GoAccess needs it",
     ],
   },
 ];
 
 export const pricingTiers: PricingTier[] = [
   {
-    title: "Phase 1",
-    price: "Focus",
+    title: "Now",
+    price: "Vendor Portal",
     suffix: "",
     items: [
-      "GoAccess-only portal",
-      "Partner application and approval",
-      "Deal registration",
+      "Applications, NDA, and credentials",
+      "Approved vendor profiles",
+      "Deal registration and review",
       "HubSpot-backed workflow",
     ],
   },
   {
-    title: "Phase 2",
-    price: "Scale",
+    title: "Next",
+    price: "Deal Ops",
     suffix: "",
     badge: "Recommended",
     featured: true,
     items: [
-      "Real auth and role control",
-      "Email notifications",
-      "Partner deal tracking",
-      "Admin review depth",
-      "Reporting and exports",
+      "Admin duplicate review",
+      "Vendor deal management",
+      "HubSpot status backfill",
+      "Operational support tooling",
+      "Audit visibility",
     ],
   },
   {
-    title: "Later",
-    price: "Optional",
+    title: "Then",
+    price: "RMR",
     suffix: "",
     items: [
-      "Commission workflows if needed",
-      "Expanded partner operations",
-      "More automation",
-      "Broader portal capabilities",
+      "Monthly revenue totals per vendor",
+      "Statements and exports",
+      "Profile-level recurring revenue visibility",
+      "Optional finance workflows later",
     ],
   },
 ];
+
 type PricingTier = {
   title: string;
   price: string;

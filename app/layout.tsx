@@ -3,23 +3,23 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Relay PRM | Partner Revenue Infrastructure for SaaS",
+  title: "GoAccess Vendor Portal | Approved vendor onboarding, HubSpot deal registration, and RMR tracking",
   description:
-    "Relay PRM helps SaaS companies recruit partners, track referrals, calculate commissions, and run payouts with HubSpot and Stripe.",
-  metadataBase: new URL("https://relayprm.com"),
+    "GoAccess Vendor Portal gives approved vendors one place to apply, complete NDA, receive credentials, register deals into HubSpot, and track monthly recurring revenue.",
+  metadataBase: new URL("https://prm-site-8tt6tcck5-brandonoswalt18-bots-projects.vercel.app"),
   openGraph: {
-    title: "Relay PRM",
+    title: "GoAccess Vendor Portal",
     description:
-      "Partner revenue infrastructure for SaaS teams running affiliate, referral, agency, reseller, and integration programs.",
-    url: "https://relayprm.com",
-    siteName: "Relay PRM",
+      "Approved vendor onboarding, HubSpot-backed deal registration, and monthly RMR visibility for GoAccess.",
+    url: "https://prm-site-8tt6tcck5-brandonoswalt18-bots-projects.vercel.app",
+    siteName: "GoAccess Vendor Portal",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Relay PRM",
+    title: "GoAccess Vendor Portal",
     description:
-      "Launch a PRM that finance, sales ops, and partners can all trust.",
+      "A GoAccess-only vendor portal for applications, NDA completion, HubSpot deal registration, and RMR tracking.",
   },
 };
 

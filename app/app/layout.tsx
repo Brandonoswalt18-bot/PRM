@@ -15,7 +15,7 @@ export default async function VendorLayout({
 
   return (
     <WorkspaceLayout
-      brand="Relay PRM"
+      brand="GoAccess"
       workspace="VENDOR ADMIN"
       navItems={navItems}
       session={
@@ -23,7 +23,7 @@ export default async function VendorLayout({
           fullName: "Unknown user",
           email: "unknown",
           role: "Vendor",
-          organization: "Relay PRM",
+          organization: "GoAccess",
         }
       }
     >

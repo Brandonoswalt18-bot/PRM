@@ -4,19 +4,19 @@ export default function PartnerSupportPage() {
   return (
     <>
       <WorkspacePageHeader
-        workspace="PARTNER PORTAL"
+        workspace="VENDOR PORTAL"
         title="Support"
-        subtitle="This route is reserved for partner FAQs, issue intake, and dispute handling."
+        subtitle="This route is reserved for vendor FAQs, deal registration help, profile corrections, and monthly RMR questions."
         primaryLabel="Open support request"
       />
       <div className="app-content">
         <article className="workspace-card">
           <h3>Planned next</h3>
           <ul>
-            <li>FAQ and program policy help</li>
-            <li>Commission or payout dispute intake</li>
-            <li>Support ticket visibility</li>
-            <li>Escalation path to partner manager</li>
+            <li>FAQ and approved vendor policy help</li>
+            <li>Deal registration and HubSpot sync support intake</li>
+            <li>Monthly RMR statement questions</li>
+            <li>Escalation path to the GoAccess channel team</li>
           </ul>
         </article>
       </div>

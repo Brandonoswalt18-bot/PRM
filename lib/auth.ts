@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import type { WorkspaceSession } from "@/types/prm";
 
 export type WorkspaceRole = "vendor" | "partner";
@@ -6,6 +5,7 @@ export type WorkspaceRole = "vendor" | "partner";
 export const SESSION_COOKIE = "relay_role";
 
 export async function getWorkspaceRole(): Promise<WorkspaceRole | null> {
+  const { cookies } = await import("next/headers");
   const cookieStore = await cookies();
   const role = cookieStore.get(SESSION_COOKIE)?.value;
 

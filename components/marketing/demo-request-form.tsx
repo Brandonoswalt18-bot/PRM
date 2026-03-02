@@ -103,15 +103,15 @@ export function DemoRequestForm() {
       />
       <textarea
         className="cta-textarea"
-        placeholder="What kind of partner program are you launching?"
-        aria-label="Program details"
+        placeholder="Tell us about your company, territory, and vendor application needs."
+        aria-label="Vendor application details"
         value={form.notes}
         onFocus={() => trackEvent("demo_request_field_focused", { field: "notes" })}
         onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
         rows={4}
       />
       <button className="button button-primary" type="submit" disabled={status === "submitting"}>
-        {status === "submitting" ? "Submitting..." : "Request a Demo"}
+        {status === "submitting" ? "Submitting..." : "Request vendor access"}
       </button>
       <p
         className={`form-message ${
@@ -120,7 +120,7 @@ export function DemoRequestForm() {
         aria-live="polite"
       >
         {message ||
-          "Requests are validated server-side and can be routed into HubSpot, email, or your CRM."}
+          "Requests are validated server-side and can be routed into HubSpot for GoAccess review."}
       </p>
     </form>
   );

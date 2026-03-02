@@ -13,19 +13,19 @@ export default async function PartnerAssetsPage() {
   return (
     <>
       <WorkspacePageHeader
-        workspace="PARTNER PORTAL"
-        title="Assets"
-        subtitle="Partners need an asset library that is current, searchable, and clearly scoped to their program."
-        primaryLabel="Browse latest assets"
+        workspace="VENDOR PORTAL"
+        title="Documents"
+        subtitle="Access the NDA, onboarding guides, and GoAccess operating documents tied to your approved vendor account."
+        primaryLabel="Download NDA"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
         <section className="dashboard-grid">
           <TableSection
-            title="Available assets"
-            description="Partner-facing content by type, audience, and availability."
-            actionLabel="View terms"
-            headers={["Asset", "Type", "Audience", "Status"]}
+            title="Available documents"
+            description="Vendor-facing legal, onboarding, and operating files."
+            actionLabel="Open file"
+            headers={["Document", "Type", "Audience", "Status"]}
             rows={data.assets}
             renderRow={AssetRow}
           />

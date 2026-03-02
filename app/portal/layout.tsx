@@ -15,15 +15,15 @@ export default async function PartnerLayout({
 
   return (
     <WorkspaceLayout
-      brand="Relay PRM"
-      workspace="PARTNER PORTAL"
+      brand="GoAccess"
+      workspace="VENDOR PORTAL"
       navItems={navItems}
       session={
         session ?? {
           fullName: "Unknown user",
           email: "unknown",
-          role: "Partner",
-          organization: "Unknown",
+          role: "Approved vendor",
+          organization: "Approved vendor",
         }
       }
     >

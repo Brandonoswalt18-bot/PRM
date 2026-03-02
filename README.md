@@ -1,4 +1,4 @@
-# Relay PRM Website
+# GoAccess Vendor Portal
 
 Next.js app-router marketing site for a PRM SaaS concept modeled on the product blueprint.
 

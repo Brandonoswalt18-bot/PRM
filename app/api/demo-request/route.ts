@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         ok: true,
-        message: "Thanks. Your demo request has been sent to the sales queue.",
+        message: "Thanks. Your vendor access request has been sent to the GoAccess review queue.",
         destination: "hubspot",
         contactId: hubspotResult.contactId,
       });
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     message:
-      "Thanks. Your demo request has been captured locally. Add HubSpot env vars to route it automatically.",
+      "Thanks. Your vendor access request has been captured locally. Add HubSpot env vars to route it automatically.",
     destination: "log",
   });
 }

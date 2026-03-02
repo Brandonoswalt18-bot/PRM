@@ -9,94 +9,94 @@ export default async function VendorDashboardPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
-      title="Partner revenue command center"
-      subtitle="A realistic shell for the internal PRM workspace: approvals, attribution, commissions, payouts, and integration health."
-        primaryLabel="New program"
+        title="GoAccess vendor operations command center"
+        subtitle="Review vendor applications, track NDA and credential status, approve deal registrations, sync to HubSpot, and monitor monthly RMR."
+        primaryLabel="Review applications"
       />
       <div className="app-content">
-      <MetricGrid metrics={data.metrics} />
+        <MetricGrid metrics={data.metrics} />
 
-      <section className="dashboard-grid">
-        <article className="workspace-card wide-card">
-          <div className="card-header-row">
-            <div>
-              <h3>Program portfolio</h3>
-              <p>Multiple motions, one shared commission and payout model.</p>
-            </div>
-            <a href="#" className="button button-secondary">
-              Create program
-            </a>
-          </div>
-          <div className="data-table">
-            <div className="table-head">
-              <span>Program</span>
-              <span>Partners</span>
-              <span>Commission</span>
-              <span>Status</span>
-            </div>
-            {data.programs.map((program) => (
-              <div className="table-row" key={program.name}>
-                <span>{program.name}</span>
-                <span>{program.partners}</span>
-                <span>{program.commission}</span>
-                <span>{program.status}</span>
+        <section className="dashboard-grid">
+          <article className="workspace-card wide-card">
+            <div className="card-header-row">
+              <div>
+                <h3>Application and onboarding pipeline</h3>
+                <p>One queue for vendor approval, NDA status, credential issue, and activation.</p>
               </div>
-            ))}
-          </div>
-        </article>
-
-        {data.queues.map((queue) => (
-          <article className="workspace-card" key={queue.title}>
-            <h3>{queue.title}</h3>
-            <ul>
-              {queue.items.map((item) => (
-                <li key={item}>{item}</li>
+              <a href="#" className="button button-secondary">
+                Export applications
+              </a>
+            </div>
+            <div className="data-table">
+              <div className="table-head">
+                <span>Vendor</span>
+                <span>Stage</span>
+                <span>Onboarding</span>
+                <span>Status</span>
+              </div>
+              {data.programs.map((program) => (
+                <div className="table-row" key={program.name}>
+                  <span>{program.name}</span>
+                  <span>{program.partners}</span>
+                  <span>{program.commission}</span>
+                  <span>{program.status}</span>
+                </div>
               ))}
+            </div>
+          </article>
+
+          {data.queues.map((queue) => (
+            <article className="workspace-card" key={queue.title}>
+              <h3>{queue.title}</h3>
+              <ul>
+                {queue.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </section>
+
+        <section className="dashboard-grid">
+          <article className="workspace-card wide-card">
+            <div className="card-header-row">
+              <div>
+                <h3>HubSpot sync activity</h3>
+                <p>Each admin decision should show whether the deal was created, linked, held, or needs review.</p>
+              </div>
+              <a href="#" className="button button-secondary">
+                Open sync queue
+              </a>
+            </div>
+            <div className="data-table">
+              <div className="table-head">
+                <span>Vendor</span>
+                <span>Queue</span>
+                <span>Event</span>
+                <span>Reference</span>
+                <span>Status</span>
+              </div>
+              {data.commissions.map((row) => (
+                <div className="table-row" key={`${row.partner}-${row.event}`}>
+                  <span>{row.partner}</span>
+                  <span>{row.program}</span>
+                  <span>{row.event}</span>
+                  <span>{row.amount}</span>
+                  <span>{row.status}</span>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="workspace-card">
+            <h3>What this workspace centers</h3>
+            <ul>
+              <li>Approved vendor onboarding is now the first-class workflow.</li>
+              <li>HubSpot only receives reviewed deals, not raw submissions.</li>
+              <li>Monthly recurring revenue is visible alongside deal operations.</li>
             </ul>
           </article>
-        ))}
-      </section>
-
-      <section className="dashboard-grid">
-        <article className="workspace-card wide-card">
-          <div className="card-header-row">
-            <div>
-              <h3>Commission activity</h3>
-              <p>Explainable ledger entries tied to real partner and billing events.</p>
-            </div>
-            <a href="#" className="button button-secondary">
-              Review ledger
-            </a>
-          </div>
-          <div className="data-table">
-            <div className="table-head">
-              <span>Partner</span>
-              <span>Program</span>
-              <span>Event</span>
-              <span>Amount</span>
-              <span>Status</span>
-            </div>
-            {data.commissions.map((row) => (
-              <div className="table-row" key={`${row.partner}-${row.event}`}>
-                <span>{row.partner}</span>
-                <span>{row.program}</span>
-                <span>{row.event}</span>
-                <span>{row.amount}</span>
-                <span>{row.status}</span>
-              </div>
-            ))}
-          </div>
-        </article>
-
-        <article className="workspace-card">
-          <h3>What this shell proves</h3>
-          <ul>
-            <li>Vendor navigation is now aligned to the PRD and route map.</li>
-            <li>Dashboard modules map directly to core operational workflows.</li>
-            <li>The next step can add auth, real data loaders, and route-level layouts.</li>
-          </ul>
-        </article>
-      </section>
+        </section>
       </div>
     </>
   );

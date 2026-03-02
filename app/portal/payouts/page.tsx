@@ -13,19 +13,19 @@ export default async function PartnerPayoutsPage() {
   return (
     <>
       <WorkspacePageHeader
-        workspace="PARTNER PORTAL"
-        title="Payouts"
-        subtitle="Partners should be able to see exactly what is scheduled, what is paid, and what is still under review."
-        primaryLabel="Update payout details"
+        workspace="VENDOR PORTAL"
+        title="Statements"
+        subtitle="Review your month-by-month recurring revenue statements and see which periods are still open versus finalized."
+        primaryLabel="Download latest statement"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
         <section className="dashboard-grid">
           <TableSection
-            title="Payout history"
-            description="A partner-facing remittance view with amount, method, and status."
-            actionLabel="Download remittance"
-            headers={["Period", "Amount", "Method", "Status"]}
+            title="Monthly statements"
+            description="A simple statement history for recurring vendor revenue."
+            actionLabel="Export statement"
+            headers={["Month", "Amount", "Type", "Status"]}
             rows={data.payouts}
             renderRow={PayoutRow}
           />

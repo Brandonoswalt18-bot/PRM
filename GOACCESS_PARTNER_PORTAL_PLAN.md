@@ -1,17 +1,19 @@
-# GoAccess Partner Portal Plan
+# GoAccess Vendor Portal Plan
 
 ## Product Goal
 
-Build a focused GoAccess partner portal, not a generic multi-tenant PRM.
+Build a focused GoAccess approved vendor portal, not a generic multi-tenant PRM.
 
 The first version should let GoAccess:
 
-- accept partner applications
-- approve or reject partners
-- let approved partners create accounts and log in
-- let partners register deals
+- accept vendor applications
+- approve or reject vendors
+- send and track NDAs
+- issue credentials after approval
+- let approved vendors create profiles and log in
+- let vendors register deals
 - sync approved deals into HubSpot
-- let partners track deal status from the portal
+- let vendors track deal status and monthly RMR from the portal
 
 ## Core Product Decision
 
@@ -21,7 +23,7 @@ The portal should be:
 
 - the partner-facing entry point
 - the approval and visibility layer
-- the place where partners submit and track deals
+- the place where approved vendors complete onboarding, submit deals, and track revenue
 
 The portal should not be the main CRM.
 
@@ -29,40 +31,44 @@ The portal should not be the main CRM.
 
 ### Public
 
-- GoAccess partner landing page
-- partner application form
+- GoAccess vendor landing page
+- vendor application form
 - login page
 
 ### Admin
 
-- partner application review queue
-- approve or reject partners
-- partner list
+- vendor application review queue
+- approve or reject vendors
+- NDA tracking
+- credential issue controls
+- approved vendor list
 - deal registration review queue
 - deal detail view
 - status updates
 - internal notes
 - HubSpot sync status
+- monthly RMR reporting
 
 ### Partner
 
-- account creation after approval
+- account creation after approval and signed NDA
 - login
 - dashboard
 - register a deal
 - view submitted deals
 - view deal status
 - update profile
+- view monthly RMR totals
 
 ## Deal Registration Workflow
 
-1. Partner submits a deal in the portal.
+1. Vendor submits a deal in the portal.
 2. Portal stores the submission in the app database.
 3. Admin reviews for duplicates and fit.
 4. If approved, the app creates or links HubSpot records.
 5. Portal stores HubSpot IDs locally.
 6. HubSpot deal stage becomes the source of truth for pipeline status.
-7. Portal syncs status back to the partner-facing deal view.
+7. Portal syncs status back to the vendor-facing deal view and monthly RMR view.
 
 ## Recommended Deal Statuses
 
@@ -83,10 +89,13 @@ Internal / portal statuses:
 - `partners`
 - `partner_applications`
 - `partner_memberships`
+- `nda_events`
+- `vendor_profiles`
 - `deal_registrations`
 - `deal_registration_status_history`
 - `admin_notes`
 - `hubspot_sync_events`
+- `monthly_rmr_entries`
 
 ## Required Deal Registration Fields
 
@@ -100,7 +109,7 @@ Internal / portal statuses:
 - country / region
 - product interest
 - notes
-- partner id
+- vendor id
 
 ## HubSpot Mapping
 
@@ -184,7 +193,7 @@ If a conflict exists:
 - email notifications
 - audit trail improvements
 - CSV exports
-- profile and payout/compliance placeholders
+- profile completion and monthly RMR placeholders
 
 ## Not In Scope Yet
 
@@ -203,12 +212,12 @@ Do not prioritize these yet:
 
 The existing live site should now be repositioned as:
 
-- GoAccess Partner Portal
+- GoAccess Vendor Portal
 
 The next code work should focus on:
 
 1. replacing mock auth with real auth
-2. adding partner application and approval storage
-3. implementing deal registration data model
+2. adding vendor application, NDA, and approval storage
+3. implementing vendor profile and deal registration data models
 4. implementing HubSpot create/update/link flows
-5. showing HubSpot-backed deal status in the portal
+5. showing HubSpot-backed deal status and monthly RMR in the portal

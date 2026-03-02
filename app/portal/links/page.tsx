@@ -13,19 +13,19 @@ export default async function LinksPage() {
   return (
     <>
       <WorkspacePageHeader
-        workspace="PARTNER PORTAL"
-        title="Links"
-        subtitle="Tracked links and referral codes are the fastest way for partners to start generating attributed pipeline."
-        primaryLabel="Create link"
+        workspace="VENDOR PORTAL"
+        title="Register a deal"
+        subtitle="Submit a structured GoAccess opportunity with company, contact, value, and notes before it is reviewed for HubSpot sync."
+        primaryLabel="Start registration"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
         <section className="dashboard-grid">
           <TableSection
-            title="Link performance"
-            description="Campaign-level visibility into what partners are sharing and what is converting."
-            actionLabel="Copy referral code"
-            headers={["Asset", "Destination", "Clicks", "Conversions"]}
+            title="Recent registrations"
+            description="A simple view of the opportunities you have already submitted through the portal."
+            actionLabel="View submission rules"
+            headers={["Account", "Domain", "Submitted", "Status"]}
             rows={data.links}
             renderRow={LinkRow}
           />

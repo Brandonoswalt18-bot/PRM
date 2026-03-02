@@ -13,9 +13,9 @@ export default async function PartnerProfilePage() {
   return (
     <>
       <WorkspacePageHeader
-        workspace="PARTNER PORTAL"
+        workspace="VENDOR PORTAL"
         title="Profile"
-        subtitle="Profile settings are the operational bridge between partner identity, payout setup, and compliance readiness."
+        subtitle="Your vendor profile should show legal readiness, credential status, operating details, and the monthly recurring revenue you will collect."
         primaryLabel="Edit profile"
       />
       <div className="app-content">
@@ -23,7 +23,7 @@ export default async function PartnerProfilePage() {
         <section className="dashboard-grid">
           <TableSection
             title="Organization profile"
-            description="A minimal profile surface that can later expand into payout, tax, and compliance controls."
+            description="A vendor-facing profile that combines onboarding status, account details, and current monthly RMR."
             actionLabel="Update details"
             headers={["Field", "Value"]}
             rows={data.profile}

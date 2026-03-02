@@ -8,93 +8,93 @@ export default async function PartnerPortalPage() {
   return (
     <>
       <WorkspacePageHeader
-        workspace="PARTNER PORTAL"
-      title="Partner earnings, links, and payout visibility"
-      subtitle="A realistic shell for the external partner experience: transparent status, trusted earnings, and self-serve program execution."
-        primaryLabel="Create link"
+        workspace="VENDOR PORTAL"
+        title="Approved vendor dashboard"
+        subtitle="Manage your GoAccess vendor profile, register deals, track HubSpot-backed statuses, and see the monthly recurring revenue tied to your accounts."
+        primaryLabel="Register a deal"
       />
       <div className="app-content">
-      <MetricGrid metrics={data.metrics} />
+        <MetricGrid metrics={data.metrics} />
 
-      <section className="dashboard-grid">
-        <article className="workspace-card wide-card">
-          <div className="card-header-row">
-            <div>
-              <h3>Link and code performance</h3>
-              <p>Simple partner-facing visibility into what is actually driving pipeline.</p>
-            </div>
-            <a href="#" className="button button-secondary">
-              Create link
-            </a>
-          </div>
-          <div className="data-table">
-            <div className="table-head">
-              <span>Asset</span>
-              <span>Destination</span>
-              <span>Clicks</span>
-              <span>Conversions</span>
-            </div>
-            {data.links.map((link) => (
-              <div className="table-row" key={link.name}>
-                <span>{link.name}</span>
-                <span>{link.destination}</span>
-                <span>{link.clicks}</span>
-                <span>{link.conversions}</span>
+        <section className="dashboard-grid">
+          <article className="workspace-card wide-card">
+            <div className="card-header-row">
+              <div>
+                <h3>Recent deal registrations</h3>
+                <p>Every submission should show exactly when it was sent and whether GoAccess approved it for HubSpot.</p>
               </div>
-            ))}
-          </div>
-        </article>
-
-        {data.highlights.map((highlight) => (
-          <article className="workspace-card" key={highlight.title}>
-            <h3>{highlight.title}</h3>
-            <ul>
-              {highlight.items.map((item) => (
-                <li key={item}>{item}</li>
+              <a href="#" className="button button-secondary">
+                Register new deal
+              </a>
+            </div>
+            <div className="data-table">
+              <div className="table-head">
+                <span>Account</span>
+                <span>Domain</span>
+                <span>Submitted</span>
+                <span>Status</span>
+              </div>
+              {data.links.map((link) => (
+                <div className="table-row" key={link.name}>
+                  <span>{link.name}</span>
+                  <span>{link.destination}</span>
+                  <span>{link.clicks}</span>
+                  <span>{link.conversions}</span>
+                </div>
               ))}
+            </div>
+          </article>
+
+          {data.highlights.map((highlight) => (
+            <article className="workspace-card" key={highlight.title}>
+              <h3>{highlight.title}</h3>
+              <ul>
+                {highlight.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </section>
+
+        <section className="dashboard-grid">
+          <article className="workspace-card wide-card">
+            <div className="card-header-row">
+              <div>
+                <h3>Monthly RMR ledger</h3>
+                <p>Vendors should see which active accounts are contributing recurring monthly revenue and what is still forecasted.</p>
+              </div>
+              <a href="#" className="button button-secondary">
+                Download statement
+              </a>
+            </div>
+            <div className="data-table">
+              <div className="table-head">
+                <span>Month</span>
+                <span>Account</span>
+                <span>Monthly RMR</span>
+                <span>Status</span>
+              </div>
+              {data.ledger.map((row) => (
+                <div className="table-row" key={`${row.date}-${row.description}`}>
+                  <span>{row.date}</span>
+                  <span>{row.description}</span>
+                  <span>{row.amount}</span>
+                  <span>{row.status}</span>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="workspace-card">
+            <h3>What this portal centers</h3>
+            <ul>
+              <li>Vendors get onboarding, deal ops, and recurring revenue in one place.</li>
+              <li>HubSpot-backed deal management is visible without exposing raw CRM complexity.</li>
+              <li>The profile becomes the source for current monthly RMR totals.</li>
             </ul>
           </article>
-        ))}
-      </section>
-
-      <section className="dashboard-grid">
-        <article className="workspace-card wide-card">
-          <div className="card-header-row">
-            <div>
-              <h3>Earnings ledger</h3>
-              <p>Partners need the same explainability finance uses internally.</p>
-            </div>
-            <a href="#" className="button button-secondary">
-              Download CSV
-            </a>
-          </div>
-          <div className="data-table">
-            <div className="table-head">
-              <span>Date</span>
-              <span>Description</span>
-              <span>Amount</span>
-              <span>Status</span>
-            </div>
-            {data.ledger.map((row) => (
-              <div className="table-row" key={`${row.date}-${row.description}`}>
-                <span>{row.date}</span>
-                <span>{row.description}</span>
-                <span>{row.amount}</span>
-                <span>{row.status}</span>
-              </div>
-            ))}
-          </div>
-        </article>
-
-        <article className="workspace-card">
-          <h3>What this shell proves</h3>
-          <ul>
-            <li>Partner-facing navigation now maps to the blueprint directly.</li>
-            <li>The portal emphasizes trust: earnings, payouts, and attribution clarity.</li>
-            <li>The next step can layer in auth, real API calls, and shared account state.</li>
-          </ul>
-        </article>
-      </section>
+        </section>
       </div>
     </>
   );

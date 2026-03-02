@@ -14,18 +14,18 @@ export default async function PartnersPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
-        title="Partners"
-        subtitle="Manage applications, approvals, memberships, and activation across every partner type."
-        primaryLabel="Invite partner"
+        title="Approved vendors"
+        subtitle="Manage active vendor profiles, status, access, and current monthly recurring revenue contribution."
+        primaryLabel="Open vendor profile"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
         <section className="dashboard-grid">
           <TableSection
-            title="Partner roster"
-            description="Partner-level visibility across type, status, program, and realized earnings."
-            actionLabel="Review applications"
-            headers={["Partner", "Type", "Status", "Program", "Earnings"]}
+            title="Vendor roster"
+            description="A current view of every approved or in-progress GoAccess vendor."
+            actionLabel="Review status"
+            headers={["Vendor", "Type", "Status", "Portal state", "Monthly RMR"]}
             rows={data.partners}
             renderRow={PartnerRow}
           />

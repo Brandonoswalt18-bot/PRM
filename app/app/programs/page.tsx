@@ -14,18 +14,18 @@ export default async function ProgramsPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
-        title="Programs"
-        subtitle="Configure partner motions with the operational controls they need: terms, attribution, commissions, and payout settings."
-        primaryLabel="Create program"
+        title="Vendor applications"
+        subtitle="Track the GoAccess approval lifecycle from application review through NDA and credential issuance."
+        primaryLabel="Review application"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
         <section className="dashboard-grid">
           <TableSection
-            title="Program portfolio"
-            description="Programs reflect the bounded, opinionated SaaS PRM model defined in the blueprint."
-            actionLabel="New terms version"
-            headers={["Program", "Partners", "Commission", "Status"]}
+            title="Application pipeline"
+            description="A focused onboarding queue for approved vendor operations."
+            actionLabel="Send NDA"
+            headers={["Vendor", "Stage", "Onboarding", "Status"]}
             rows={data.programs}
             renderRow={ProgramRow}
           />

@@ -13,19 +13,19 @@ export default async function EarningsPage() {
   return (
     <>
       <WorkspacePageHeader
-        workspace="PARTNER PORTAL"
-        title="Earnings"
-        subtitle="Partners need the same traceable financial picture that finance uses internally: pending, approved, paid, and clawed back."
-        primaryLabel="Download report"
+        workspace="VENDOR PORTAL"
+        title="Monthly RMR"
+        subtitle="See the recurring monthly revenue tied to your approved GoAccess accounts and understand what is forecasted versus already posted."
+        primaryLabel="Download statement"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
         <section className="dashboard-grid">
           <TableSection
-            title="Earnings ledger"
-            description="Every payout-relevant event should be visible, understandable, and exportable."
+            title="Recurring revenue ledger"
+            description="A vendor-facing monthly RMR view tied back to approved accounts."
             actionLabel="Open support"
-            headers={["Date", "Description", "Amount", "Status"]}
+            headers={["Month", "Account", "Monthly RMR", "Status"]}
             rows={data.ledger}
             renderRow={LedgerRow}
           />

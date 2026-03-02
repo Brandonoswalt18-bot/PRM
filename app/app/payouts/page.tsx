@@ -14,18 +14,18 @@ export default async function VendorPayoutsPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
-        title="Payouts"
-        subtitle="Finance needs a clean review, approval, and remittance surface tied back to the commission ledger."
-        primaryLabel="Run payout batch"
+        title="Monthly RMR ledger"
+        subtitle="Track recurring monthly revenue by approved vendor and keep month-over-month totals tied back to underlying deals."
+        primaryLabel="Export RMR report"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
         <section className="dashboard-grid">
           <TableSection
-            title="Payout runs"
-            description="A simplified payout register for review, approval, and payout operations."
-            actionLabel="Export remittance"
-            headers={["Period", "Amount", "Method", "Status"]}
+            title="RMR reporting periods"
+            description="A month-by-month summary of forecasted and recognized recurring vendor revenue."
+            actionLabel="Download statement"
+            headers={["Month", "RMR total", "Basis", "Status"]}
             rows={data.payouts}
             renderRow={PayoutRow}
           />

@@ -4,19 +4,19 @@ export default function PartnerDealsPage() {
   return (
     <>
       <WorkspacePageHeader
-        workspace="PARTNER PORTAL"
-        title="Deals"
-        subtitle="This route is reserved for partner-visible referral, opportunity, and deal status tracking."
-        primaryLabel="Submit referral"
+        workspace="VENDOR PORTAL"
+        title="My deals"
+        subtitle="Track every GoAccess deal you registered, whether it is under review, in HubSpot, or already closed won."
+        primaryLabel="Register new deal"
       />
       <div className="app-content">
         <article className="workspace-card">
           <h3>Planned next</h3>
           <ul>
-            <li>Referral and opportunity status timeline</li>
-            <li>Manual referral or deal registration submission</li>
-            <li>Estimated commission visibility</li>
-            <li>Dispute and support entry point</li>
+            <li>Vendor-visible deal timeline from submitted to closed won</li>
+            <li>Approval notes and duplicate-review outcomes</li>
+            <li>HubSpot reference and pipeline status after sync</li>
+            <li>Support path for deal corrections or missing updates</li>
           </ul>
         </article>
       </div>

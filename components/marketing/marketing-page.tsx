@@ -22,8 +22,8 @@ export function MarketingPage() {
     <div className="site-shell">
       <header className="topbar">
         <Link className="brand" href="#hero">
-          <span className="brand-mark">R</span>
-          <span className="brand-text">GoAccess Partner Portal</span>
+          <span className="brand-mark">G</span>
+          <span className="brand-text">GoAccess Vendor Portal</span>
         </Link>
         <nav className="nav">
           {navItems.map((item) => (
@@ -32,27 +32,28 @@ export function MarketingPage() {
             </Link>
           ))}
         </nav>
-        <Link className="button button-ghost" href="#cta">
-          Book a Demo
+        <Link className="button button-ghost" href="/login">
+          Vendor Login
         </Link>
       </header>
 
       <main>
         <section className="hero" id="hero">
           <div className="hero-copy">
-            <div className="eyebrow">GOACCESS PARTNER PORTAL</div>
-            <h1>Give GoAccess partners one place to apply, log in, and register deals.</h1>
+            <div className="eyebrow">GOACCESS APPROVED VENDOR PORTAL</div>
+            <h1>Give approved GoAccess vendors one place to apply, sign an NDA, register deals, and track monthly RMR.</h1>
             <p className="lede">
-              This portal is designed specifically for GoAccess partner operations:
-              approve partners, let them register deals, review submissions
-              internally, and map approved deals into HubSpot.
+              This portal is designed specifically for GoAccess vendor operations:
+              approve vendors, collect NDA completion, issue credentials, review
+              deal registrations, sync approved records into HubSpot, and show
+              each vendor the recurring monthly revenue tied to their accounts.
             </p>
             <div className="hero-actions">
               <Link className="button button-primary" href="#cta">
-                Request Partner Access
+                Apply to Become a Vendor
               </Link>
-              <Link className="button button-secondary" href="#platform">
-                See How It Works
+              <Link className="button button-secondary" href="/login">
+                Approved Vendor Login
               </Link>
             </div>
             <div className="hero-metrics">
@@ -100,7 +101,7 @@ export function MarketingPage() {
         </section>
 
         <section className="logo-strip">
-          <span>Built for the GoAccess team and its partner ecosystem across</span>
+          <span>Built for the GoAccess team and its approved vendor ecosystem across</span>
           <div className="logo-list">
             {partnerModels.map((model) => (
               <span key={model}>{model}</span>
@@ -123,7 +124,7 @@ export function MarketingPage() {
               </ul>
             </article>
             <article className="glass-card accent-card">
-              <h3>What Relay replaces it with</h3>
+              <h3>What the portal replaces it with</h3>
               <ul>
                 {solutionPoints.map((point) => (
                   <li key={point}>{point}</li>
@@ -136,7 +137,7 @@ export function MarketingPage() {
         <section className="platform" id="platform">
           <div className="section-heading">
             <div className="eyebrow">PLATFORM</div>
-            <h2>The smallest correct platform for GoAccess partner deal registration.</h2>
+            <h2>The smallest correct platform for GoAccess vendor onboarding, HubSpot-backed deal registration, and RMR visibility.</h2>
           </div>
           <div className="feature-grid">
             {platformFeatures.map((feature) => (
@@ -151,7 +152,7 @@ export function MarketingPage() {
         <section className="workspace-band" id="workflows">
           <div className="section-heading compact">
             <div className="eyebrow">WORKSPACES</div>
-            <h2>One admin workspace, one partner portal, one HubSpot-backed workflow.</h2>
+            <h2>One GoAccess admin workspace, one approved vendor portal, one HubSpot-backed workflow.</h2>
           </div>
           <div className="workspace-grid">
             {workspaces.map((workspace) => (
@@ -174,7 +175,7 @@ export function MarketingPage() {
         <section className="flow-section">
           <div className="section-heading">
             <div className="eyebrow">OPERATING MODEL</div>
-            <h2>The workflow is intentionally simple: apply, approve, register, review, sync.</h2>
+            <h2>The workflow is intentionally simple: apply, sign legal, get credentials, register deals, sync to HubSpot, track RMR.</h2>
           </div>
           <div className="flow-grid">
             {operatingModel.map((item) => (
@@ -210,7 +211,7 @@ export function MarketingPage() {
         <section className="architecture">
           <div className="section-heading">
             <div className="eyebrow">ARCHITECTURE</div>
-            <h2>Built as a partner intake and review layer on top of HubSpot.</h2>
+            <h2>Built as a vendor onboarding and deal operations layer on top of HubSpot.</h2>
           </div>
           <div className="architecture-grid">
             {architectureModules.map((module) => (
@@ -225,7 +226,7 @@ export function MarketingPage() {
         <section className="roadmap" id="roadmap">
           <div className="section-heading">
             <div className="eyebrow">ROADMAP</div>
-            <h2>Build the GoAccess portal core first. Add complexity only if needed.</h2>
+            <h2>Build the GoAccess vendor portal core first. Add payout complexity only if it becomes necessary.</h2>
           </div>
           <div className="roadmap-grid">
             {roadmap.map((phase) => (
@@ -244,7 +245,7 @@ export function MarketingPage() {
         <section className="pricing" id="pricing">
           <div className="section-heading">
             <div className="eyebrow">BUILD PHASES</div>
-            <h2>What to build now versus what to defer.</h2>
+            <h2>What GoAccess should build now versus what to defer.</h2>
           </div>
           <div className="pricing-grid">
             {pricingTiers.map((tier) => (
@@ -271,12 +272,12 @@ export function MarketingPage() {
         <section className="cta-section" id="cta">
           <div className="cta-card">
             <div>
-              <div className="eyebrow">READY TO BUILD THE CATEGORY?</div>
-              <h2>Launch the GoAccess partner portal with a real HubSpot-backed deal workflow.</h2>
+              <div className="eyebrow">READY TO LAUNCH</div>
+              <h2>Launch the GoAccess approved vendor portal with real onboarding, HubSpot deal registration, and monthly RMR reporting.</h2>
               <p>
                 The next correct build step is not a broad PRM. It is a focused
-                partner application, login, deal registration, and review flow
-                designed specifically for GoAccess.
+                GoAccess vendor application, NDA, credentialing, deal review,
+                HubSpot sync, and recurring revenue workflow.
               </p>
             </div>
             <DemoRequestForm />

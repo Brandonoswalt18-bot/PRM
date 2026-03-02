@@ -42,7 +42,7 @@ export function WorkspaceLayout({
     <div className="app-frame">
       <aside className="app-sidebar">
         <Link className="brand" href="/">
-          <span className="brand-mark">R</span>
+          <span className="brand-mark">G</span>
           <span className="brand-text">{brand}</span>
         </Link>
         <div className="sidebar-label">{workspace}</div>
