@@ -41,11 +41,11 @@ The public application form and admin deal-sync actions can route into HubSpot.
 Current behavior:
 
 - validates required fields
-- rejects common personal email domains
+- accepts both personal and company email addresses
 - logs accepted requests server-side when HubSpot is not configured
 - submits to HubSpot Forms API when env vars are present
 - creates or updates HubSpot companies, contacts, and deals when an admin syncs an approved vendor deal
-- records outbound approval, NDA, and credential invite notifications in the local store
+- records outbound applicant, admin, approval, NDA, and credential invite notifications in the local store
 - uses a Google Docs NDA link for the current lightweight legal workflow
 - sends vendor lifecycle emails through Resend when email env vars are configured
 
@@ -66,6 +66,7 @@ Portal workflow env vars:
 
 - `GOACCESS_NDA_DOCUMENT_URL`
 - `GOACCESS_PORTAL_BASE_URL`
+- `GOACCESS_APPLICATION_NOTIFICATION_EMAIL`
 - `RESEND_API_KEY`
 - `EMAIL_FROM_ADDRESS`
 

@@ -100,7 +100,12 @@ export type VendorNotification = {
   vendorId?: string;
   recipientEmail: string;
   subject: string;
-  category: "application_received" | "application_approved" | "nda_sent" | "credentials_issued";
+  category:
+    | "application_received"
+    | "application_internal_alert"
+    | "application_approved"
+    | "nda_sent"
+    | "credentials_issued";
   status: "sent" | "failed" | "logged";
   reference?: string;
   createdAt: string;

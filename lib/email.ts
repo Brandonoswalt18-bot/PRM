@@ -1,5 +1,5 @@
 type VendorEmailPayload = {
-  to: string;
+  to: string | string[];
   subject: string;
   text: string;
   html: string;
@@ -24,11 +24,21 @@ export function buildInviteUrl(inviteToken: string) {
   return `${getPortalBaseUrl()}/invite/${inviteToken}`;
 }
 
+export function getApplicationNotificationRecipients() {
+  const raw = process.env.GOACCESS_APPLICATION_NOTIFICATION_EMAIL ?? "";
+
+  return raw
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
 export async function sendVendorEmail(payload: VendorEmailPayload): Promise<VendorEmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM_ADDRESS;
+  const recipients = Array.isArray(payload.to) ? payload.to : [payload.to];
 
-  if (!apiKey || !from) {
+  if (!apiKey || !from || recipients.length === 0) {
     return {
       status: "logged",
       reference: "email provider not configured",
@@ -43,7 +53,7 @@ export async function sendVendorEmail(payload: VendorEmailPayload): Promise<Vend
     },
     body: JSON.stringify({
       from,
-      to: [payload.to],
+      to: recipients,
       subject: payload.subject,
       text: payload.text,
       html: payload.html,

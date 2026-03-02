@@ -1,6 +1,10 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { buildInviteUrl, sendVendorEmail } from "@/lib/email";
+import {
+  buildInviteUrl,
+  getApplicationNotificationRecipients,
+  sendVendorEmail,
+} from "@/lib/email";
 import type {
   ApprovedVendor,
   CreateDealInput,
@@ -362,7 +366,7 @@ function buildNotification(
 async function recordWorkflowEmail(input: {
   applicationId?: string;
   vendorId?: string;
-  recipientEmail: string;
+  recipientEmail: string | string[];
   subject: string;
   category: VendorNotification["category"];
   reference?: string;
@@ -379,7 +383,9 @@ async function recordWorkflowEmail(input: {
   return buildNotification({
     applicationId: input.applicationId,
     vendorId: input.vendorId,
-    recipientEmail: input.recipientEmail,
+    recipientEmail: Array.isArray(input.recipientEmail)
+      ? input.recipientEmail.join(", ")
+      : input.recipientEmail,
     subject: input.subject,
     category: input.category,
     reference: result.reference ?? input.reference,
@@ -416,6 +422,51 @@ export async function submitVendorApplication(input: CreateVendorApplicationInpu
       html: `<p>Hi ${application.primaryContactName},</p><p>We received your GoAccess vendor application for <strong>${application.companyName}</strong>. Our team will review it and follow up with next steps.</p><p>GoAccess</p>`,
     })
   );
+
+  const internalRecipients = getApplicationNotificationRecipients();
+
+  if (internalRecipients.length > 0) {
+    store.notifications.unshift(
+      await recordWorkflowEmail({
+        applicationId: application.id,
+        recipientEmail: internalRecipients,
+        subject: `New GoAccess vendor application: ${application.companyName}`,
+        category: "application_internal_alert",
+        reference: application.primaryContactEmail,
+        text: [
+          "A new GoAccess vendor application was submitted.",
+          "",
+          `Company: ${application.companyName}`,
+          `Website: ${application.website || "Not provided"}`,
+          `Region: ${application.region}`,
+          `Vendor type: ${application.vendorType}`,
+          `Primary contact: ${application.primaryContactName}`,
+          `Email: ${application.primaryContactEmail}`,
+          application.notes ? `Notes: ${application.notes}` : "",
+          "",
+          "Review it in the GoAccess admin portal under Applications.",
+        ]
+          .filter(Boolean)
+          .join("\n"),
+        html: [
+          "<p>A new GoAccess vendor application was submitted.</p>",
+          "<ul>",
+          `<li><strong>Company:</strong> ${application.companyName}</li>`,
+          `<li><strong>Website:</strong> ${application.website || "Not provided"}</li>`,
+          `<li><strong>Region:</strong> ${application.region}</li>`,
+          `<li><strong>Vendor type:</strong> ${application.vendorType}</li>`,
+          `<li><strong>Primary contact:</strong> ${application.primaryContactName}</li>`,
+          `<li><strong>Email:</strong> ${application.primaryContactEmail}</li>`,
+          application.notes ? `<li><strong>Notes:</strong> ${application.notes}</li>` : "",
+          "</ul>",
+          "<p>Review it in the GoAccess admin portal under Applications.</p>",
+        ]
+          .filter(Boolean)
+          .join(""),
+      })
+    );
+  }
+
   await writeStore(store);
   return application;
 }
