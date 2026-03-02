@@ -23,7 +23,7 @@ export function MarketingPage() {
       <header className="topbar">
         <Link className="brand" href="#hero">
           <span className="brand-mark">R</span>
-          <span className="brand-text">Relay PRM</span>
+          <span className="brand-text">GoAccess Partner Portal</span>
         </Link>
         <nav className="nav">
           {navItems.map((item) => (
@@ -40,19 +40,19 @@ export function MarketingPage() {
       <main>
         <section className="hero" id="hero">
           <div className="hero-copy">
-            <div className="eyebrow">PRM FOR B2B SAAS</div>
-            <h1>Run partner revenue like a real system, not a spreadsheet.</h1>
+            <div className="eyebrow">GOACCESS PARTNER PORTAL</div>
+            <h1>Give GoAccess partners one place to apply, log in, and register deals.</h1>
             <p className="lede">
-              Relay PRM gives SaaS companies a single operating layer for partner
-              recruitment, attribution, commissions, and payouts, with HubSpot
-              and Stripe at the core.
+              This portal is designed specifically for GoAccess partner operations:
+              approve partners, let them register deals, review submissions
+              internally, and map approved deals into HubSpot.
             </p>
             <div className="hero-actions">
               <Link className="button button-primary" href="#cta">
-                Launch Your Program
+                Request Partner Access
               </Link>
               <Link className="button button-secondary" href="#platform">
-                See the Platform
+                See How It Works
               </Link>
             </div>
             <div className="hero-metrics">
@@ -100,7 +100,7 @@ export function MarketingPage() {
         </section>
 
         <section className="logo-strip">
-          <span>Built for SaaS teams running partner-led growth across</span>
+          <span>Built for the GoAccess team and its partner ecosystem across</span>
           <div className="logo-list">
             {partnerModels.map((model) => (
               <span key={model}>{model}</span>
@@ -111,7 +111,7 @@ export function MarketingPage() {
         <section className="problem-solution">
           <div className="section-heading">
             <div className="eyebrow">WHY THIS EXISTS</div>
-            <h2>Most partner programs fail in operations, not strategy.</h2>
+            <h2>Partner deal flow breaks down when email and CRM are disconnected.</h2>
           </div>
           <div className="split-grid">
             <article className="glass-card">
@@ -136,7 +136,7 @@ export function MarketingPage() {
         <section className="platform" id="platform">
           <div className="section-heading">
             <div className="eyebrow">PLATFORM</div>
-            <h2>Everything required to run a real partner program end to end.</h2>
+            <h2>The smallest correct platform for GoAccess partner deal registration.</h2>
           </div>
           <div className="feature-grid">
             {platformFeatures.map((feature) => (
@@ -151,7 +151,7 @@ export function MarketingPage() {
         <section className="workspace-band" id="workflows">
           <div className="section-heading compact">
             <div className="eyebrow">WORKSPACES</div>
-            <h2>Two distinct experiences. One shared ledger.</h2>
+            <h2>One admin workspace, one partner portal, one HubSpot-backed workflow.</h2>
           </div>
           <div className="workspace-grid">
             {workspaces.map((workspace) => (
@@ -174,7 +174,7 @@ export function MarketingPage() {
         <section className="flow-section">
           <div className="section-heading">
             <div className="eyebrow">OPERATING MODEL</div>
-            <h2>The default workflow is designed to reduce disputes.</h2>
+            <h2>The workflow is intentionally simple: apply, approve, register, review, sync.</h2>
           </div>
           <div className="flow-grid">
             {operatingModel.map((item) => (
@@ -190,7 +190,7 @@ export function MarketingPage() {
         <section className="integrations" id="integrations">
           <div className="section-heading">
             <div className="eyebrow">INTEGRATIONS</div>
-            <h2>Opinionated where it matters: HubSpot for pipeline, Stripe for revenue.</h2>
+            <h2>HubSpot is the system of record for approved partner deals.</h2>
           </div>
           <div className="integration-grid">
             {integrations.map((integration) => (
@@ -210,7 +210,7 @@ export function MarketingPage() {
         <section className="architecture">
           <div className="section-heading">
             <div className="eyebrow">ARCHITECTURE</div>
-            <h2>Built like revenue infrastructure, not just a portal.</h2>
+            <h2>Built as a partner intake and review layer on top of HubSpot.</h2>
           </div>
           <div className="architecture-grid">
             {architectureModules.map((module) => (
@@ -222,10 +222,10 @@ export function MarketingPage() {
           </div>
         </section>
 
-        <section className="roadmap">
+        <section className="roadmap" id="roadmap">
           <div className="section-heading">
             <div className="eyebrow">ROADMAP</div>
-            <h2>Ship the operating core first. Expand complexity later.</h2>
+            <h2>Build the GoAccess portal core first. Add complexity only if needed.</h2>
           </div>
           <div className="roadmap-grid">
             {roadmap.map((phase) => (
@@ -243,8 +243,8 @@ export function MarketingPage() {
 
         <section className="pricing" id="pricing">
           <div className="section-heading">
-            <div className="eyebrow">PACKAGING</div>
-            <h2>Priced for real partner programs, not vanity dashboards.</h2>
+            <div className="eyebrow">BUILD PHASES</div>
+            <h2>What to build now versus what to defer.</h2>
           </div>
           <div className="pricing-grid">
             {pricingTiers.map((tier) => (
@@ -272,10 +272,11 @@ export function MarketingPage() {
           <div className="cta-card">
             <div>
               <div className="eyebrow">READY TO BUILD THE CATEGORY?</div>
-              <h2>Launch a PRM that finance, sales ops, and partners can all trust.</h2>
+              <h2>Launch the GoAccess partner portal with a real HubSpot-backed deal workflow.</h2>
               <p>
-                Relay is designed around one practical principle: partner payouts
-                should follow real revenue, and every decision should be auditable.
+                The next correct build step is not a broad PRM. It is a focused
+                partner application, login, deal registration, and review flow
+                designed specifically for GoAccess.
               </p>
             </div>
             <DemoRequestForm />

@@ -2,98 +2,98 @@ export const navItems = [
   { href: "#platform", label: "Platform" },
   { href: "#workflows", label: "Workflows" },
   { href: "#integrations", label: "Integrations" },
-  { href: "#pricing", label: "Pricing" },
+  { href: "#roadmap", label: "Roadmap" },
 ] as const;
 
 export const heroMetrics = [
-  { value: "5x faster", label: "partner ops execution" },
-  { value: "Invoice-paid", label: "commission trigger by default" },
-  { value: "HubSpot + Stripe", label: "built into the operating model" },
+  { value: "Partner signup", label: "application and approval flow" },
+  { value: "HubSpot-backed", label: "deal registration workflow" },
+  { value: "GoAccess only", label: "focused product, faster to ship" },
 ];
 
 export const heroStats = [
-  { label: "Partner-sourced revenue", value: "$428,000", detail: "+26% vs last quarter" },
-  { label: "Active programs", value: "4" },
-  { label: "Pending payouts", value: "$31,420" },
-  { label: "Attribution model", value: "Last touch" },
-  { label: "Commission trigger", value: "First invoice paid" },
+  { label: "Pending partner applications", value: "7", detail: "ready for review" },
+  { label: "Approved partners", value: "42" },
+  { label: "Submitted deals", value: "118" },
+  { label: "HubSpot sync mode", value: "Review then create" },
+  { label: "Source of truth", value: "HubSpot deal pipeline" },
 ] as const;
 
 export const workflowTimeline = [
-  { step: "1", text: "Partner application approved for Growth Labs", state: "complete" },
-  { step: "2", text: "Referral attributed in HubSpot and stamped on deal", state: "complete" },
-  { step: "3", text: "Stripe invoice.paid generated payable commission", state: "current" },
+  { step: "1", text: "Partner application approved by GoAccess admin", state: "complete" },
+  { step: "2", text: "Partner submitted a deal registration in the portal", state: "complete" },
+  { step: "3", text: "Approved deal created and tracked in HubSpot", state: "current" },
 ] as const;
 
-export const partnerModels = ["Affiliate", "Referral", "Agency", "Reseller", "Integration"] as const;
+export const partnerModels = ["MSP", "Reseller", "Agency", "Referral", "Strategic partner"] as const;
 
 export const problemPoints = [
-  "Partner applications buried in forms and inboxes",
-  "Manual attribution logic split across CRM and spreadsheets",
-  "Commission disputes caused by weak payout triggers",
-  "No partner-facing visibility into deal or earnings status",
-  "Finance reconciling Stripe revenue manually every month",
+  "Partner applications get buried in email",
+  "Deal registrations arrive with no consistent structure",
+  "Sales has no clean way to review partner-submitted opportunities",
+  "Partners cannot see where their deals stand",
+  "HubSpot and partner operations are disconnected",
 ];
 
 export const solutionPoints = [
-  "Hosted application, approval, and onboarding flow",
-  "Source-of-truth attribution with audit trails",
-  "Invoice-paid commission logic for clean finance ops",
-  "Vendor admin workspace plus partner portal",
-  "Payout-ready ledger with HubSpot and Stripe sync",
+  "A GoAccess-specific partner application and approval flow",
+  "A partner portal for account access and deal registration",
+  "An internal review queue before deals reach HubSpot",
+  "HubSpot-backed deal creation and status tracking",
+  "A partner-facing view of submitted and reviewed deals",
 ];
 
 export const platformFeatures = [
   {
-    title: "Programs",
-    body: "Create referral, affiliate, agency, reseller, and integration programs with terms, attribution settings, payout schedules, and eligibility controls.",
+    title: "Partner application",
+    body: "Give GoAccess partners a branded place to apply, get approved, and activate their portal access.",
   },
   {
-    title: "Partner onboarding",
-    body: "Launch branded application pages, approve partners, assign memberships, and track onboarding completion.",
+    title: "Partner accounts",
+    body: "Approved partners can create an account, log in, and manage their profile inside a dedicated portal.",
   },
   {
-    title: "Attribution",
-    body: "Track links, cookies, UTMs, codes, and CRM-linked evidence with first-touch or last-touch logic and override audit trails.",
+    title: "Deal registration",
+    body: "Partners submit structured deals with company, contact, value, notes, and product interest instead of emailing sales ad hoc.",
   },
   {
-    title: "Commissions",
-    body: "Calculate fixed bounties, percent-based payouts, and recurring revenue share from Stripe invoice events.",
+    title: "Admin review",
+    body: "GoAccess reviews partner-submitted deals, checks for duplicates, and decides which records should be created in HubSpot.",
   },
   {
-    title: "Payouts",
-    body: "Run monthly payout cycles, apply thresholds and clawbacks, export remittance, and roll Stripe Connect out selectively.",
+    title: "HubSpot mapping",
+    body: "Approved deals create or update HubSpot companies, contacts, and deals while storing partner metadata on the deal record.",
   },
   {
-    title: "Reporting",
-    body: "Separate pipeline reporting from paid revenue reporting so GTM and finance are looking at the right truth for the job.",
+    title: "Deal tracking",
+    body: "Partners can return to the portal to see whether their registered deals are under review, approved, in pipeline, or closed.",
   },
 ];
 
 export const workspaces = [
   {
     title: "Vendor Admin",
-    body: "Built for partner managers, sales ops, finance, and execs who need operational control and clean reconciliation.",
+    body: "Built for the GoAccess team managing partner applications, deal reviews, and HubSpot sync decisions.",
     items: [
-      "Dashboard with sourced pipeline and paid revenue",
-      "Programs, terms, and commission rule management",
-      "Partner approvals and status controls",
+      "Partner application approvals and status controls",
       "Deal registration review queue",
-      "Commission ledger and payout approvals",
-      "Integration health and audit logs",
+      "HubSpot sync review and duplicate checking",
+      "Partner list and account management",
+      "Internal notes and audit visibility",
+      "Settings for portal and HubSpot connection",
     ],
     className: "",
   },
   {
     title: "Partner Portal",
-    body: "Built for external partners who need clarity, speed, and trust.",
+    body: "Built for approved GoAccess partners who need a simple place to log in and register deals.",
     items: [
-      "Generate referral links and use referral codes",
-      "See referrals, deals, and attribution status",
-      "Track pending, approved, and paid earnings",
-      "View payout history and remittance details",
-      "Download assets and review terms",
-      "Maintain payout and profile settings",
+      "Create an account after approval",
+      "Log in and submit deal registrations",
+      "Track deal review and pipeline status",
+      "See all deals I submitted",
+      "Maintain profile and partner details",
+      "Contact GoAccess support",
     ],
     className: "partner-workspace",
   },
@@ -103,67 +103,67 @@ export const operatingModel = [
   {
     step: "01",
     title: "Partner applies",
-    body: "Vendor reviews fit, approves membership, and provisions portal access.",
+    body: "A prospective GoAccess partner submits an application and waits for approval.",
   },
   {
     step: "02",
-    title: "Partner drives traffic",
-    body: "Links, codes, UTMs, and cookie windows capture sourced attribution evidence.",
+    title: "GoAccess approves the partner",
+    body: "An admin reviews the application and enables account creation for approved partners.",
   },
   {
     step: "03",
-    title: "HubSpot tracks pipeline",
-    body: "Contacts, companies, and deals sync so sales-stage visibility stays in the CRM.",
+    title: "Partner registers a deal",
+    body: "The partner submits a structured deal with company, contact, value, and notes.",
   },
   {
     step: "04",
-    title: "Stripe confirms revenue",
-    body: "Invoice-paid becomes the default payable event for initial and recurring commissions.",
+    title: "Admin reviews and syncs",
+    body: "GoAccess checks for duplicates and, if approved, creates or links the deal in HubSpot.",
   },
   {
     step: "05",
-    title: "Finance runs payout",
-    body: "Thresholds, holds, clawbacks, and remittance are handled in one payout cycle.",
+    title: "Partner tracks status",
+    body: "The portal reflects the HubSpot-backed deal status so the partner knows what is happening.",
   },
 ];
 
 export const integrations = [
   {
     title: "HubSpot",
-    body: "Sync contacts, companies, deals, stages, and partner properties. Closed won updates reporting, partner metadata, and attribution visibility for sales and ops.",
+    body: "HubSpot is the system of record for approved partner-submitted deals. The portal should create or link companies, contacts, and deals only after review.",
     items: [
-      "OAuth-based connection",
-      "Webhook + polling sync strategy",
-      "Standard partner source property package",
+      "Create or update company, contact, and deal",
+      "Store partner metadata on the HubSpot deal",
+      "Use HubSpot stage as the external pipeline status",
     ],
   },
   {
-    title: "Stripe",
-    body: "Consume invoice, subscription, and refund events to compute payable commissions from actual collected revenue, not just pipeline movement.",
+    title: "Portal database",
+    body: "The app still needs its own database so GoAccess can preserve submissions, approvals, notes, sync attempts, and partner-visible history.",
     items: [
-      "`invoice.paid` drives payout eligibility",
-      "Refunds and cancellations trigger clawbacks",
-      "Stripe Connect available behind feature flag",
+      "Keep a local record before pushing to HubSpot",
+      "Store HubSpot IDs after sync",
+      "Show partner-facing deal history independent of CRM failures",
     ],
   },
 ];
 
 export const architectureModules = [
   {
-    title: "Tracking Service",
-    body: "High-volume click ingestion with duplicate suppression and fraud flags.",
+    title: "Partner auth",
+    body: "Approved GoAccess partners need real account creation, login, and protected access to the portal.",
   },
   {
-    title: "Attribution Service",
-    body: "Resolves links, codes, CRM evidence, and manual overrides into one winning record.",
+    title: "Deal intake service",
+    body: "Deal registrations should be stored first in the app, then reviewed and synced into HubSpot.",
   },
   {
-    title: "Commission Engine",
-    body: "Creates an auditable ledger from rules, invoices, deals, refunds, and adjustments.",
+    title: "HubSpot sync service",
+    body: "Approved deals should create or link HubSpot companies, contacts, and deals and record sync outcomes.",
   },
   {
-    title: "Payout Service",
-    body: "Groups eligible earnings into reviewable payout batches with line-item traceability.",
+    title: "Admin review workflow",
+    body: "GoAccess needs an internal queue for duplicates, approval decisions, and status updates.",
   },
 ];
 
@@ -171,70 +171,70 @@ export const roadmap = [
   {
     title: "MVP",
     items: [
-      "Partner signup + approval",
-      "Referral links + codes",
-      "HubSpot + Stripe baseline",
-      "Fixed and recurring commissions",
-      "Monthly payout reporting",
+      "Partner application and approval",
+      "Partner account creation and login",
+      "Deal registration form",
+      "Admin review queue",
+      "HubSpot create/update/link flow",
     ],
   },
   {
     title: "Phase 2",
     items: [
-      "Tiered commissions",
-      "Deeper deal registration rules",
-      "KYC / tax collection",
-      "Advanced analytics",
-      "PayPal and broader payout options",
+      "Duplicate detection improvements",
+      "Partner deal history and comments",
+      "Email notifications",
+      "Export and reporting",
+      "Improved admin notes and audit trail",
     ],
   },
   {
     title: "Phase 3",
     items: [
-      "Marketplace network effects",
-      "Enterprise SSO and controls",
-      "Global payments orchestration",
-      "Multi-touch attribution",
-      "Advanced fraud and scoring",
+      "Real role-based access control",
+      "Advanced HubSpot workflow automation",
+      "Partner document collection",
+      "Expanded dashboard analytics",
+      "Future commission support if GoAccess needs it",
     ],
   },
 ];
 
 export const pricingTiers: PricingTier[] = [
   {
-    title: "Starter",
-    price: "$499",
-    suffix: "/mo",
+    title: "Phase 1",
+    price: "Focus",
+    suffix: "",
     items: [
-      "1 program",
-      "50 approved partners",
-      "HubSpot + Stripe baseline",
-      "Payout reporting",
+      "GoAccess-only portal",
+      "Partner application and approval",
+      "Deal registration",
+      "HubSpot-backed workflow",
     ],
   },
   {
-    title: "Growth",
-    price: "$1,499",
-    suffix: "/mo",
+    title: "Phase 2",
+    price: "Scale",
+    suffix: "",
     badge: "Recommended",
     featured: true,
     items: [
-      "5 programs",
-      "250 approved partners",
-      "Recurring commissions",
-      "Deal registration",
-      "Webhook endpoints",
+      "Real auth and role control",
+      "Email notifications",
+      "Partner deal tracking",
+      "Admin review depth",
+      "Reporting and exports",
     ],
   },
   {
-    title: "Scale",
-    price: "$3,500+",
-    suffix: "/mo",
+    title: "Later",
+    price: "Optional",
+    suffix: "",
     items: [
-      "Custom partner volume",
-      "Stripe Connect rollout",
-      "Advanced approvals",
-      "Enhanced fraud controls",
+      "Commission workflows if needed",
+      "Expanded partner operations",
+      "More automation",
+      "Broader portal capabilities",
     ],
   },
 ];

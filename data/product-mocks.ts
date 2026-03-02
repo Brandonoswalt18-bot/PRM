@@ -45,10 +45,10 @@ export const partnerNavigation: WorkspaceNavItem[] = [
 ];
 
 export const vendorMetrics: MetricCard[] = [
-  { label: "Partner-sourced pipeline", value: "$2.4M", delta: "+18% this quarter" },
-  { label: "Attributed paid revenue", value: "$428K", delta: "+26% vs last quarter" },
-  { label: "Pending payout liability", value: "$31.4K", delta: "27 payouts in review" },
-  { label: "Active partners", value: "138", delta: "84 activated this month" },
+  { label: "Pending applications", value: "7", delta: "3 submitted this week" },
+  { label: "Approved partners", value: "42", delta: "5 awaiting account setup" },
+  { label: "Deal registrations", value: "118", delta: "14 under review" },
+  { label: "HubSpot sync health", value: "99.2%", delta: "Last sync 6 minutes ago" },
 ];
 
 export const vendorQueues: QueueGroup[] = [
@@ -56,45 +56,45 @@ export const vendorQueues: QueueGroup[] = [
     title: "Approval queue",
     items: [
       "7 new partner applications waiting for review",
-      "2 agency applications missing tax details",
-      "1 reseller request flagged for duplicate domain check",
+      "2 partner applications missing company domain",
+      "1 strategic partner request needs manual follow-up",
     ],
   },
   {
-    title: "Attribution exceptions",
+    title: "Deal review queue",
     items: [
-      "3 deals need sourced vs influenced review",
-      "2 manual override requests from sales ops",
-      "1 self-referral hold awaiting finance signoff",
+      "6 submitted deals waiting for duplicate review",
+      "3 registrations match existing HubSpot companies",
+      "2 partner deals need owner assignment",
     ],
   },
   {
     title: "Integration health",
     items: [
       "HubSpot sync healthy: last backfill 6 minutes ago",
-      "Stripe webhooks healthy: 0 failed deliveries",
-      "1 payout export pending accounting handoff",
+      "0 failed deal syncs in the last 24 hours",
+      "1 submission is waiting for admin approval before HubSpot creation",
     ],
   },
 ];
 
 export const vendorPrograms: ProgramSummary[] = [
   {
-    name: "Agency Referral",
-    partners: "54 active",
-    commission: "20% first-year rev share",
-    status: "Active",
+    name: "GoAccess Reseller",
+    partners: "18 approved",
+    commission: "Deferred",
+    status: "Live",
   },
   {
-    name: "Affiliate",
-    partners: "61 active",
-    commission: "$500 first invoice bounty",
-    status: "Active",
+    name: "GoAccess Agency",
+    partners: "14 approved",
+    commission: "Deferred",
+    status: "Live",
   },
   {
-    name: "Integration",
-    partners: "23 active",
-    commission: "10% recurring influence pool",
+    name: "Strategic Partner Pilot",
+    partners: "10 approved",
+    commission: "Deferred",
     status: "Pilot",
   },
 ];
@@ -102,24 +102,24 @@ export const vendorPrograms: ProgramSummary[] = [
 export const vendorCommissions: CommissionActivity[] = [
   {
     partner: "Growth Labs",
-    program: "Agency Referral",
-    event: "Invoice paid",
-    amount: "$4,000",
-    status: "Approved",
+    program: "GoAccess Agency",
+    event: "Deal approved and synced",
+    amount: "HS Deal #10452",
+    status: "Created",
   },
   {
     partner: "RevPilot",
-    program: "Affiliate",
-    event: "First invoice",
-    amount: "$500",
+    program: "GoAccess Reseller",
+    event: "Duplicate review",
+    amount: "Needs company match",
     status: "Held",
   },
   {
-    partner: "Launch Loop",
-    program: "Agency Referral",
-    event: "Refund clawback",
-    amount: "-$1,200",
-    status: "Applied",
+    partner: "Northstar Advisors",
+    program: "Strategic Partner Pilot",
+    event: "Partner application approved",
+    amount: "Portal access ready",
+    status: "Ready",
   },
 ];
 
@@ -128,22 +128,22 @@ export const vendorPartners: PartnerRecord[] = [
     name: "Growth Labs",
     type: "Agency",
     status: "Active",
-    program: "Agency Referral",
-    earnings: "$18,400",
+    program: "GoAccess Agency",
+    earnings: "12 deals submitted",
   },
   {
     name: "RevPilot",
-    type: "Affiliate",
+    type: "Reseller",
     status: "Active",
-    program: "Affiliate",
-    earnings: "$7,100",
+    program: "GoAccess Reseller",
+    earnings: "8 deals submitted",
   },
   {
     name: "Northstar Advisors",
-    type: "Reseller",
+    type: "Strategic",
     status: "Pending review",
-    program: "Reseller Pilot",
-    earnings: "$0",
+    program: "Strategic Partner Pilot",
+    earnings: "No account yet",
   },
 ];
 
@@ -153,9 +153,10 @@ export const vendorProgramSections: InfoListSection[] = [
     description: "What the product needs to support per program.",
     items: [
       "Terms versioning and membership assignment",
-      "Attribution model and cookie window",
-      "Commission rules and payout thresholds",
-      "Public or invite-only application flow",
+      "GoAccess-only partner application flow",
+      "Admin approval requirements",
+      "Deal registration defaults",
+      "HubSpot partner metadata mapping",
     ],
   },
   {
@@ -163,9 +164,9 @@ export const vendorProgramSections: InfoListSection[] = [
     description: "Operational actions before a program goes live.",
     items: [
       "Publish white-labeled application page",
-      "Connect assets and onboarding copy",
+      "Connect onboarding copy and partner instructions",
       "Configure HubSpot property mapping",
-      "Define first invoice paid commission trigger",
+      "Define partner deal review rules",
     ],
   },
 ];
@@ -195,100 +196,100 @@ export const vendorPartnerSections: InfoListSection[] = [
 
 export const vendorCommissionSections: InfoListSection[] = [
   {
-    title: "Commission policy",
-    description: "Defaults reflected in the blueprint.",
+    title: "HubSpot registration workflow",
+    description: "This route should be repurposed into a deal sync and review ledger.",
     items: [
-      "Initial payout trigger is first invoice paid",
-      "Recurring commissions follow invoice.paid events",
-      "Refunds and cancellations create clawback candidates",
-      "Manual overrides create audit-log-backed recalculation",
+      "Store deal registration locally first",
+      "Review duplicates before HubSpot creation",
+      "Create or update company, contact, and deal",
+      "Record sync outcome and HubSpot IDs",
     ],
   },
   {
-    title: "Finance workflow",
+    title: "Future use",
     description: "What this screen should eventually drive.",
     items: [
-      "Approve, hold, and adjust commission entries",
-      "Filter by vendor, partner, program, and status",
-      "Prepare payout batches from payable balances",
-      "Export reconciliation-friendly ledger views",
+      "This area can later become commission logic if GoAccess needs it",
+      "For now it should prioritize deal review and sync history",
+      "Keep audit visibility into admin actions",
+      "Expose status changes to partners cleanly",
     ],
   },
 ];
 
 export const partnerMetrics: MetricCard[] = [
-  { label: "Pending earnings", value: "$4,820", delta: "3 commissions in review" },
-  { label: "Approved for payout", value: "$12,600", delta: "Next monthly run on Apr 1" },
-  { label: "Attributed referrals", value: "46", delta: "12 converted to pipeline" },
-  { label: "Active links", value: "18", delta: "Top campaign: q2_launch" },
+  { label: "Submitted deals", value: "12", delta: "2 submitted this week" },
+  { label: "Under review", value: "3", delta: "awaiting GoAccess review" },
+  { label: "Approved in pipeline", value: "5", delta: "synced to HubSpot" },
+  { label: "Profile status", value: "Active", delta: "partner account approved" },
 ];
 
 export const partnerHighlights: PartnerHighlight[] = [
   {
-    title: "Referral performance",
+    title: "Deal activity",
     items: [
-      "46 captured referrals",
-      "12 converted to opportunities",
-      "8 deals now in closed won",
+      "12 deals submitted",
+      "5 approved and synced to HubSpot",
+      "2 closed won in the CRM",
     ],
   },
   {
-    title: "Earnings status",
+    title: "Review status",
     items: [
-      "2 commissions pending hold expiry",
-      "5 commissions approved for payout",
-      "1 clawback posted after refund",
+      "3 deals are under review",
+      "1 deal needs more information",
+      "0 rejected this month",
     ],
   },
   {
     title: "Recommended next actions",
     items: [
-      "Create a new webinar campaign link",
-      "Upload updated payout details",
-      "Download the latest co-selling deck",
+      "Register your next opportunity",
+      "Update your partner profile",
+      "Review GoAccess deal submission rules",
     ],
   },
 ];
 
 export const partnerLinks: LinkPerformance[] = [
   {
-    name: "Q2 webinar",
-    destination: "/demo?utm_campaign=q2_webinar",
-    clicks: "184",
-    conversions: "11",
+    name: "ClientCo opportunity",
+    destination: "clientco.com",
+    clicks: "Submitted Mar 28",
+    conversions: "Approved",
   },
   {
-    name: "Pricing page CTA",
-    destination: "/pricing?utm_campaign=pricing_push",
-    clicks: "96",
-    conversions: "6",
+    name: "Northstar renewal",
+    destination: "northstar.io",
+    clicks: "Submitted Mar 22",
+    conversions: "Under review",
   },
   {
-    name: "Referral code",
-    destination: "GROWTHLABS",
-    clicks: "Offline / direct",
-    conversions: "4",
+    name: "Brightline expansion",
+    destination: "brightline.ai",
+    clicks: "Submitted Mar 18",
+    conversions: "Closed won",
   },
 ];
 
 export const partnerLedger: LedgerEntry[] = [
   {
     date: "Mar 28",
-    description: "ClientCo monthly invoice",
-    amount: "$1,200",
+    description: "ClientCo registered and approved",
+    amount: "HubSpot #10452",
     status: "Approved",
   },
   {
     date: "Mar 19",
-    description: "Northstar first invoice bounty",
-    amount: "$500",
-    status: "Paid",
+    description: "Northstar registration under review",
+    amount: "Waiting for duplicate check",
+    status: "Review",
   },
   {
     date: "Mar 07",
-    description: "Launch Loop clawback",
-    amount: "-$300",
-    status: "Applied",
+    description: "Brightline closed won",
+    amount: "HubSpot closed won",
+    status: "Won",
   },
 ];
 
