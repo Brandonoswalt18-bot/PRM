@@ -3,6 +3,8 @@ import { WorkspaceLayout } from "@/components/product/workspace-layout";
 import { getVendorNavigation } from "@/lib/mock-data";
 import { getWorkspaceSession } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export default async function VendorLayout({
   children,
 }: {

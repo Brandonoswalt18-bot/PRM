@@ -263,27 +263,24 @@ function getStorePath() {
   return path.join(process.cwd(), "data", STORE_FILENAME);
 }
 
-async function ensureStoreFile() {
-  const filePath = getStorePath();
-
-  try {
-    await readFile(filePath, "utf8");
-    return filePath;
-  } catch {
-    await mkdir(path.dirname(filePath), { recursive: true });
-    await writeFile(filePath, JSON.stringify(seedStore, null, 2), "utf8");
-    return filePath;
-  }
+function cloneSeedStore(): PortalStore {
+  return JSON.parse(JSON.stringify(seedStore)) as PortalStore;
 }
 
 async function readStore(): Promise<PortalStore> {
-  const filePath = await ensureStoreFile();
-  const raw = await readFile(filePath, "utf8");
-  return JSON.parse(raw) as PortalStore;
+  const filePath = getStorePath();
+
+  try {
+    const raw = await readFile(filePath, "utf8");
+    return JSON.parse(raw) as PortalStore;
+  } catch {
+    return cloneSeedStore();
+  }
 }
 
 async function writeStore(store: PortalStore) {
-  const filePath = await ensureStoreFile();
+  const filePath = getStorePath();
+  await mkdir(path.dirname(filePath), { recursive: true });
   await writeFile(filePath, JSON.stringify(store, null, 2), "utf8");
 }
 
