@@ -100,3 +100,4 @@ Current prototype auth flow:
 - a cookie-backed session is set
 - middleware redirects unauthorized role access back to login
 - when credentials are issued, the vendor invite route `/invite/[token]` can activate portal access and log the vendor into the approved portal
+Deployment trigger
