@@ -4,37 +4,42 @@ import { FormEvent, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 
 type FormState = {
-  name: string;
-  email: string;
-  company: string;
+  companyName: string;
+  website: string;
+  region: string;
+  vendorType: string;
+  primaryContactName: string;
+  primaryContactEmail: string;
   notes: string;
 };
 
 const initialState: FormState = {
-  name: "",
-  email: "",
-  company: "",
+  companyName: "",
+  website: "",
+  region: "",
+  vendorType: "",
+  primaryContactName: "",
+  primaryContactEmail: "",
   notes: "",
 };
 
 export function DemoRequestForm() {
   const [form, setForm] = useState<FormState>(initialState);
-  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">(
-    "idle"
-  );
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus("submitting");
     setMessage("");
-    trackEvent("demo_request_submitted", {
-      company: form.company,
-      has_notes: Boolean(form.notes.trim()),
+
+    trackEvent("vendor_application_submitted", {
+      company: form.companyName,
+      vendor_type: form.vendorType,
     });
 
     try {
-      const response = await fetch("/api/demo-request", {
+      const response = await fetch("/api/vendor-applications", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -46,72 +51,107 @@ export function DemoRequestForm() {
 
       if (!response.ok) {
         setStatus("error");
-        setMessage(payload.message ?? "Unable to submit your request.");
-        trackEvent("demo_request_failed", {
-          company: form.company,
+        setMessage(payload.message ?? "Unable to submit your application.");
+        trackEvent("vendor_application_failed", {
+          company: form.companyName,
           reason: payload.message ?? "unknown",
         });
         return;
       }
 
       setStatus("success");
-      setMessage(payload.message ?? "Request submitted.");
-      trackEvent("demo_request_succeeded", {
-        company: form.company,
-      });
+      setMessage(payload.message ?? "Application submitted.");
       setForm(initialState);
+      trackEvent("vendor_application_succeeded", {
+        company: form.companyName,
+      });
     } catch {
       setStatus("error");
       setMessage("Network error. Try again when the site is deployed.");
-      trackEvent("demo_request_failed", {
-        company: form.company,
+      trackEvent("vendor_application_failed", {
+        company: form.companyName,
         reason: "network_error",
       });
     }
+  }
+
+  function update<K extends keyof FormState>(key: K, value: FormState[K]) {
+    setForm((current) => ({ ...current, [key]: value }));
   }
 
   return (
     <form className="cta-form" onSubmit={handleSubmit}>
       <input
         type="text"
-        placeholder="Your name"
-        aria-label="Your name"
-        value={form.name}
-        onFocus={() => trackEvent("demo_request_field_focused", { field: "name" })}
-        onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+        placeholder="Company name"
+        aria-label="Company name"
+        value={form.companyName}
+        onFocus={() => trackEvent("vendor_application_field_focused", { field: "companyName" })}
+        onChange={(event) => update("companyName", event.target.value)}
+        required
+      />
+      <input
+        type="url"
+        placeholder="Website"
+        aria-label="Website"
+        value={form.website}
+        onFocus={() => trackEvent("vendor_application_field_focused", { field: "website" })}
+        onChange={(event) => update("website", event.target.value)}
+        required
+      />
+      <div className="inline-form-grid">
+        <input
+          type="text"
+          placeholder="Region"
+          aria-label="Region"
+          value={form.region}
+          onFocus={() => trackEvent("vendor_application_field_focused", { field: "region" })}
+          onChange={(event) => update("region", event.target.value)}
+          required
+        />
+        <input
+          type="text"
+          placeholder="Vendor type"
+          aria-label="Vendor type"
+          value={form.vendorType}
+          onFocus={() => trackEvent("vendor_application_field_focused", { field: "vendorType" })}
+          onChange={(event) => update("vendorType", event.target.value)}
+          required
+        />
+      </div>
+      <input
+        type="text"
+        placeholder="Primary contact"
+        aria-label="Primary contact"
+        value={form.primaryContactName}
+        onFocus={() =>
+          trackEvent("vendor_application_field_focused", { field: "primaryContactName" })
+        }
+        onChange={(event) => update("primaryContactName", event.target.value)}
         required
       />
       <input
         type="email"
         placeholder="Work email"
         aria-label="Work email"
-        value={form.email}
-        onFocus={() => trackEvent("demo_request_field_focused", { field: "email" })}
-        onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-        required
-      />
-      <input
-        type="text"
-        placeholder="Company"
-        aria-label="Company"
-        value={form.company}
-        onFocus={() => trackEvent("demo_request_field_focused", { field: "company" })}
-        onChange={(event) =>
-          setForm((current) => ({ ...current, company: event.target.value }))
+        value={form.primaryContactEmail}
+        onFocus={() =>
+          trackEvent("vendor_application_field_focused", { field: "primaryContactEmail" })
         }
+        onChange={(event) => update("primaryContactEmail", event.target.value)}
         required
       />
       <textarea
         className="cta-textarea"
-        placeholder="Tell us about your company, territory, and vendor application needs."
+        placeholder="Tell GoAccess about your company, territory, and the types of deals you want to bring in."
         aria-label="Vendor application details"
         value={form.notes}
-        onFocus={() => trackEvent("demo_request_field_focused", { field: "notes" })}
-        onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
+        onFocus={() => trackEvent("vendor_application_field_focused", { field: "notes" })}
+        onChange={(event) => update("notes", event.target.value)}
         rows={4}
       />
       <button className="button button-primary" type="submit" disabled={status === "submitting"}>
-        {status === "submitting" ? "Submitting..." : "Request vendor access"}
+        {status === "submitting" ? "Submitting..." : "Submit vendor application"}
       </button>
       <p
         className={`form-message ${
@@ -120,7 +160,7 @@ export function DemoRequestForm() {
         aria-live="polite"
       >
         {message ||
-          "Requests are validated server-side and can be routed into HubSpot for GoAccess review."}
+          "Applications are stored in the portal and can also be routed into HubSpot for GoAccess review."}
       </p>
     </form>
   );

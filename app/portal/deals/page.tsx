@@ -1,6 +1,14 @@
+import {
+  LinkRow,
+  MetricGrid,
+  TableSection,
+} from "@/components/product/product-page-sections";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
+import { getLinksPageData } from "@/lib/mock-data";
 
-export default function PartnerDealsPage() {
+export default async function PartnerDealsPage() {
+  const data = await getLinksPageData();
+
   return (
     <>
       <WorkspacePageHeader
@@ -10,15 +18,26 @@ export default function PartnerDealsPage() {
         primaryLabel="Register new deal"
       />
       <div className="app-content">
-        <article className="workspace-card">
-          <h3>Planned next</h3>
-          <ul>
-            <li>Vendor-visible deal timeline from submitted to closed won</li>
-            <li>Approval notes and duplicate-review outcomes</li>
-            <li>HubSpot reference and pipeline status after sync</li>
-            <li>Support path for deal corrections or missing updates</li>
-          </ul>
-        </article>
+        <MetricGrid metrics={data.metrics} />
+        <section className="dashboard-grid">
+          <TableSection
+            title="Deal history"
+            description="Your full GoAccess deal list, including records still under review and deals already synced to HubSpot."
+            actionLabel="Register another deal"
+            headers={["Account", "Domain", "Submitted", "Status"]}
+            rows={data.links}
+            renderRow={LinkRow}
+          />
+          <article className="workspace-card">
+            <h3>How to use this view</h3>
+            <ul>
+              <li>Use this page to see every deal you registered with GoAccess.</li>
+              <li>Status changes reflect the latest review or CRM sync step.</li>
+              <li>Closed won accounts will later flow into monthly RMR totals.</li>
+              <li>Use Support if a deal looks incorrect or stalled.</li>
+            </ul>
+          </article>
+        </section>
       </div>
     </>
   );

@@ -22,18 +22,19 @@ export async function getWorkspaceSession(): Promise<WorkspaceSession | null> {
   if (role === "vendor") {
     return {
       fullName: "Maya Chen",
-      email: "maya@relayprm.com",
-      role: "Partner Manager",
-      organization: "Relay PRM",
+      email: "maya@goaccess.com",
+      role: "GoAccess Admin",
+      organization: "GoAccess",
     };
   }
 
   if (role === "partner") {
     return {
       fullName: "Jordan Lee",
-      email: "jordan@growthlabs.co",
-      role: "Agency Partner",
-      organization: "Growth Labs",
+      email: "jordan@bluehavenintegrators.com",
+      role: "Approved vendor",
+      organization: "Blue Haven Integrators",
+      vendorId: "vendor-blue-haven",
     };
   }
 

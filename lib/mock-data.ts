@@ -1,25 +1,19 @@
 import {
-  partnerAssetsPageData,
-  partnerHighlights,
-  partnerEarningsPageData,
-  partnerLedger,
-  partnerLinksPageData,
-  partnerLinks,
-  partnerMetrics,
-  partnerNavigation,
-  partnerProfilePageData,
-  partnerPayoutsPageData,
-  vendorAssetsPageData,
-  vendorCommissions,
-  vendorCommissionsPageData,
-  vendorMetrics,
-  vendorNavigation,
-  vendorPartnersPageData,
-  vendorPayoutsPageData,
-  vendorPrograms,
-  vendorProgramsPageData,
-  vendorQueues,
-} from "@/data/product-mocks";
+  getPartnerAssetsFromStore,
+  getPartnerDashboardFromStore,
+  getPartnerDealsFromStore,
+  getPartnerNavigationData,
+  getPartnerProfileFromStore,
+  getPartnerRmrFromStore,
+  getPartnerStatementsFromStore,
+  getProgramsFromStore,
+  getVendorAssetsFromStore,
+  getVendorDashboardFromStore,
+  getVendorNavigationData,
+  getVendorRmrPeriodsFromStore,
+  getPartnersFromStore,
+  getHubSpotSyncFromStore,
+} from "@/lib/goaccess-data";
 import type {
   AssetsPageData,
   CommissionsPageData,
@@ -40,80 +34,70 @@ function delay(ms: number) {
 
 export async function getVendorNavigation(): Promise<WorkspaceNavItem[]> {
   await delay(5);
-  return vendorNavigation;
+  return getVendorNavigationData();
 }
 
 export async function getPartnerNavigation(): Promise<WorkspaceNavItem[]> {
   await delay(5);
-  return partnerNavigation;
+  return getPartnerNavigationData();
 }
 
 export async function getVendorDashboardData(): Promise<VendorDashboardData> {
-  await delay(20);
-  return {
-    metrics: vendorMetrics,
-    queues: vendorQueues,
-    programs: vendorPrograms,
-    commissions: vendorCommissions,
-  };
+  await delay(5);
+  return getVendorDashboardFromStore();
 }
 
 export async function getPartnerDashboardData(): Promise<PartnerDashboardData> {
-  await delay(20);
-  return {
-    metrics: partnerMetrics,
-    highlights: partnerHighlights,
-    links: partnerLinks,
-    ledger: partnerLedger,
-  };
+  await delay(5);
+  return getPartnerDashboardFromStore();
 }
 
 export async function getProgramsPageData(): Promise<ProgramPageData> {
-  await delay(15);
-  return vendorProgramsPageData;
+  await delay(5);
+  return getProgramsFromStore();
 }
 
 export async function getPartnersPageData(): Promise<PartnersPageData> {
-  await delay(15);
-  return vendorPartnersPageData;
+  await delay(5);
+  return getPartnersFromStore();
 }
 
 export async function getCommissionsPageData(): Promise<CommissionsPageData> {
-  await delay(15);
-  return vendorCommissionsPageData;
+  await delay(5);
+  return getHubSpotSyncFromStore();
 }
 
 export async function getLinksPageData(): Promise<LinksPageData> {
-  await delay(15);
-  return partnerLinksPageData;
+  await delay(5);
+  return getPartnerDealsFromStore();
 }
 
 export async function getEarningsPageData(): Promise<EarningsPageData> {
-  await delay(15);
-  return partnerEarningsPageData;
+  await delay(5);
+  return getPartnerRmrFromStore();
 }
 
 export async function getVendorPayoutsPageData(): Promise<PayoutsPageData> {
-  await delay(15);
-  return vendorPayoutsPageData;
+  await delay(5);
+  return getVendorRmrPeriodsFromStore();
 }
 
 export async function getVendorAssetsPageData(): Promise<AssetsPageData> {
-  await delay(15);
-  return vendorAssetsPageData;
+  await delay(5);
+  return getVendorAssetsFromStore();
 }
 
 export async function getPartnerPayoutsPageData(): Promise<PayoutsPageData> {
-  await delay(15);
-  return partnerPayoutsPageData;
+  await delay(5);
+  return getPartnerStatementsFromStore();
 }
 
 export async function getPartnerAssetsPageData(): Promise<AssetsPageData> {
-  await delay(15);
-  return partnerAssetsPageData;
+  await delay(5);
+  return getPartnerAssetsFromStore();
 }
 
 export async function getPartnerProfilePageData(): Promise<ProfilePageData> {
-  await delay(15);
-  return partnerProfilePageData;
+  await delay(5);
+  return getPartnerProfileFromStore();
 }

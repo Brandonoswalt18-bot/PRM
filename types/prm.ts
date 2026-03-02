@@ -8,6 +8,7 @@ export type WorkspaceSession = {
   email: string;
   role: string;
   organization: string;
+  vendorId?: string;
 };
 
 export type MetricCard = {

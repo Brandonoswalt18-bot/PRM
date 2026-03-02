@@ -1,14 +1,17 @@
 import {
   MetricGrid,
-  ProgramRow,
   SideSections,
-  TableSection,
 } from "@/components/product/product-page-sections";
+import { AdminApplicationManager } from "@/components/product/admin-application-manager";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
+import { listVendorApplications } from "@/lib/goaccess-store";
 import { getProgramsPageData } from "@/lib/mock-data";
 
 export default async function ProgramsPage() {
-  const data = await getProgramsPageData();
+  const [data, applications] = await Promise.all([
+    getProgramsPageData(),
+    listVendorApplications(),
+  ]);
 
   return (
     <>
@@ -21,14 +24,7 @@ export default async function ProgramsPage() {
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
         <section className="dashboard-grid">
-          <TableSection
-            title="Application pipeline"
-            description="A focused onboarding queue for approved vendor operations."
-            actionLabel="Send NDA"
-            headers={["Vendor", "Stage", "Onboarding", "Status"]}
-            rows={data.programs}
-            renderRow={ProgramRow}
-          />
+          <AdminApplicationManager applications={applications} />
           <SideSections sections={data.sections} />
         </section>
       </div>
