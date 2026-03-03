@@ -194,8 +194,8 @@ export type DealStatusUpdateOptions = {
 export type UpdateVendorProfileInput = {
   companyName: string;
   website: string;
-  region: string;
-  vendorType: string;
+  city: string;
+  state: string;
   primaryContactName: string;
   primaryContactEmail: string;
 };

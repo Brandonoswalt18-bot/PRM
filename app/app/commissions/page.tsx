@@ -16,7 +16,7 @@ export default async function CommissionsPage() {
         workspace="VENDOR ADMIN"
         title="HubSpot sync"
         subtitle="Review approved vendor-submitted deals before they create or update companies, contacts, and deals in HubSpot."
-        primaryLabel="Review sync queue"
+        primaryLabel="Open deal review"
         primaryHref="/app/deal-registrations"
       />
       <div className="app-content">
@@ -25,7 +25,7 @@ export default async function CommissionsPage() {
           <TableSection
             title="Sync activity"
             description="Every CRM write should explain what was reviewed, created, linked, or held."
-            actionLabel="Export sync log"
+            actionLabel="Open deal queue"
             actionHref="/app/deal-registrations"
             headers={["Vendor", "Queue", "Event", "Reference", "Status"]}
             rows={data.commissions}

@@ -1,7 +1,5 @@
 import {
-  LinkRow,
   MetricGrid,
-  TableSection,
   TimelineSection,
 } from "@/components/product/product-page-sections";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
@@ -59,20 +57,34 @@ export default async function PartnerDealsPage() {
       />
       <div className="app-content">
         <MetricGrid metrics={metrics} />
-        <TableSection
-          title="Deal history"
-          description="Every deal you submitted through the GoAccess vendor portal."
-          actionLabel="Register another deal"
-          actionHref="/portal/links"
-          headers={["Account", "Domain", "Submitted", "Status"]}
-          rows={deals.map((deal) => ({
-            name: deal.companyName,
-            destination: deal.domain,
-            clicks: `Submitted ${new Date(deal.createdAt).toLocaleDateString()}`,
-            conversions: titleCaseStatus(deal.status),
-          }))}
-          renderRow={LinkRow}
-        />
+        <article className="workspace-card wide-card">
+          <div className="card-header-row">
+            <div>
+              <h3>Deal history</h3>
+              <p>Every deal you submitted through the GoAccess vendor portal.</p>
+            </div>
+          </div>
+          <div className="data-table">
+            <div className="table-head table-cols-5">
+              <span>Account</span>
+              <span>Domain</span>
+              <span>Submitted</span>
+              <span>Status</span>
+              <span>Detail</span>
+            </div>
+            {deals.map((deal) => (
+              <div className="table-row table-cols-5" key={deal.id}>
+                <span>{deal.companyName}</span>
+                <span>{deal.domain}</span>
+                <span>{new Date(deal.createdAt).toLocaleDateString()}</span>
+                <span>{titleCaseStatus(deal.status)}</span>
+                <span>
+                  <a href={`/portal/deals/${deal.id}`}>Open</a>
+                </span>
+              </div>
+            ))}
+          </div>
+        </article>
         <section className="dashboard-grid">
           {deals.slice(0, 3).map((deal) => (
             <TimelineSection

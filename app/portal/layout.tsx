@@ -24,8 +24,8 @@ export default async function PartnerLayout({
         session ?? {
           fullName: "Unknown user",
           email: "unknown",
-          role: "Approved vendor",
-          organization: "Approved vendor",
+          role: "Vendor",
+          organization: "Vendor account",
         }
       }
     >

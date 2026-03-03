@@ -19,7 +19,7 @@ export default async function PartnerProfilePage() {
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="Profile"
-        subtitle="Your vendor profile should show legal readiness, credential status, operating details, and the monthly recurring revenue you will collect."
+        subtitle="Keep your approved vendor record current so onboarding, support, and deal review all have the right business details."
         primaryLabel="Register a deal"
         primaryHref="/portal/links"
       />

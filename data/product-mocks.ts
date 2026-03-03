@@ -23,22 +23,22 @@ import type {
 } from "@/types/prm";
 
 export const vendorNavigation: WorkspaceNavItem[] = [
-  { label: "Dashboard", href: "/app" },
+  { label: "Overview", href: "/app" },
   { label: "Applications", href: "/app/programs" },
-  { label: "Approved Vendors", href: "/app/partners" },
+  { label: "Vendor Roster", href: "/app/partners" },
   { label: "Deal Review", href: "/app/deal-registrations" },
   { label: "HubSpot Sync", href: "/app/commissions" },
   { label: "RMR Ledger", href: "/app/payouts" },
   { label: "Documents", href: "/app/assets" },
-  { label: "Settings", href: "/app/settings" },
+  { label: "Support Ops", href: "/app/settings" },
 ];
 
 export const partnerNavigation: WorkspaceNavItem[] = [
-  { label: "Dashboard", href: "/portal" },
+  { label: "Home", href: "/portal" },
   { label: "Register Deal", href: "/portal/links" },
   { label: "My Deals", href: "/portal/deals" },
   { label: "Monthly RMR", href: "/portal/earnings" },
-  { label: "Statements", href: "/portal/payouts" },
+  { label: "RMR Statements", href: "/portal/payouts" },
   { label: "Documents", href: "/portal/assets" },
   { label: "Profile", href: "/portal/profile" },
   { label: "Support", href: "/portal/support" },

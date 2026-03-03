@@ -12,8 +12,8 @@ type VendorProfileFormProps = {
 type FormState = {
   companyName: string;
   website: string;
-  region: string;
-  vendorType: string;
+  city: string;
+  state: string;
   primaryContactName: string;
   primaryContactEmail: string;
 };
@@ -22,8 +22,8 @@ function getInitialState(vendor: ApprovedVendor): FormState {
   return {
     companyName: vendor.companyName,
     website: vendor.website,
-    region: vendor.region,
-    vendorType: vendor.vendorType,
+    city: vendor.city ?? "",
+    state: vendor.state ?? "",
     primaryContactName: vendor.primaryContactName,
     primaryContactEmail: vendor.primaryContactEmail,
   };
@@ -77,7 +77,7 @@ export function VendorProfileForm({ vendor }: VendorProfileFormProps) {
       <div className="card-header-row">
         <div>
           <h3>Update vendor profile</h3>
-          <p>Keep your company and primary contact details current so GoAccess has the right onboarding and deal registration data.</p>
+          <p>Keep your business and contact details current so GoAccess has the right onboarding and deal registration data.</p>
         </div>
       </div>
       <form className="cta-form" onSubmit={handleSubmit}>
@@ -99,16 +99,16 @@ export function VendorProfileForm({ vendor }: VendorProfileFormProps) {
         <div className="inline-form-grid">
           <input
             type="text"
-            placeholder="Region"
-            value={form.region}
-            onChange={(event) => update("region", event.target.value)}
+            placeholder="City"
+            value={form.city}
+            onChange={(event) => update("city", event.target.value)}
             required
           />
           <input
             type="text"
-            placeholder="Vendor type"
-            value={form.vendorType}
-            onChange={(event) => update("vendorType", event.target.value)}
+            placeholder="State"
+            value={form.state}
+            onChange={(event) => update("state", event.target.value)}
             required
           />
         </div>

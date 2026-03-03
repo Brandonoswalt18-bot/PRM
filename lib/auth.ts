@@ -37,7 +37,7 @@ export async function getWorkspaceSession(): Promise<WorkspaceSession | null> {
     return {
       fullName: vendor?.primaryContactName ?? "Jordan Lee",
       email: vendor?.primaryContactEmail ?? "jordan@bluehavenintegrators.com",
-      role: "Approved vendor",
+      role: "Vendor",
       organization: vendor?.companyName ?? "Blue Haven Integrators",
       vendorId: vendor?.id ?? "vendor-blue-haven",
     };

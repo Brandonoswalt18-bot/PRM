@@ -24,7 +24,7 @@ export function WorkspacePageHeader({
       </div>
       <div className="app-topbar-actions">
         <Link className="button button-secondary" href="/">
-          Marketing site
+          Public page
         </Link>
         <Link className="button button-primary" href={primaryHref ?? "#"}>
           {primaryLabel}

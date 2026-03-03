@@ -2,6 +2,7 @@ import type {
   ApprovedVendor,
   DealRegistration,
   DealSyncEvent,
+  SupportRequest,
   TimelineEntry,
   VendorApplication,
   VendorNotification,
@@ -156,6 +157,37 @@ export function buildDealTimeline(
           : "This opportunity is closed and no longer active in the pipeline.",
       timestamp: deal.updatedAt,
       tone: deal.status === "closed_won" ? "success" : "danger",
+    });
+  }
+
+  return entries.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+}
+
+export function buildSupportTimeline(request: SupportRequest): TimelineEntry[] {
+  const entries: TimelineEntry[] = [
+    {
+      title: "Support request submitted",
+      detail: request.message,
+      timestamp: request.createdAt,
+      tone: "neutral",
+    },
+  ];
+
+  if (request.status === "in_progress" || request.status === "resolved") {
+    entries.push({
+      title: "GoAccess is reviewing this request",
+      detail: "The request was acknowledged and moved into active handling.",
+      timestamp: request.updatedAt,
+      tone: "warning",
+    });
+  }
+
+  if (request.status === "resolved") {
+    entries.push({
+      title: "Support request resolved",
+      detail: "The request was closed by the GoAccess team.",
+      timestamp: request.updatedAt,
+      tone: "success",
     });
   }
 

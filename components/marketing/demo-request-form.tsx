@@ -147,7 +147,7 @@ export function DemoRequestForm() {
         } ${status === "error" ? "form-message-error" : ""}`.trim()}
         aria-live="polite"
       >
-        {message || "Applications are reviewed by the GoAccess team before access is issued."}
+        {message || "GoAccess reviews each application before access is issued."}
       </p>
     </form>
   );

@@ -1,99 +1,188 @@
-import Link from "next/link";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
-import { getPartnerDashboardData } from "@/lib/mock-data";
 import { MetricGrid } from "@/components/product/product-page-sections";
+import { getWorkspaceSession } from "@/lib/auth";
+import {
+  formatCurrency,
+  getCurrentMonthlyRmrForVendor,
+  getForecastMonthlyRmrForVendor,
+  getVendorById,
+  listDeals,
+  listSupportRequests,
+} from "@/lib/goaccess-store";
+
+function titleCaseStatus(value: string) {
+  return value.replaceAll("_", " ");
+}
+
+function formatShortDate(value: string) {
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
 
 export default async function PartnerPortalPage() {
-  const data = await getPartnerDashboardData();
+  const session = await getWorkspaceSession();
+  const vendorId = session?.vendorId;
+  const [vendor, deals, supportRequests, currentRmr, forecastRmr] = await Promise.all([
+    vendorId ? getVendorById(vendorId) : Promise.resolve(null),
+    listDeals(vendorId),
+    listSupportRequests(vendorId),
+    vendorId ? getCurrentMonthlyRmrForVendor(vendorId) : Promise.resolve(0),
+    vendorId ? getForecastMonthlyRmrForVendor(vendorId) : Promise.resolve(0),
+  ]);
+
+  const metrics = [
+    {
+      label: "Registered deals",
+      value: String(deals.length),
+      delta: `${deals.filter((deal) => deal.status === "submitted" || deal.status === "under_review").length} waiting on GoAccess review`,
+    },
+    {
+      label: "Current monthly RMR",
+      value: formatCurrency(currentRmr),
+      delta: `${deals.filter((deal) => deal.status === "closed_won").length} active accounts`,
+    },
+    {
+      label: "Forecast monthly RMR",
+      value: formatCurrency(forecastRmr),
+      delta: `${deals.filter((deal) => deal.status === "synced_to_hubspot").length} accounts in HubSpot pipeline`,
+    },
+    {
+      label: "Open support requests",
+      value: String(supportRequests.filter((request) => request.status !== "resolved").length),
+      delta: vendor?.credentialsIssued ? "Portal credentials are active" : "Credentials still pending",
+    },
+  ];
 
   return (
     <>
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
-        title="Approved vendor dashboard"
-        subtitle="Manage your GoAccess vendor profile, register deals, track HubSpot-backed statuses, and see the monthly recurring revenue tied to your accounts."
+        title="Vendor home"
+        subtitle="Register deals, see what GoAccess is reviewing, and track the monthly recurring revenue tied to your accounts."
         primaryLabel="Register a deal"
         primaryHref="/portal/links"
       />
       <div className="app-content">
-        <MetricGrid metrics={data.metrics} />
+        <MetricGrid metrics={metrics} />
 
         <section className="dashboard-grid">
           <article className="workspace-card wide-card">
             <div className="card-header-row">
               <div>
-                <h3>Recent deal registrations</h3>
-                <p>Every submission should show exactly when it was sent and whether GoAccess approved it for HubSpot.</p>
+                <h3>What needs attention</h3>
+                <p>Your home page should make the next step obvious: finish onboarding, register a deal, or check what is still under review.</p>
               </div>
-              <Link href="/portal/links" className="button button-secondary">
-                Register new deal
-              </Link>
+              <a href="/portal/profile" className="button button-secondary">
+                Open profile
+              </a>
             </div>
-            <div className="data-table">
-              <div className="table-head">
-                <span>Account</span>
-                <span>Domain</span>
-                <span>Submitted</span>
-                <span>Status</span>
-              </div>
-              {data.links.map((link) => (
-                <div className="table-row" key={link.name}>
-                  <span>{link.name}</span>
-                  <span>{link.destination}</span>
-                  <span>{link.clicks}</span>
-                  <span>{link.conversions}</span>
+            <div className="stack-list">
+              <div className="stack-card">
+                <div className="stack-card-header">
+                  <div>
+                    <h3>Vendor status</h3>
+                    <p>{vendor?.companyName ?? "Your company"} in the GoAccess portal.</p>
+                  </div>
+                  <span className="status-pill">{vendor?.status ?? "unknown"}</span>
                 </div>
-              ))}
+                <div className="stack-meta-grid">
+                  <span>NDA: {vendor?.ndaStatus ?? "unknown"}</span>
+                  <span>Credentials: {vendor?.credentialsIssued ? "issued" : "pending"}</span>
+                  <span>Portal access: {vendor?.portalAccess ?? "unknown"}</span>
+                </div>
+              </div>
+              <div className="stack-card">
+                <div className="stack-card-header">
+                  <div>
+                    <h3>Deal queue</h3>
+                    <p>Watch what is under review before it reaches HubSpot.</p>
+                  </div>
+                  <span className="status-pill">
+                    {deals.filter((deal) => deal.status === "submitted" || deal.status === "under_review").length} open
+                  </span>
+                </div>
+                <div className="stack-meta-grid">
+                  <span>{deals.filter((deal) => deal.status === "submitted").length} submitted</span>
+                  <span>{deals.filter((deal) => deal.status === "under_review").length} under review</span>
+                  <span>{deals.filter((deal) => deal.status === "synced_to_hubspot").length} in HubSpot</span>
+                </div>
+              </div>
+              <div className="stack-card">
+                <div className="stack-card-header">
+                  <div>
+                    <h3>Monthly RMR</h3>
+                    <p>Closed won deals feed active recurring revenue. Synced pipeline stays forecasted until won.</p>
+                  </div>
+                  <span className="status-pill">{formatCurrency(currentRmr)}</span>
+                </div>
+                <div className="stack-meta-grid">
+                  <span>{formatCurrency(forecastRmr)} forecast</span>
+                  <span>{deals.filter((deal) => deal.status === "closed_won").length} active accounts</span>
+                  <span>{deals.filter((deal) => deal.status === "synced_to_hubspot").length} forecast accounts</span>
+                </div>
+              </div>
             </div>
           </article>
 
-          {data.highlights.map((highlight) => (
-            <article className="workspace-card" key={highlight.title}>
-              <h3>{highlight.title}</h3>
-              <ul>
-                {highlight.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
+          <article className="workspace-card">
+            <h3>Quick actions</h3>
+            <ul>
+              <li><a href="/portal/links">Register a new deal</a></li>
+              <li><a href="/portal/deals">Review deal statuses</a></li>
+              <li><a href="/portal/earnings">Check monthly RMR</a></li>
+              <li><a href="/portal/support">Open support</a></li>
+            </ul>
+          </article>
+
+          <article className="workspace-card">
+            <h3>Latest support</h3>
+            <ul>
+              {supportRequests.slice(0, 4).map((request) => (
+                <li key={request.id}>
+                  {request.subject}: {titleCaseStatus(request.status)}
+                </li>
+              ))}
+            </ul>
+          </article>
         </section>
 
         <section className="dashboard-grid">
           <article className="workspace-card wide-card">
             <div className="card-header-row">
               <div>
-                <h3>Monthly RMR ledger</h3>
-                <p>Vendors should see which active accounts are contributing recurring monthly revenue and what is still forecasted.</p>
+                <h3>Recent deal registrations</h3>
+                <p>Each line shows what you submitted, when it was sent, and whether GoAccess or HubSpot has advanced it.</p>
               </div>
-              <Link href="/portal/payouts" className="button button-secondary">
-                Download statement
-              </Link>
+              <a href="/portal/deals" className="button button-secondary">
+                Open all deals
+              </a>
             </div>
             <div className="data-table">
-              <div className="table-head">
-                <span>Month</span>
+              <div className="table-head table-cols-4">
                 <span>Account</span>
-                <span>Monthly RMR</span>
+                <span>Submitted</span>
                 <span>Status</span>
+                <span>Monthly RMR</span>
               </div>
-              {data.ledger.map((row) => (
-                <div className="table-row" key={`${row.date}-${row.description}`}>
-                  <span>{row.date}</span>
-                  <span>{row.description}</span>
-                  <span>{row.amount}</span>
-                  <span>{row.status}</span>
+              {deals.slice(0, 6).map((deal) => (
+                <div className="table-row table-cols-4" key={deal.id}>
+                  <span>{deal.companyName}</span>
+                  <span>{formatShortDate(deal.createdAt)}</span>
+                  <span>{titleCaseStatus(deal.status)}</span>
+                  <span>{formatCurrency(deal.monthlyRmr)}</span>
                 </div>
               ))}
             </div>
           </article>
 
           <article className="workspace-card">
-            <h3>What this portal centers</h3>
+            <h3>How this portal works</h3>
             <ul>
-              <li>Vendors get onboarding, deal ops, and recurring revenue in one place.</li>
-              <li>HubSpot-backed deal management is visible without exposing raw CRM complexity.</li>
-              <li>The profile becomes the source for current monthly RMR totals.</li>
+              <li>You apply once, complete NDA and credentials, then work from this portal.</li>
+              <li>Registered deals are reviewed before HubSpot creation or assignment.</li>
+              <li>Monthly RMR becomes visible here when deals move into active recurring revenue.</li>
             </ul>
           </article>
         </section>

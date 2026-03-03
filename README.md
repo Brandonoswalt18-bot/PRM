@@ -5,12 +5,12 @@ Next.js app-router app for GoAccess vendor onboarding, deal registration, HubSpo
 ## Structure
 
 - `app/`: routes, layout, metadata, and global styles
-- `app/api/demo-request/route.ts`: landing-page form submission endpoint
+- `app/api/demo-request/route.ts`: public application-form submission endpoint
 - `app/api/vendor-applications/route.ts`: GoAccess vendor application API
 - `app/invite/[token]/page.tsx`: vendor invite acceptance entrypoint
 - `app/api/deals/route.ts`: vendor deal registration API
 - `app/api/track/route.ts`: lightweight analytics collector endpoint
-- `app/login/page.tsx`: mock login selector for vendor vs partner workspace
+- `app/login/page.tsx`: mock login selector for admin vs vendor workspace
 - `app/auth/mock-login/route.ts`: cookie-backed mock session login
 - `app/auth/logout/route.ts`: clears mock session
 - `components/marketing/`: reusable landing-page sections
@@ -97,7 +97,7 @@ Protected routes:
 Current prototype auth flow:
 
 - visit `/login`
-- choose vendor or partner workspace
+- choose admin or vendor workspace
 - a cookie-backed session is set
 - middleware redirects unauthorized role access back to login
 - when credentials are issued, the vendor invite route `/invite/[token]` can activate portal access and log the vendor into the approved portal

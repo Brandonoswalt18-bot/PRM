@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
 import { buildDealTimeline } from "@/lib/goaccess-timeline";
@@ -115,6 +116,9 @@ export function AdminDealManager({ deals, syncEvents, vendors }: AdminDealManage
                   ))}
                 </div>
                 <div className="action-row">
+                  <Link className="button button-ghost" href={`/app/deal-registrations/${deal.id}`}>
+                    Open detail
+                  </Link>
                   {actions.map((action) => (
                     <button
                       className="button button-secondary"

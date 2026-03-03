@@ -949,8 +949,9 @@ export async function updateVendorProfile(vendorId: string, input: UpdateVendorP
 
   vendor.companyName = input.companyName;
   vendor.website = input.website;
-  vendor.region = input.region;
-  vendor.vendorType = input.vendorType;
+  vendor.city = input.city;
+  vendor.state = input.state;
+  vendor.region = [input.city, input.state].filter(Boolean).join(", ");
   vendor.primaryContactName = input.primaryContactName;
   vendor.primaryContactEmail = input.primaryContactEmail;
   vendor.updatedAt = nowIso();
@@ -960,8 +961,9 @@ export async function updateVendorProfile(vendorId: string, input: UpdateVendorP
   if (application) {
     application.companyName = input.companyName;
     application.website = input.website;
-    application.region = input.region;
-    application.vendorType = input.vendorType;
+    application.city = input.city;
+    application.state = input.state;
+    application.region = vendor.region;
     application.primaryContactName = input.primaryContactName;
     application.primaryContactEmail = input.primaryContactEmail;
     application.updatedAt = vendor.updatedAt;
@@ -991,6 +993,41 @@ export async function submitSupportRequest(vendorId: string, input: CreateSuppor
   };
 
   store.supportRequests.unshift(request);
+  await writeStore(store);
+  return request;
+}
+
+export function canTransitionSupportRequestStatus(
+  currentStatus: SupportRequest["status"],
+  nextStatus: SupportRequest["status"]
+) {
+  if (currentStatus === nextStatus) {
+    return false;
+  }
+
+  const allowedTransitions: Record<SupportRequest["status"], SupportRequest["status"][]> = {
+    open: ["in_progress", "resolved"],
+    in_progress: ["open", "resolved"],
+    resolved: ["open"],
+  };
+
+  return allowedTransitions[currentStatus].includes(nextStatus);
+}
+
+export async function updateSupportRequestStatus(
+  supportRequestId: string,
+  nextStatus: SupportRequest["status"]
+) {
+  const store = await readStore();
+  const request = store.supportRequests.find((item) => item.id === supportRequestId);
+
+  if (!request) {
+    throw new Error("Support request not found.");
+  }
+
+  request.status = nextStatus;
+  request.updatedAt = nowIso();
+
   await writeStore(store);
   return request;
 }

@@ -4,3 +4,5 @@ node_modules
 .DS_Store
 node-v22.14.0-darwin-arm64
 node-v22.14.0-darwin-arm64.tar.gz
+.vercel
+.env*.local

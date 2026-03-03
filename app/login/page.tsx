@@ -15,12 +15,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <main className="login-shell">
       <div className="login-card">
-        <span className="eyebrow">GOACCESS ACCESS</span>
-        <h1>Choose the portal workspace.</h1>
-        <p>
-          Select the GoAccess admin workspace or the approved vendor workspace to enter the
-          correct protected portal.
-        </p>
+        <span className="eyebrow">GOACCESS</span>
+        <h1>Portal sign in</h1>
+        <p>Enter the GoAccess admin workspace or the approved vendor portal.</p>
         <div className="login-actions">
           <Link
             className={`button ${
@@ -41,7 +38,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </div>
         <div className="login-footer">
           <Link className="button button-ghost" href="/">
-            Back to marketing site
+            Back to public page
           </Link>
           <Link className="button button-ghost" href="/auth/logout">
             Clear session

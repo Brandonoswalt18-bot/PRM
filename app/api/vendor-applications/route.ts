@@ -11,6 +11,18 @@ type VendorApplicationPayload = {
   primaryContactEmail?: string;
 };
 
+function summarizeEmailFailure(reference: string) {
+  if (reference.includes("goaccess.com domain is not verified")) {
+    return "Email could not be delivered because the GoAccess sending domain is not yet verified in Resend.";
+  }
+
+  if (reference.includes("You can only send testing emails to your own email address")) {
+    return "Email could not be delivered because Resend is still in test mode and can only send to the account owner's email until the sending domain is verified.";
+  }
+
+  return "Email delivery failed. Check the configured sender address and Resend domain verification.";
+}
+
 export async function GET() {
   const applications = await listVendorApplications();
   return NextResponse.json({ items: applications });
@@ -87,10 +99,14 @@ export async function POST(request: Request) {
   let message = "Your GoAccess vendor application has been submitted for review.";
 
   if (failedNotifications.length > 0) {
-    const reasons = failedNotifications
-      .map((item) => item.reference)
-      .filter(Boolean)
-      .join(" | ");
+    const reasons = Array.from(
+      new Set(
+        failedNotifications
+          .map((item) => item.reference)
+          .filter((item): item is string => Boolean(item))
+          .map((item) => summarizeEmailFailure(item))
+      )
+    ).join(" ");
     message =
       `Your application was submitted, but email delivery failed.${reasons ? ` ${reasons}` : ""}`;
   } else if (loggedNotifications.length > 0) {

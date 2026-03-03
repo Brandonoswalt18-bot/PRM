@@ -2,8 +2,8 @@ import { MetricGrid, TimelineSection } from "@/components/product/product-page-s
 import { SupportRequestForm } from "@/components/product/support-request-form";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
+import { buildSupportTimeline } from "@/lib/goaccess-timeline";
 import { listSupportRequests } from "@/lib/goaccess-store";
-import type { TimelineEntry } from "@/types/goaccess";
 
 function titleCaseStatus(value: string) {
   return value.replaceAll("_", " ");
@@ -61,32 +61,12 @@ export default async function PartnerSupportPage() {
         </section>
         <section className="dashboard-grid">
           {supportRequests.slice(0, 4).map((request) => {
-            const entries: TimelineEntry[] = [
-              {
-                title: request.subject,
-                detail: request.message,
-                timestamp: request.createdAt,
-                tone: request.status === "resolved" ? "success" : request.status === "in_progress" ? "warning" : "neutral",
-              },
-              {
-                title: `Status: ${titleCaseStatus(request.status)}`,
-                detail:
-                  request.status === "resolved"
-                    ? "The request is closed."
-                    : request.status === "in_progress"
-                      ? "The GoAccess team is currently working on this."
-                      : "The request is waiting for review.",
-                timestamp: request.updatedAt,
-                tone: request.status === "resolved" ? "success" : request.status === "in_progress" ? "warning" : "neutral",
-              },
-            ];
-
             return (
               <TimelineSection
                 key={request.id}
                 title={request.subject}
                 description={titleCaseStatus(request.category)}
-                entries={entries}
+                entries={buildSupportTimeline(request)}
               />
             );
           })}

@@ -5,8 +5,8 @@ import { getVendorById, updateVendorProfile } from "@/lib/goaccess-store";
 type VendorProfilePayload = {
   companyName?: string;
   website?: string;
-  region?: string;
-  vendorType?: string;
+  city?: string;
+  state?: string;
   primaryContactName?: string;
   primaryContactEmail?: string;
 };
@@ -44,14 +44,14 @@ export async function PATCH(request: Request) {
 
   const companyName = body.companyName?.trim() ?? "";
   const website = body.website?.trim() ?? "";
-  const region = body.region?.trim() ?? "";
-  const vendorType = body.vendorType?.trim() ?? "";
+  const city = body.city?.trim() ?? "";
+  const state = body.state?.trim() ?? "";
   const primaryContactName = body.primaryContactName?.trim() ?? "";
   const primaryContactEmail = body.primaryContactEmail?.trim().toLowerCase() ?? "";
 
-  if (!companyName || !region || !vendorType || !primaryContactName || !primaryContactEmail) {
+  if (!companyName || !city || !state || !primaryContactName || !primaryContactEmail) {
     return NextResponse.json(
-      { message: "Company, region, vendor type, contact name, and email are required." },
+      { message: "Business name, city, state, contact name, and email are required." },
       { status: 400 }
     );
   }
@@ -64,8 +64,8 @@ export async function PATCH(request: Request) {
     const vendor = await updateVendorProfile(session.vendorId, {
       companyName,
       website,
-      region,
-      vendorType,
+      city,
+      state,
       primaryContactName,
       primaryContactEmail,
     });

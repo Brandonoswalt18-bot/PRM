@@ -205,6 +205,18 @@ span {
   padding-top: 18px;
 }
 
+.entry-hero {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  padding: 18px 8px 4px;
+}
+
+.entry-copy {
+  display: grid;
+  gap: 10px;
+  max-width: 52rem;
+}
+
 .lede,
 .feature-card p,
 .glass-card li,
@@ -236,6 +248,10 @@ span {
   margin: 0 auto;
 }
 
+.access-shell-quiet {
+  grid-template-columns: 320px minmax(0, 1fr);
+}
+
 .access-panel,
 .access-sidecard {
   border: 1px solid var(--line);
@@ -262,8 +278,27 @@ span {
   top: 110px;
 }
 
+.access-sidecard-primary {
+  gap: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(240, 246, 255, 0.96)),
+    var(--surface);
+  border-color: var(--line-strong);
+}
+
 .access-sidecard p {
   margin: 0;
+}
+
+.entry-action-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.entry-action-stack small {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
 }
 
 .mock-card strong,

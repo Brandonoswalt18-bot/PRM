@@ -38,7 +38,7 @@ export const solutionPoints = [
   "A GoAccess-only vendor application and approval workflow",
   "NDA tracking and credential issue in the same portal",
   "Structured deal registration with internal review before HubSpot sync",
-  "Partner-facing deal management and status visibility",
+  "Vendor-facing deal management and status visibility",
   "Monthly RMR totals visible directly inside each vendor profile",
 ];
 
@@ -102,7 +102,7 @@ export const workspaces = [
       "Review monthly RMR totals",
       "Access operating documents and support",
     ],
-    className: "partner-workspace",
+    className: "vendor-workspace",
   },
 ] as const;
 

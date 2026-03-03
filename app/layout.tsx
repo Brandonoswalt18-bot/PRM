@@ -3,15 +3,15 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GoAccess Vendor Portal | Approved vendor onboarding, HubSpot deal registration, and RMR tracking",
+  title: "GoAccess Vendor Portal",
   description:
-    "GoAccess Vendor Portal gives approved vendors one place to apply, complete NDA, receive credentials, register deals into HubSpot, and track monthly recurring revenue.",
-  metadataBase: new URL("https://prm-site-8tt6tcck5-brandonoswalt18-bots-projects.vercel.app"),
+    "Apply to become a GoAccess vendor, complete onboarding, register deals, and track monthly recurring revenue.",
+  metadataBase: new URL("https://prm-gamma.vercel.app"),
   openGraph: {
     title: "GoAccess Vendor Portal",
     description:
-      "Approved vendor onboarding, HubSpot-backed deal registration, and monthly RMR visibility for GoAccess.",
-    url: "https://prm-site-8tt6tcck5-brandonoswalt18-bots-projects.vercel.app",
+      "GoAccess vendor application, onboarding, deal registration, and recurring revenue tracking.",
+    url: "https://prm-gamma.vercel.app",
     siteName: "GoAccess Vendor Portal",
     type: "website",
   },
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "GoAccess Vendor Portal",
     description:
-      "A GoAccess-only vendor portal for applications, NDA completion, HubSpot deal registration, and RMR tracking.",
+      "GoAccess vendor application, onboarding, deal registration, and recurring revenue tracking.",
   },
 };
 

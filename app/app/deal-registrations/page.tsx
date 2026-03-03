@@ -36,7 +36,7 @@ export default async function DealRegistrationsPage() {
             <li>Automatic duplicate scoring before the admin opens a record</li>
             <li>Company/contact match preview from HubSpot search</li>
             <li>Owner assignment and territory routing</li>
-            <li>Partner-visible review notes after status changes</li>
+            <li>Vendor-visible review notes after status changes</li>
           </ul>
         </article>
       </div>

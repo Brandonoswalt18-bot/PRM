@@ -1,9 +1,4 @@
-import {
-  LinkRow,
-  MetricGrid,
-  SideSections,
-  TableSection,
-} from "@/components/product/product-page-sections";
+import { MetricGrid, SideSections } from "@/components/product/product-page-sections";
 import { DealRegistrationForm } from "@/components/product/deal-registration-form";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
@@ -89,20 +84,37 @@ export default async function LinksPage() {
           <SideSections sections={sections} />
         </section>
         <section className="dashboard-grid">
-          <TableSection
-            title="Recent registrations"
-            description="The latest opportunities you have already sent to GoAccess."
-            actionLabel="Open full history"
-            actionHref="/portal/deals"
-            headers={["Account", "Domain", "Submitted", "Status"]}
-            rows={deals.slice(0, 8).map((deal) => ({
-              name: deal.companyName,
-              destination: deal.domain,
-              clicks: `Submitted ${new Date(deal.createdAt).toLocaleDateString()}`,
-              conversions: titleCaseStatus(deal.status),
-            }))}
-            renderRow={LinkRow}
-          />
+          <article className="workspace-card wide-card">
+            <div className="card-header-row">
+              <div>
+                <h3>Recent registrations</h3>
+                <p>The latest opportunities you have already sent to GoAccess.</p>
+              </div>
+              <a href="/portal/deals" className="button button-secondary">
+                Open full history
+              </a>
+            </div>
+            <div className="data-table">
+              <div className="table-head table-cols-5">
+                <span>Account</span>
+                <span>Domain</span>
+                <span>Submitted</span>
+                <span>Status</span>
+                <span>Detail</span>
+              </div>
+              {deals.slice(0, 8).map((deal) => (
+                <div className="table-row table-cols-5" key={deal.id}>
+                  <span>{deal.companyName}</span>
+                  <span>{deal.domain}</span>
+                  <span>{new Date(deal.createdAt).toLocaleDateString()}</span>
+                  <span>{titleCaseStatus(deal.status)}</span>
+                  <span>
+                    <a href={`/portal/deals/${deal.id}`}>Open</a>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </article>
         </section>
       </div>
     </>

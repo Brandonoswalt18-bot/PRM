@@ -290,7 +290,7 @@ export async function createHubSpotLead(payload: LeadPayload): Promise<HubSpotLe
           { name: "firstname", value: firstName || payload.name },
           { name: "lastname", value: lastName || "-" },
           { name: "company", value: payload.company },
-          { name: "message", value: payload.notes || "Relay PRM demo request" },
+          { name: "message", value: payload.notes || "GoAccess vendor portal request" },
         ],
         context: {
           pageName: "GoAccess Vendor Portal",
