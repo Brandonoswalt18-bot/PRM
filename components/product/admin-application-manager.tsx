@@ -123,7 +123,9 @@ export function AdminApplicationManager({
                 {latestNotification ? (
                   <p className="stack-note">
                     Latest email: {latestNotification.subject} on{" "}
-                    {new Date(latestNotification.createdAt).toLocaleDateString()}
+                    {new Date(latestNotification.createdAt).toLocaleDateString()} · status{" "}
+                    {latestNotification.status}
+                    {latestNotification.reference ? ` · ${latestNotification.reference}` : ""}
                   </p>
                 ) : null}
                 {inviteUrl ? (

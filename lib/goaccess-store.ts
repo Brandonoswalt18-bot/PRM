@@ -410,65 +410,73 @@ export async function submitVendorApplication(input: CreateVendorApplicationInpu
     updatedAt: timestamp,
   };
 
+  const createdNotifications: VendorNotification[] = [];
+
   store.vendorApplications.unshift(application);
-  store.notifications.unshift(
-    await recordWorkflowEmail({
-      applicationId: application.id,
-      recipientEmail: application.primaryContactEmail,
-      subject: "We received your GoAccess vendor application",
-      category: "application_received",
-      reference: application.companyName,
-      text: `Hi ${application.primaryContactName},\n\nWe received your GoAccess vendor application for ${application.companyName}. Our team will review it and follow up with next steps.\n\nGoAccess`,
-      html: `<p>Hi ${application.primaryContactName},</p><p>We received your GoAccess vendor application for <strong>${application.companyName}</strong>. Our team will review it and follow up with next steps.</p><p>GoAccess</p>`,
-    })
-  );
+
+  const applicantNotification = await recordWorkflowEmail({
+    applicationId: application.id,
+    recipientEmail: application.primaryContactEmail,
+    subject: "We received your GoAccess vendor application",
+    category: "application_received",
+    reference: application.companyName,
+    text: `Hi ${application.primaryContactName},\n\nWe received your GoAccess vendor application for ${application.companyName}. Our team will review it and follow up with next steps.\n\nGoAccess`,
+    html: `<p>Hi ${application.primaryContactName},</p><p>We received your GoAccess vendor application for <strong>${application.companyName}</strong>. Our team will review it and follow up with next steps.</p><p>GoAccess</p>`,
+  });
+
+  createdNotifications.push(applicantNotification);
+  store.notifications.unshift(applicantNotification);
 
   const internalRecipients = getApplicationNotificationRecipients();
 
   if (internalRecipients.length > 0) {
-    store.notifications.unshift(
-      await recordWorkflowEmail({
-        applicationId: application.id,
-        recipientEmail: internalRecipients,
-        subject: `New GoAccess vendor application: ${application.companyName}`,
-        category: "application_internal_alert",
-        reference: application.primaryContactEmail,
-        text: [
-          "A new GoAccess vendor application was submitted.",
-          "",
-          `Company: ${application.companyName}`,
-          `Website: ${application.website || "Not provided"}`,
-          `Region: ${application.region}`,
-          `Vendor type: ${application.vendorType}`,
-          `Primary contact: ${application.primaryContactName}`,
-          `Email: ${application.primaryContactEmail}`,
-          application.notes ? `Notes: ${application.notes}` : "",
-          "",
-          "Review it in the GoAccess admin portal under Applications.",
-        ]
-          .filter(Boolean)
-          .join("\n"),
-        html: [
-          "<p>A new GoAccess vendor application was submitted.</p>",
-          "<ul>",
-          `<li><strong>Company:</strong> ${application.companyName}</li>`,
-          `<li><strong>Website:</strong> ${application.website || "Not provided"}</li>`,
-          `<li><strong>Region:</strong> ${application.region}</li>`,
-          `<li><strong>Vendor type:</strong> ${application.vendorType}</li>`,
-          `<li><strong>Primary contact:</strong> ${application.primaryContactName}</li>`,
-          `<li><strong>Email:</strong> ${application.primaryContactEmail}</li>`,
-          application.notes ? `<li><strong>Notes:</strong> ${application.notes}</li>` : "",
-          "</ul>",
-          "<p>Review it in the GoAccess admin portal under Applications.</p>",
-        ]
-          .filter(Boolean)
-          .join(""),
-      })
-    );
+    const internalNotification = await recordWorkflowEmail({
+      applicationId: application.id,
+      recipientEmail: internalRecipients,
+      subject: `New GoAccess vendor application: ${application.companyName}`,
+      category: "application_internal_alert",
+      reference: application.primaryContactEmail,
+      text: [
+        "A new GoAccess vendor application was submitted.",
+        "",
+        `Company: ${application.companyName}`,
+        `Website: ${application.website || "Not provided"}`,
+        `Region: ${application.region}`,
+        `Vendor type: ${application.vendorType}`,
+        `Primary contact: ${application.primaryContactName}`,
+        `Email: ${application.primaryContactEmail}`,
+        application.notes ? `Notes: ${application.notes}` : "",
+        "",
+        "Review it in the GoAccess admin portal under Applications.",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      html: [
+        "<p>A new GoAccess vendor application was submitted.</p>",
+        "<ul>",
+        `<li><strong>Company:</strong> ${application.companyName}</li>`,
+        `<li><strong>Website:</strong> ${application.website || "Not provided"}</li>`,
+        `<li><strong>Region:</strong> ${application.region}</li>`,
+        `<li><strong>Vendor type:</strong> ${application.vendorType}</li>`,
+        `<li><strong>Primary contact:</strong> ${application.primaryContactName}</li>`,
+        `<li><strong>Email:</strong> ${application.primaryContactEmail}</li>`,
+        application.notes ? `<li><strong>Notes:</strong> ${application.notes}</li>` : "",
+        "</ul>",
+        "<p>Review it in the GoAccess admin portal under Applications.</p>",
+      ]
+        .filter(Boolean)
+        .join(""),
+    });
+
+    createdNotifications.push(internalNotification);
+    store.notifications.unshift(internalNotification);
   }
 
   await writeStore(store);
-  return application;
+  return {
+    application,
+    notifications: createdNotifications,
+  };
 }
 
 export async function updateVendorApplicationStatus(

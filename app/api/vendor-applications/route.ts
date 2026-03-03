@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Enter a valid email address." }, { status: 400 });
   }
 
-  const application = await submitVendorApplication({
+  const result = await submitVendorApplication({
     companyName,
     website,
     region,
@@ -71,19 +71,33 @@ export async function POST(request: Request) {
         ]
           .filter(Boolean)
           .join("\n"),
-        receivedAt: application.createdAt,
+        receivedAt: result.application.createdAt,
       });
     } catch (error) {
       console.error("vendor_application_hubspot_failed", {
-        applicationId: application.id,
+        applicationId: result.application.id,
         error,
       });
     }
   }
 
+  const failedNotifications = result.notifications.filter((item) => item.status === "failed");
+  const loggedNotifications = result.notifications.filter((item) => item.status === "logged");
+
+  let message = "Your GoAccess vendor application has been submitted for review.";
+
+  if (failedNotifications.length > 0) {
+    message =
+      "Your application was submitted, but email delivery failed. Review the admin queue for the exact Resend error.";
+  } else if (loggedNotifications.length > 0) {
+    message =
+      "Your application was submitted. Email delivery is not fully configured yet, so confirmations were only logged.";
+  }
+
   return NextResponse.json({
     ok: true,
-    application,
-    message: "Your GoAccess vendor application has been submitted for review.",
+    application: result.application,
+    notifications: result.notifications,
+    message,
   });
 }
