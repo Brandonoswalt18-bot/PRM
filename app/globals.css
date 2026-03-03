@@ -199,23 +199,23 @@ span {
 
 .marketing-minimal {
   display: grid;
-  gap: 36px;
-  padding-top: 18px;
+  gap: 28px;
+  padding-top: 8px;
 }
 
-.minimal-access {
+.minimal-portal {
   display: grid;
-  gap: 24px;
-  max-width: 900px;
+  gap: 18px;
+  max-width: 760px;
   margin: 0 auto;
 }
 
-.minimal-access-copy {
+.minimal-portal-copy {
   display: grid;
   gap: 8px;
   justify-items: center;
   text-align: center;
-  padding: 12px 0 0;
+  padding: 8px 0 0;
 }
 
 .lede,
@@ -240,12 +240,6 @@ span {
   margin: 4px 0 0;
 }
 
-.access-actions-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
 .mock-card strong,
 .price {
   display: block;
@@ -258,37 +252,12 @@ span {
   font-size: 0.92rem;
 }
 
-.access-action-card {
-  padding: 24px;
-  border-radius: 20px;
-  border: 1px solid var(--line-strong);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: var(--shadow);
-  display: grid;
-  gap: 10px;
-}
-
-.access-action-card-muted {
-  background: rgba(255, 255, 255, 0.74);
-}
-
 .access-label {
   color: var(--signal);
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.access-action-card h2 {
-  max-width: none;
-  font-size: 1.45rem;
-  margin: 0;
-}
-
-.access-action-card p {
-  margin: 0 0 8px;
-  color: var(--muted);
 }
 
 .panel-frame,
@@ -410,16 +379,7 @@ span {
 }
 
 .minimal-apply {
-  display: grid;
-  grid-template-columns: 0.7fr 1.3fr;
-  gap: 24px;
-  align-items: start;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.minimal-apply-copy {
-  padding: 10px 0;
+  display: block;
 }
 
 .minimal-form-card {
@@ -428,6 +388,44 @@ span {
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: var(--shadow);
+}
+
+.portal-surface {
+  display: grid;
+  gap: 18px;
+}
+
+.portal-surface-header {
+  display: flex;
+  justify-content: center;
+}
+
+.portal-surface-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.application-header {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.application-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.minimal-footnote {
+  margin-top: 0;
+  text-align: center;
+}
+
+.minimal-footnote p {
+  margin: 0;
+  color: var(--muted);
 }
 
 .split-grid,
@@ -887,7 +885,7 @@ li + li {
 }
 
 @media (max-width: 1080px) {
-  .minimal-access,
+  .minimal-portal,
   .minimal-apply,
   .product-hero,
   .cta-card,
@@ -936,7 +934,6 @@ li + li {
   }
 
   .minimal-metrics,
-  .access-actions-grid,
   .mock-grid,
   .feature-grid,
   .flow-grid,
@@ -954,7 +951,7 @@ li + li {
   }
 
   h1 {
-    max-width: 11ch;
+    max-width: none;
   }
 
   section {
@@ -962,7 +959,8 @@ li + li {
   }
 
   .workspace-band,
-  .cta-card {
+  .cta-card,
+  .minimal-form-card {
     padding: 22px;
   }
 
