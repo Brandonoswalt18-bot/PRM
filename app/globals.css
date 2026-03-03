@@ -22,6 +22,7 @@
 
 html {
   scroll-behavior: smooth;
+  font-size: 15px;
 }
 
 body {
@@ -101,7 +102,7 @@ textarea {
 }
 
 .brand-text {
-  font-size: 0.98rem;
+  font-size: 0.92rem;
 }
 
 .nav {
@@ -112,7 +113,7 @@ textarea {
 .nav a {
   color: var(--muted);
   text-decoration: none;
-  font-size: 0.94rem;
+  font-size: 0.88rem;
   letter-spacing: 0.01em;
 }
 
@@ -120,11 +121,12 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.95rem 1.25rem;
+  padding: 0.82rem 1.12rem;
   border-radius: 14px;
   text-decoration: none;
   border: 1px solid transparent;
   font-weight: 700;
+  font-size: 0.94rem;
   transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
@@ -149,7 +151,7 @@ textarea {
   display: inline-block;
   margin-bottom: 14px;
   color: var(--signal);
-  font-size: 0.82rem;
+  font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.16em;
 }
@@ -169,17 +171,17 @@ h2 {
 }
 
 h1 {
-  font-size: clamp(3.4rem, 7vw, 6.4rem);
+  font-size: clamp(2.4rem, 5vw, 4.4rem);
   max-width: 14ch;
 }
 
 h2 {
-  font-size: clamp(2.4rem, 4.3vw, 4rem);
+  font-size: clamp(1.85rem, 3.2vw, 3rem);
   max-width: 15ch;
 }
 
 h3 {
-  font-size: 1.28rem;
+  font-size: 1.12rem;
 }
 
 p,
@@ -236,7 +238,7 @@ span {
 
 .lede {
   max-width: 38ch;
-  font-size: 1rem;
+  font-size: 0.94rem;
   margin: 4px 0 0;
 }
 
@@ -415,7 +417,7 @@ span {
 
 .application-header h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.28rem;
 }
 
 .minimal-footnote {
@@ -523,12 +525,12 @@ li + li {
 
 .price {
   margin: 14px 0 18px;
-  font-size: 2.3rem;
+  font-size: 1.9rem;
   font-weight: 800;
 }
 
 .price span {
-  font-size: 1rem;
+  font-size: 0.92rem;
   font-weight: 600;
 }
 
@@ -549,22 +551,24 @@ li + li {
 
 .cta-form input {
   width: 100%;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border: 1px solid rgba(31, 100, 216, 0.14);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.94);
   color: var(--ink);
+  font-size: 0.96rem;
 }
 
 .cta-textarea {
   width: 100%;
-  padding: 14px 16px;
+  padding: 12px 14px;
   border: 1px solid rgba(31, 100, 216, 0.14);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.94);
   color: var(--ink);
   resize: vertical;
   min-height: 110px;
+  font-size: 0.96rem;
 }
 
 .cta-form button[disabled] {
@@ -576,7 +580,7 @@ li + li {
   margin: 0;
   min-height: 1.6em;
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 0.88rem;
 }
 
 .form-message-success {
@@ -628,7 +632,7 @@ li + li {
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(31, 100, 216, 0.08);
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: 0.86rem;
 }
 
 .session-name {
@@ -638,7 +642,7 @@ li + li {
 
 .sidebar-label {
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
@@ -654,6 +658,7 @@ li + li {
   text-decoration: none;
   color: var(--muted);
   background: rgba(255, 255, 255, 0.76);
+  font-size: 0.92rem;
 }
 
 .app-nav-item.is-active {
@@ -687,7 +692,7 @@ li + li {
 }
 
 .app-title {
-  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-size: clamp(1.8rem, 3.8vw, 3rem);
   max-width: none;
 }
 
@@ -752,12 +757,12 @@ li + li {
   display: inline-block;
   margin-bottom: 8px;
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: 0.84rem;
 }
 
 .metric-value {
   display: block;
-  font-size: 2rem;
+  font-size: 1.6rem;
 }
 
 .card-header-row {
@@ -818,7 +823,7 @@ li + li {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 14px;
   color: var(--muted);
-  font-size: 0.94rem;
+  font-size: 0.88rem;
 }
 
 .stack-note {
@@ -841,7 +846,7 @@ li + li {
   border-radius: 999px;
   background: rgba(31, 100, 216, 0.1);
   color: var(--signal);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 700;
   text-transform: capitalize;
 }
@@ -873,7 +878,7 @@ li + li {
 .table-head {
   background: rgba(31, 100, 216, 0.08);
   color: var(--signal);
-  font-size: 0.86rem;
+  font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -994,6 +999,7 @@ li + li {
 .login-card p {
   color: var(--muted);
   max-width: 58ch;
+  font-size: 0.94rem;
 }
 
 .login-actions,
