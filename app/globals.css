@@ -962,6 +962,12 @@ li + li {
   margin-top: 14px;
 }
 
+.stage-actions-topline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .stage-pill {
   display: inline-flex;
   align-items: center;
@@ -969,10 +975,32 @@ li + li {
   min-height: 32px;
   padding: 6px 10px;
   border-radius: 999px;
-  border: 1px solid transparent;
+  border: 1px solid rgba(31, 100, 216, 0.12);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.01em;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--muted);
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.stage-pill:not(:disabled) {
+  cursor: pointer;
+}
+
+.stage-pill:not(:disabled):hover {
+  border-color: rgba(31, 100, 216, 0.24);
+  color: var(--signal);
+  transform: translateY(-1px);
+}
+
+.stage-pill:disabled {
+  cursor: default;
 }
 
 .stage-pill-completed {
@@ -982,13 +1010,14 @@ li + li {
 }
 
 .stage-pill-current {
-  background: rgba(31, 100, 216, 0.12);
-  border-color: rgba(31, 100, 216, 0.16);
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(31, 100, 216, 0.36);
+  box-shadow: inset 0 0 0 1px rgba(31, 100, 216, 0.08);
   color: var(--signal);
 }
 
 .stage-pill-pending {
-  background: rgba(255, 255, 255, 0.74);
+  background: rgba(255, 255, 255, 0.92);
   border-color: rgba(31, 100, 216, 0.1);
   color: var(--muted);
 }
@@ -997,6 +1026,16 @@ li + li {
   background: rgba(197, 67, 67, 0.12);
   border-color: rgba(197, 67, 67, 0.18);
   color: #a13030;
+}
+
+.button-inline-danger {
+  min-width: auto;
+  border-color: rgba(197, 67, 67, 0.16);
+  color: #a13030;
+}
+
+.button-inline-danger:disabled {
+  opacity: 0.45;
 }
 
 .table-note {

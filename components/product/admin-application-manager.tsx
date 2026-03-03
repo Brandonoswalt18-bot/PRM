@@ -16,15 +16,6 @@ type AdminApplicationManagerProps = {
   notifications: VendorNotification[];
 };
 
-const actions: Array<{ label: string; status: VendorApplicationStatus }> = [
-  { label: "Mark under review", status: "under_review" },
-  { label: "Approve", status: "approved" },
-  { label: "Send NDA", status: "nda_sent" },
-  { label: "Mark NDA signed", status: "nda_signed" },
-  { label: "Issue credentials", status: "credentials_issued" },
-  { label: "Reject", status: "rejected" },
-];
-
 const allowedTransitions: Record<VendorApplicationStatus, VendorApplicationStatus[]> = {
   submitted: ["under_review", "approved", "rejected"],
   under_review: ["approved", "rejected"],
@@ -80,6 +71,23 @@ function getLifecycleStageState(
   }
 
   return "pending";
+}
+
+function getStageActionLabel(status: VendorApplicationStatus) {
+  switch (status) {
+    case "under_review":
+      return "Mark under review";
+    case "approved":
+      return "Approve";
+    case "nda_sent":
+      return "Send NDA";
+    case "nda_signed":
+      return "Mark NDA signed";
+    case "credentials_issued":
+      return "Issue credentials";
+    default:
+      return "Submitted";
+  }
 }
 
 export function AdminApplicationManager({
@@ -139,6 +147,7 @@ export function AdminApplicationManager({
             const inviteUrl = vendor?.inviteToken ? `/invite/${vendor.inviteToken}` : null;
             const timeline = buildApplicationTimeline(application, vendor ?? null, appNotifications).slice(0, 4);
             const isRejected = application.status === "rejected";
+            const allowedNextSteps = allowedTransitions[application.status];
 
             return (
               <div className="stack-card" key={application.id}>
@@ -151,21 +160,38 @@ export function AdminApplicationManager({
                       · {application.primaryContactName}
                     </p>
                   </div>
-                  <span className={`status-pill ${getStatusTone(application.status)}`}>
-                    {application.status.replaceAll("_", " ")}
-                  </span>
+                  <div className="stage-actions-topline">
+                    <span className={`status-pill ${getStatusTone(application.status)}`}>
+                      {application.status.replaceAll("_", " ")}
+                    </span>
+                    <button
+                      className="button button-secondary button-inline-danger"
+                      type="button"
+                      disabled={busyId === application.id || !allowedNextSteps.includes("rejected")}
+                      onClick={() => updateStatus(application.id, "rejected")}
+                    >
+                      Reject
+                    </button>
+                  </div>
                 </div>
                 <div className="stage-pill-row" aria-label="Application lifecycle">
                   {lifecycleStages.map((stage) => (
-                    <span
+                    <button
                       className={`stage-pill stage-pill-${getLifecycleStageState(
                         stage.status,
                         application.status
                       )}`}
+                      disabled={
+                        busyId === application.id ||
+                        stage.status === "submitted" ||
+                        !allowedNextSteps.includes(stage.status)
+                      }
                       key={`${application.id}-${stage.status}`}
+                      type="button"
+                      onClick={() => updateStatus(application.id, stage.status)}
                     >
-                      {stage.label}
-                    </span>
+                      {getStageActionLabel(stage.status)}
+                    </button>
                   ))}
                   {isRejected ? <span className="stage-pill stage-pill-rejected">Rejected</span> : null}
                 </div>
@@ -212,22 +238,6 @@ export function AdminApplicationManager({
                       </div>
                       <p>{entry.detail}</p>
                     </div>
-                  ))}
-                </div>
-                <div className="action-row">
-                  {actions.map((action) => (
-                    <button
-                      className="button button-secondary"
-                      key={action.status}
-                      type="button"
-                      disabled={
-                        busyId === application.id ||
-                        !allowedTransitions[application.status].includes(action.status)
-                      }
-                      onClick={() => updateStatus(application.id, action.status)}
-                    >
-                      {action.label}
-                    </button>
                   ))}
                 </div>
               </div>
