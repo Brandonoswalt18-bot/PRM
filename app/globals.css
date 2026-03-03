@@ -22,7 +22,7 @@
 
 html {
   scroll-behavior: smooth;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 body {
@@ -171,12 +171,12 @@ h2 {
 }
 
 h1 {
-  font-size: clamp(2.4rem, 5vw, 4.4rem);
+  font-size: clamp(1.9rem, 4vw, 2.9rem);
   max-width: 14ch;
 }
 
 h2 {
-  font-size: clamp(1.85rem, 3.2vw, 3rem);
+  font-size: clamp(1.4rem, 2.8vw, 2rem);
   max-width: 15ch;
 }
 
@@ -201,23 +201,8 @@ span {
 
 .marketing-minimal {
   display: grid;
-  gap: 28px;
-  padding-top: 8px;
-}
-
-.minimal-portal {
-  display: grid;
-  gap: 18px;
-  max-width: 760px;
-  margin: 0 auto;
-}
-
-.minimal-portal-copy {
-  display: grid;
-  gap: 8px;
-  justify-items: center;
-  text-align: center;
-  padding: 8px 0 0;
+  gap: 20px;
+  padding-top: 18px;
 }
 
 .lede,
@@ -237,9 +222,48 @@ span {
 }
 
 .lede {
-  max-width: 38ch;
-  font-size: 0.94rem;
+  max-width: 34ch;
+  font-size: 0.88rem;
   margin: 4px 0 0;
+}
+
+.access-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 18px;
+  align-items: start;
+  width: min(980px, 100%);
+  margin: 0 auto;
+}
+
+.access-panel,
+.access-sidecard {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow);
+}
+
+.access-panel {
+  padding: 28px;
+}
+
+.access-panel-copy {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.access-sidecard {
+  display: grid;
+  gap: 10px;
+  padding: 24px;
+  position: sticky;
+  top: 110px;
+}
+
+.access-sidecard p {
+  margin: 0;
 }
 
 .mock-card strong,
@@ -278,6 +302,18 @@ span {
   background: var(--surface);
   backdrop-filter: blur(18px);
   box-shadow: var(--shadow);
+}
+
+.minimal-footnote {
+  width: min(980px, 100%);
+  margin: 0 auto;
+}
+
+.minimal-footnote p {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.84rem;
 }
 
 .panel-frame {
@@ -580,7 +616,8 @@ li + li {
   margin: 0;
   min-height: 1.6em;
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
 }
 
 .form-message-success {
@@ -589,7 +626,11 @@ li + li {
 }
 
 .form-message-error {
-  color: #c54343;
+  padding: 12px 14px;
+  border: 1px solid rgba(197, 67, 67, 0.18);
+  border-radius: 14px;
+  background: rgba(197, 67, 67, 0.05);
+  color: #a13030;
   font-weight: 600;
 }
 

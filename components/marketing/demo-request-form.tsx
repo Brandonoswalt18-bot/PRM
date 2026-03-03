@@ -147,8 +147,7 @@ export function DemoRequestForm() {
         } ${status === "error" ? "form-message-error" : ""}`.trim()}
         aria-live="polite"
       >
-        {message ||
-          "Applications are stored in the portal and can also be routed into HubSpot for GoAccess review."}
+        {message || "Applications are reviewed by the GoAccess team before access is issued."}
       </p>
     </form>
   );

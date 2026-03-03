@@ -15,38 +15,30 @@ export function MarketingPage() {
       </header>
 
       <main className="marketing-minimal">
-        <section className="minimal-portal">
-          <div className="minimal-portal-copy">
-            <div className="eyebrow eyebrow-blue">GOACCESS</div>
-            <h1>Vendor portal</h1>
-            <p className="lede">
-              Sign in to your account or submit a vendor application.
-            </p>
-          </div>
+        <section className="access-shell">
+          <article className="access-panel" id="application">
+            <div className="access-panel-copy">
+              <span className="access-label">Vendor application</span>
+              <h1>Apply for access</h1>
+              <p className="lede">
+                Submit your business details for GoAccess review.
+              </p>
+            </div>
+            <DemoRequestForm />
+          </article>
 
-          <div className="portal-surface">
-            <div className="portal-surface-header">
-              <div className="portal-surface-actions">
-                <Link className="button button-primary button-blue" href="/login">
-                  Vendor Login
-                </Link>
-                <a className="button button-secondary button-white" href="#application">
-                  Apply
-                </a>
-              </div>
-            </div>
-            <div className="minimal-form-card" id="application">
-              <div className="application-header">
-                <span className="access-label">Application</span>
-                <h2>Apply to become a vendor</h2>
-              </div>
-              <DemoRequestForm />
-            </div>
-          </div>
+          <aside className="access-sidecard">
+            <span className="access-label">Approved vendors</span>
+            <h2>Already approved?</h2>
+            <p>Use your existing credentials to sign in and manage your account.</p>
+            <Link className="button button-primary button-blue" href="/login">
+              Vendor Login
+            </Link>
+          </aside>
         </section>
 
         <section className="minimal-footnote">
-          <p>Already approved? Use the vendor login above.</p>
+          <p>Vendor access is issued after review and onboarding approval.</p>
         </section>
       </main>
     </div>
