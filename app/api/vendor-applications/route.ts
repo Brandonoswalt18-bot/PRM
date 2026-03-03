@@ -87,8 +87,12 @@ export async function POST(request: Request) {
   let message = "Your GoAccess vendor application has been submitted for review.";
 
   if (failedNotifications.length > 0) {
+    const reasons = failedNotifications
+      .map((item) => item.reference)
+      .filter(Boolean)
+      .join(" | ");
     message =
-      "Your application was submitted, but email delivery failed. Review the admin queue for the exact Resend error.";
+      `Your application was submitted, but email delivery failed.${reasons ? ` ${reasons}` : ""}`;
   } else if (loggedNotifications.length > 0) {
     message =
       "Your application was submitted. Email delivery is not fully configured yet, so confirmations were only logged.";

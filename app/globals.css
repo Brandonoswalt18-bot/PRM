@@ -199,22 +199,23 @@ span {
 
 .marketing-minimal {
   display: grid;
-  gap: 56px;
-  padding-top: 46px;
+  gap: 36px;
+  padding-top: 18px;
 }
 
-.minimal-hero {
+.minimal-access {
   display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: 32px;
-  align-items: stretch;
+  gap: 24px;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-.minimal-copy {
+.minimal-access-copy {
   display: grid;
-  gap: 0;
-  align-content: center;
-  padding: 34px 0;
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+  padding: 12px 0 0;
 }
 
 .lede,
@@ -234,76 +235,59 @@ span {
 }
 
 .lede {
-  max-width: 62ch;
-  font-size: 1.12rem;
-  margin: 22px 0 28px;
+  max-width: 38ch;
+  font-size: 1rem;
+  margin: 4px 0 0;
 }
 
-.hero-actions {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
-
-.minimal-metrics {
+.access-actions-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
-  margin-top: 28px;
 }
 
-.minimal-metric {
-  padding: 18px 20px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.78);
-  text-align: left;
-}
-
-.minimal-metric strong,
 .mock-card strong,
 .price {
   display: block;
   font-size: 1.2rem;
 }
 
-.minimal-metric span,
 .mock-card small,
 .mock-card .label {
   color: var(--muted);
   font-size: 0.92rem;
 }
 
-.access-panel {
-  display: grid;
-  gap: 18px;
-}
-
-.access-card {
-  padding: 30px;
-  border-radius: 24px;
+.access-action-card {
+  padding: 24px;
+  border-radius: 20px;
   border: 1px solid var(--line-strong);
   background: rgba(255, 255, 255, 0.9);
   box-shadow: var(--shadow);
+  display: grid;
+  gap: 10px;
 }
 
-.primary-access-card {
-  background: linear-gradient(180deg, #ffffff, #eef5ff);
+.access-action-card-muted {
+  background: rgba(255, 255, 255, 0.74);
 }
 
-.secondary-access-card {
-  background: rgba(255, 255, 255, 0.86);
+.access-label {
+  color: var(--signal);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.access-card h2 {
+.access-action-card h2 {
   max-width: none;
-  font-size: 2rem;
-  margin-bottom: 12px;
+  font-size: 1.45rem;
+  margin: 0;
 }
 
-.access-card p {
-  margin: 0 0 18px;
+.access-action-card p {
+  margin: 0 0 8px;
   color: var(--muted);
 }
 
@@ -425,49 +409,23 @@ span {
   color: var(--signal-deep);
 }
 
-section {
-  margin-top: 110px;
-}
-
-.minimal-proof {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.proof-card {
-  padding: 22px 20px;
-  border-radius: 22px;
-  border: 1px solid var(--line-strong);
-  background: rgba(255, 255, 255, 0.84);
-}
-
-.proof-card strong {
-  display: block;
-  margin-top: 10px;
-  font-size: 1.55rem;
-}
-
-.proof-card small,
-.proof-card .label {
-  color: var(--muted);
-}
-
 .minimal-apply {
   display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
-  gap: 30px;
+  grid-template-columns: 0.7fr 1.3fr;
+  gap: 24px;
   align-items: start;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .minimal-apply-copy {
-  padding: 26px 0;
+  padding: 10px 0;
 }
 
 .minimal-form-card {
-  padding: 30px;
+  padding: 24px;
   border: 1px solid var(--line-strong);
-  border-radius: 26px;
+  border-radius: 20px;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: var(--shadow);
 }
@@ -929,7 +887,7 @@ li + li {
 }
 
 @media (max-width: 1080px) {
-  .minimal-hero,
+  .minimal-access,
   .minimal-apply,
   .product-hero,
   .cta-card,
@@ -950,7 +908,6 @@ li + li {
   .architecture-grid,
   .roadmap-grid,
   .pricing-grid,
-  .minimal-proof,
   .product-stats,
   .product-columns {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -979,13 +936,13 @@ li + li {
   }
 
   .minimal-metrics,
+  .access-actions-grid,
   .mock-grid,
   .feature-grid,
   .flow-grid,
   .architecture-grid,
   .roadmap-grid,
   .pricing-grid,
-  .minimal-proof,
   .product-stats,
   .product-columns,
   .stack-meta-grid,
@@ -1001,7 +958,7 @@ li + li {
   }
 
   section {
-    margin-top: 82px;
+    margin-top: 56px;
   }
 
   .workspace-band,
