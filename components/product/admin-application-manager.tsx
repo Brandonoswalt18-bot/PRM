@@ -35,22 +35,6 @@ const lifecycleStages: Array<{ label: string; status: VendorApplicationStatus }>
   { label: "Credentials issued", status: "credentials_issued" },
 ];
 
-function getStatusTone(status: VendorApplicationStatus) {
-  if (status === "credentials_issued") {
-    return "status-pill-success";
-  }
-
-  if (status === "rejected") {
-    return "status-pill-danger";
-  }
-
-  if (status === "nda_sent" || status === "nda_signed") {
-    return "status-pill-warning";
-  }
-
-  return "status-pill-neutral";
-}
-
 function getLifecycleStageState(
   stageStatus: VendorApplicationStatus,
   currentStatus: VendorApplicationStatus
@@ -161,9 +145,6 @@ export function AdminApplicationManager({
                     </p>
                   </div>
                   <div className="stage-actions-topline">
-                    <span className={`status-pill ${getStatusTone(application.status)}`}>
-                      {application.status.replaceAll("_", " ")}
-                    </span>
                     <button
                       className="button button-secondary button-inline-danger"
                       type="button"

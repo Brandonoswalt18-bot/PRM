@@ -879,6 +879,7 @@ li + li {
   border-radius: 18px;
   border: 1px solid rgba(31, 100, 216, 0.08);
   background: rgba(255, 255, 255, 0.88);
+  min-width: 0;
 }
 
 .stack-card-header,
@@ -914,6 +915,12 @@ li + li {
 
 .stack-note {
   margin-top: 12px;
+  overflow-wrap: anywhere;
+}
+
+.stack-note a {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .action-row {
@@ -965,7 +972,10 @@ li + li {
 .stage-actions-topline {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 10px;
+  min-width: 0;
 }
 
 .stage-pill {
@@ -1032,6 +1042,7 @@ li + li {
   min-width: auto;
   border-color: rgba(197, 67, 67, 0.16);
   color: #a13030;
+  white-space: nowrap;
 }
 
 .button-inline-danger:disabled {
