@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { get as getBlob, put as putBlob } from "@vercel/blob";
 import {
   buildInviteUrl,
   getApplicationNotificationRecipients,
@@ -25,6 +26,7 @@ import type {
 } from "@/types/goaccess";
 
 const STORE_FILENAME = "goaccess-vendor-portal.json";
+const BLOB_STORE_PATHNAME = `portal-store/${STORE_FILENAME}`;
 const DEFAULT_NDA_DOCUMENT_NAME = "GoAccess Vendor NDA";
 const DEFAULT_NDA_DOCUMENT_URL = "https://docs.google.com/document/d/goaccess-vendor-nda";
 
@@ -296,7 +298,36 @@ function cloneSeedStore(): PortalStore {
   return JSON.parse(JSON.stringify(seedStore)) as PortalStore;
 }
 
+function getBlobStoreToken() {
+  return process.env.BLOB_READ_WRITE_TOKEN?.trim() || null;
+}
+
+async function readBlobStore(token: string): Promise<PortalStore> {
+  try {
+    const result = await getBlob(BLOB_STORE_PATHNAME, {
+      access: "private",
+      token,
+      useCache: false,
+    });
+
+    if (!result || result.statusCode !== 200) {
+      return cloneSeedStore();
+    }
+
+    const raw = await new Response(result.stream).text();
+    return JSON.parse(raw) as PortalStore;
+  } catch {
+    return cloneSeedStore();
+  }
+}
+
 async function readStore(): Promise<PortalStore> {
+  const blobToken = getBlobStoreToken();
+
+  if (blobToken) {
+    return readBlobStore(blobToken);
+  }
+
   const filePath = getStorePath();
 
   try {
@@ -308,6 +339,19 @@ async function readStore(): Promise<PortalStore> {
 }
 
 async function writeStore(store: PortalStore) {
+  const blobToken = getBlobStoreToken();
+
+  if (blobToken) {
+    await putBlob(BLOB_STORE_PATHNAME, JSON.stringify(store, null, 2), {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: "application/json",
+      token: blobToken,
+    });
+    return;
+  }
+
   const filePath = getStorePath();
   await mkdir(path.dirname(filePath), { recursive: true });
   await writeFile(filePath, JSON.stringify(store, null, 2), "utf8");
@@ -1052,6 +1096,10 @@ export async function getForecastMonthlyRmrForVendor(vendorId: string) {
 }
 
 export async function getPortalStorePathForDebug() {
+  if (getBlobStoreToken()) {
+    return `blob:${BLOB_STORE_PATHNAME}`;
+  }
+
   return getStorePath();
 }
 
