@@ -930,11 +930,73 @@ li + li {
   align-items: center;
   padding: 8px 12px;
   border-radius: 999px;
-  background: rgba(31, 100, 216, 0.1);
-  color: var(--signal);
   font-size: 0.76rem;
   font-weight: 700;
   text-transform: capitalize;
+}
+
+.status-pill-neutral {
+  background: rgba(31, 100, 216, 0.1);
+  color: var(--signal);
+}
+
+.status-pill-success {
+  background: rgba(54, 145, 82, 0.14);
+  color: #2d7d4b;
+}
+
+.status-pill-warning {
+  background: rgba(191, 139, 49, 0.14);
+  color: #9c6a16;
+}
+
+.status-pill-danger {
+  background: rgba(197, 67, 67, 0.14);
+  color: #a13030;
+}
+
+.stage-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.stage-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.stage-pill-completed {
+  background: rgba(54, 145, 82, 0.12);
+  border-color: rgba(54, 145, 82, 0.18);
+  color: #2d7d4b;
+}
+
+.stage-pill-current {
+  background: rgba(31, 100, 216, 0.12);
+  border-color: rgba(31, 100, 216, 0.16);
+  color: var(--signal);
+}
+
+.stage-pill-pending {
+  background: rgba(255, 255, 255, 0.74);
+  border-color: rgba(31, 100, 216, 0.1);
+  color: var(--muted);
+}
+
+.stage-pill-rejected {
+  background: rgba(197, 67, 67, 0.12);
+  border-color: rgba(197, 67, 67, 0.18);
+  color: #a13030;
 }
 
 .table-note {

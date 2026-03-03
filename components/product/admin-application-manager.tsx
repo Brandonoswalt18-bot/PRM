@@ -35,6 +35,53 @@ const allowedTransitions: Record<VendorApplicationStatus, VendorApplicationStatu
   rejected: [],
 };
 
+const lifecycleStages: Array<{ label: string; status: VendorApplicationStatus }> = [
+  { label: "Submitted", status: "submitted" },
+  { label: "Under review", status: "under_review" },
+  { label: "Approved", status: "approved" },
+  { label: "NDA sent", status: "nda_sent" },
+  { label: "NDA signed", status: "nda_signed" },
+  { label: "Credentials issued", status: "credentials_issued" },
+];
+
+function getStatusTone(status: VendorApplicationStatus) {
+  if (status === "credentials_issued") {
+    return "status-pill-success";
+  }
+
+  if (status === "rejected") {
+    return "status-pill-danger";
+  }
+
+  if (status === "nda_sent" || status === "nda_signed") {
+    return "status-pill-warning";
+  }
+
+  return "status-pill-neutral";
+}
+
+function getLifecycleStageState(
+  stageStatus: VendorApplicationStatus,
+  currentStatus: VendorApplicationStatus
+) {
+  if (currentStatus === "rejected") {
+    return stageStatus === "submitted" ? "completed" : "pending";
+  }
+
+  const currentIndex = lifecycleStages.findIndex((stage) => stage.status === currentStatus);
+  const stageIndex = lifecycleStages.findIndex((stage) => stage.status === stageStatus);
+
+  if (stageIndex < currentIndex) {
+    return "completed";
+  }
+
+  if (stageIndex === currentIndex) {
+    return "current";
+  }
+
+  return "pending";
+}
+
 export function AdminApplicationManager({
   applications,
   vendors,
@@ -91,6 +138,7 @@ export function AdminApplicationManager({
             const latestNotification = appNotifications[0];
             const inviteUrl = vendor?.inviteToken ? `/invite/${vendor.inviteToken}` : null;
             const timeline = buildApplicationTimeline(application, vendor ?? null, appNotifications).slice(0, 4);
+            const isRejected = application.status === "rejected";
 
             return (
               <div className="stack-card" key={application.id}>
@@ -103,7 +151,23 @@ export function AdminApplicationManager({
                       · {application.primaryContactName}
                     </p>
                   </div>
-                  <span className="status-pill">{application.status.replaceAll("_", " ")}</span>
+                  <span className={`status-pill ${getStatusTone(application.status)}`}>
+                    {application.status.replaceAll("_", " ")}
+                  </span>
+                </div>
+                <div className="stage-pill-row" aria-label="Application lifecycle">
+                  {lifecycleStages.map((stage) => (
+                    <span
+                      className={`stage-pill stage-pill-${getLifecycleStageState(
+                        stage.status,
+                        application.status
+                      )}`}
+                      key={`${application.id}-${stage.status}`}
+                    >
+                      {stage.label}
+                    </span>
+                  ))}
+                  {isRejected ? <span className="stage-pill stage-pill-rejected">Rejected</span> : null}
                 </div>
                 <div className="stack-meta-grid">
                   <span>{application.primaryContactEmail}</span>
