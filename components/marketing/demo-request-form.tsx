@@ -6,21 +6,19 @@ import { trackEvent } from "@/lib/analytics";
 type FormState = {
   companyName: string;
   website: string;
-  region: string;
-  vendorType: string;
+  city: string;
+  state: string;
   primaryContactName: string;
   primaryContactEmail: string;
-  notes: string;
 };
 
 const initialState: FormState = {
   companyName: "",
   website: "",
-  region: "",
-  vendorType: "",
+  city: "",
+  state: "",
   primaryContactName: "",
   primaryContactEmail: "",
-  notes: "",
 };
 
 export function DemoRequestForm() {
@@ -35,7 +33,7 @@ export function DemoRequestForm() {
 
     trackEvent("vendor_application_submitted", {
       company: form.companyName,
-      vendor_type: form.vendorType,
+      state: form.state,
     });
 
     try {
@@ -101,20 +99,20 @@ export function DemoRequestForm() {
       <div className="inline-form-grid">
         <input
           type="text"
-          placeholder="Region"
-          aria-label="Region"
-          value={form.region}
-          onFocus={() => trackEvent("vendor_application_field_focused", { field: "region" })}
-          onChange={(event) => update("region", event.target.value)}
+          placeholder="City"
+          aria-label="City"
+          value={form.city}
+          onFocus={() => trackEvent("vendor_application_field_focused", { field: "city" })}
+          onChange={(event) => update("city", event.target.value)}
           required
         />
         <input
           type="text"
-          placeholder="Vendor type"
-          aria-label="Vendor type"
-          value={form.vendorType}
-          onFocus={() => trackEvent("vendor_application_field_focused", { field: "vendorType" })}
-          onChange={(event) => update("vendorType", event.target.value)}
+          placeholder="State"
+          aria-label="State"
+          value={form.state}
+          onFocus={() => trackEvent("vendor_application_field_focused", { field: "state" })}
+          onChange={(event) => update("state", event.target.value)}
           required
         />
       </div>
@@ -139,15 +137,6 @@ export function DemoRequestForm() {
         }
         onChange={(event) => update("primaryContactEmail", event.target.value)}
         required
-      />
-      <textarea
-        className="cta-textarea"
-        placeholder="Tell GoAccess about your company, territory, and the types of deals you want to bring in."
-        aria-label="Vendor application details"
-        value={form.notes}
-        onFocus={() => trackEvent("vendor_application_field_focused", { field: "notes" })}
-        onChange={(event) => update("notes", event.target.value)}
-        rows={4}
       />
       <button className="button button-primary" type="submit" disabled={status === "submitting"}>
         {status === "submitting" ? "Submitting..." : "Submit vendor application"}

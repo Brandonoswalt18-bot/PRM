@@ -5,11 +5,10 @@ import { listVendorApplications, submitVendorApplication } from "@/lib/goaccess-
 type VendorApplicationPayload = {
   companyName?: string;
   website?: string;
-  region?: string;
-  vendorType?: string;
+  city?: string;
+  state?: string;
   primaryContactName?: string;
   primaryContactEmail?: string;
-  notes?: string;
 };
 
 export async function GET() {
@@ -28,15 +27,16 @@ export async function POST(request: Request) {
 
   const companyName = body.companyName?.trim() ?? "";
   const website = body.website?.trim() ?? "";
-  const region = body.region?.trim() ?? "";
-  const vendorType = body.vendorType?.trim() ?? "";
+  const city = body.city?.trim() ?? "";
+  const state = body.state?.trim() ?? "";
   const primaryContactName = body.primaryContactName?.trim() ?? "";
   const primaryContactEmail = body.primaryContactEmail?.trim().toLowerCase() ?? "";
-  const notes = body.notes?.trim() ?? "";
+  const region = [city, state].filter(Boolean).join(", ");
+  const vendorType = "Vendor applicant";
 
-  if (!companyName || !region || !vendorType || !primaryContactName || !primaryContactEmail) {
+  if (!companyName || !city || !state || !primaryContactName || !primaryContactEmail) {
     return NextResponse.json(
-      { message: "Company, region, vendor type, contact name, and email are required." },
+      { message: "Business name, city, state, contact name, and email are required." },
       { status: 400 }
     );
   }
@@ -48,11 +48,13 @@ export async function POST(request: Request) {
   const result = await submitVendorApplication({
     companyName,
     website,
+    city,
+    state,
     region,
     vendorType,
     primaryContactName,
     primaryContactEmail,
-    notes,
+    notes: "",
   });
 
   if (isHubSpotLeadRoutingEnabled()) {
@@ -64,10 +66,8 @@ export async function POST(request: Request) {
         notes: [
           "Vendor application",
           website ? `Website: ${website}` : "",
-          `Region: ${region}`,
-          `Vendor type: ${vendorType}`,
-          "",
-          notes,
+          `City: ${city}`,
+          `State: ${state}`,
         ]
           .filter(Boolean)
           .join("\n"),

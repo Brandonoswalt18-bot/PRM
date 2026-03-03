@@ -96,7 +96,9 @@ export function AdminApplicationManager({
                   <div>
                     <h3>{application.companyName}</h3>
                     <p>
-                      {application.vendorType} · {application.region} · {application.primaryContactName}
+                      {[application.city, application.state].filter(Boolean).join(", ") ||
+                        application.region}{" "}
+                      · {application.primaryContactName}
                     </p>
                   </div>
                   <span className="status-pill">{application.status.replaceAll("_", " ")}</span>

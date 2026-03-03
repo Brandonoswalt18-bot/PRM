@@ -24,6 +24,8 @@ export type VendorApplication = {
   id: string;
   companyName: string;
   website: string;
+  city?: string;
+  state?: string;
   region: string;
   vendorType: string;
   primaryContactName: string;
@@ -43,6 +45,8 @@ export type ApprovedVendor = {
   applicationId: string;
   companyName: string;
   website: string;
+  city?: string;
+  state?: string;
   region: string;
   vendorType: string;
   primaryContactName: string;
@@ -122,6 +126,8 @@ export type PortalStore = {
 export type CreateVendorApplicationInput = {
   companyName: string;
   website: string;
+  city: string;
+  state: string;
   region: string;
   vendorType: string;
   primaryContactName: string;
