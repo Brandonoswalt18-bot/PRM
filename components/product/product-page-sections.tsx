@@ -12,6 +12,7 @@ import type {
   ProfileField,
   ProgramSummary,
 } from "@/types/prm";
+import type { TimelineEntry } from "@/types/goaccess";
 
 export function MetricGrid({ metrics }: { metrics: MetricCard[] }) {
   return (
@@ -172,5 +173,39 @@ export function ProfileRow(row: ProfileField) {
       <span>{row.label}</span>
       <span>{row.value}</span>
     </div>
+  );
+}
+
+export function TimelineSection({
+  title,
+  description,
+  entries,
+}: {
+  title: string;
+  description: string;
+  entries: TimelineEntry[];
+}) {
+  return (
+    <article className="workspace-card wide-card">
+      <div className="card-header-row">
+        <div>
+          <h3>{title}</h3>
+          <p>{description}</p>
+        </div>
+      </div>
+      <div className="timeline-stack">
+        {entries.map((entry) => (
+          <div className="timeline-card" key={`${entry.timestamp}-${entry.title}`}>
+            <div className="timeline-card-topline">
+              <strong>{entry.title}</strong>
+              <span className={`timeline-badge timeline-${entry.tone ?? "neutral"}`}>
+                {new Date(entry.timestamp).toLocaleDateString()}
+              </span>
+            </div>
+            <p>{entry.detail}</p>
+          </div>
+        ))}
+      </div>
+    </article>
   );
 }

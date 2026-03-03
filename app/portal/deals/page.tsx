@@ -2,43 +2,86 @@ import {
   LinkRow,
   MetricGrid,
   TableSection,
+  TimelineSection,
 } from "@/components/product/product-page-sections";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
-import { getLinksPageData } from "@/lib/mock-data";
+import { getWorkspaceSession } from "@/lib/auth";
+import { buildDealTimeline } from "@/lib/goaccess-timeline";
+import {
+  formatCurrency,
+  listDeals,
+  listSyncEvents,
+} from "@/lib/goaccess-store";
+
+function titleCaseStatus(value: string) {
+  return value.replaceAll("_", " ");
+}
 
 export default async function PartnerDealsPage() {
-  const data = await getLinksPageData();
+  const session = await getWorkspaceSession();
+  const vendorId = session?.vendorId;
+  const [deals, syncEvents] = await Promise.all([
+    listDeals(vendorId),
+    listSyncEvents(),
+  ]);
+
+  const metrics = [
+    {
+      label: "Registered deals",
+      value: String(deals.length),
+      delta: `${deals.filter((deal) => deal.status === "submitted" || deal.status === "under_review").length} still under review`,
+    },
+    {
+      label: "In HubSpot",
+      value: String(deals.filter((deal) => deal.status === "synced_to_hubspot").length),
+      delta: `${deals.filter((deal) => deal.hubspotDealId).length} deals linked to HubSpot`,
+    },
+    {
+      label: "Closed won",
+      value: String(deals.filter((deal) => deal.status === "closed_won").length),
+      delta: `${formatCurrency(deals.filter((deal) => deal.status === "closed_won").reduce((sum, deal) => sum + deal.monthlyRmr, 0))} active monthly RMR`,
+    },
+    {
+      label: "Held or rejected",
+      value: String(deals.filter((deal) => deal.status === "rejected").length),
+      delta: `${deals.filter((deal) => deal.status === "under_review").length} waiting on GoAccess review`,
+    },
+  ];
 
   return (
     <>
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="My deals"
-        subtitle="Track every GoAccess deal you registered, whether it is under review, in HubSpot, or already closed won."
+        subtitle="Track registrations, HubSpot write-back, review holds, and the deals already contributing recurring revenue."
         primaryLabel="Register new deal"
         primaryHref="/portal/links"
       />
       <div className="app-content">
-        <MetricGrid metrics={data.metrics} />
+        <MetricGrid metrics={metrics} />
+        <TableSection
+          title="Deal history"
+          description="Every deal you submitted through the GoAccess vendor portal."
+          actionLabel="Register another deal"
+          actionHref="/portal/links"
+          headers={["Account", "Domain", "Submitted", "Status"]}
+          rows={deals.map((deal) => ({
+            name: deal.companyName,
+            destination: deal.domain,
+            clicks: `Submitted ${new Date(deal.createdAt).toLocaleDateString()}`,
+            conversions: titleCaseStatus(deal.status),
+          }))}
+          renderRow={LinkRow}
+        />
         <section className="dashboard-grid">
-          <TableSection
-            title="Deal history"
-            description="Your full GoAccess deal list, including records still under review and deals already synced to HubSpot."
-            actionLabel="Register another deal"
-            actionHref="/portal/links"
-            headers={["Account", "Domain", "Submitted", "Status"]}
-            rows={data.links}
-            renderRow={LinkRow}
-          />
-          <article className="workspace-card">
-            <h3>How to use this view</h3>
-            <ul>
-              <li>Use this page to see every deal you registered with GoAccess.</li>
-              <li>Status changes reflect the latest review or CRM sync step.</li>
-              <li>Closed won accounts will later flow into monthly RMR totals.</li>
-              <li>Use Support if a deal looks incorrect or stalled.</li>
-            </ul>
-          </article>
+          {deals.slice(0, 3).map((deal) => (
+            <TimelineSection
+              key={deal.id}
+              title={deal.companyName}
+              description={`${deal.domain} · ${titleCaseStatus(deal.status)}${deal.hubspotDealId ? ` · HubSpot #${deal.hubspotDealId}` : ""}`}
+              entries={buildDealTimeline(deal, syncEvents)}
+            />
+          ))}
         </section>
       </div>
     </>

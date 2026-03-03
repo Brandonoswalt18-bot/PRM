@@ -595,6 +595,16 @@ li + li {
   font-size: 0.96rem;
 }
 
+.cta-select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(31, 100, 216, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--ink);
+  font-size: 0.96rem;
+}
+
 .cta-textarea {
   width: 100%;
   padding: 12px 14px;
@@ -930,8 +940,66 @@ li + li {
   border: 1px solid rgba(31, 100, 216, 0.08);
 }
 
+.timeline-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.compact-timeline {
+  margin-top: 12px;
+}
+
+.timeline-card {
+  padding: 12px 14px;
+  border: 1px solid rgba(31, 100, 216, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.timeline-card p {
+  margin: 6px 0 0;
+}
+
+.timeline-card-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.timeline-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.timeline-neutral {
+  background: rgba(31, 100, 216, 0.1);
+  color: var(--signal);
+}
+
+.timeline-success {
+  background: rgba(54, 145, 82, 0.12);
+  color: #2d7d4b;
+}
+
+.timeline-warning {
+  background: rgba(191, 139, 49, 0.14);
+  color: #9c6a16;
+}
+
+.timeline-danger {
+  background: rgba(197, 67, 67, 0.12);
+  color: #a13030;
+}
+
 @media (max-width: 1080px) {
-  .minimal-portal,
+  .access-shell,
   .minimal-apply,
   .product-hero,
   .cta-card,
@@ -972,6 +1040,15 @@ li + li {
     border-radius: 24px;
   }
 
+  .access-panel,
+  .access-sidecard {
+    padding: 22px;
+  }
+
+  .access-sidecard {
+    position: static;
+  }
+
   .nav {
     order: 3;
     width: 100%;
@@ -1006,7 +1083,9 @@ li + li {
 
   .workspace-band,
   .cta-card,
-  .minimal-form-card {
+  .minimal-form-card,
+  .access-panel,
+  .access-sidecard {
     padding: 22px;
   }
 
@@ -1018,6 +1097,11 @@ li + li {
   .login-actions,
   .login-footer {
     flex-direction: column;
+  }
+
+  .timeline-card-topline {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

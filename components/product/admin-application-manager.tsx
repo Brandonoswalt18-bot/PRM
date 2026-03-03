@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
+import { buildApplicationTimeline } from "@/lib/goaccess-timeline";
 import type {
   ApprovedVendor,
   VendorApplication,
@@ -89,6 +90,7 @@ export function AdminApplicationManager({
             const appNotifications = notifications.filter((item) => item.applicationId === application.id);
             const latestNotification = appNotifications[0];
             const inviteUrl = vendor?.inviteToken ? `/invite/${vendor.inviteToken}` : null;
+            const timeline = buildApplicationTimeline(application, vendor ?? null, appNotifications).slice(0, 4);
 
             return (
               <div className="stack-card" key={application.id}>
@@ -135,6 +137,19 @@ export function AdminApplicationManager({
                     Invite link: <a href={inviteUrl}>{inviteUrl}</a>
                   </p>
                 ) : null}
+                <div className="timeline-stack compact-timeline">
+                  {timeline.map((entry) => (
+                    <div className="timeline-card" key={`${application.id}-${entry.timestamp}-${entry.title}`}>
+                      <div className="timeline-card-topline">
+                        <strong>{entry.title}</strong>
+                        <span className={`timeline-badge timeline-${entry.tone ?? "neutral"}`}>
+                          {new Date(entry.timestamp).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p>{entry.detail}</p>
+                    </div>
+                  ))}
+                </div>
                 <div className="action-row">
                   {actions.map((action) => (
                     <button

@@ -1,9 +1,14 @@
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { AdminDealManager } from "@/components/product/admin-deal-manager";
-import { listDeals } from "@/lib/goaccess-store";
+import { listApprovedVendors, listDeals, listSupportRequests, listSyncEvents } from "@/lib/goaccess-store";
 
 export default async function DealRegistrationsPage() {
-  const deals = await listDeals();
+  const [deals, syncEvents, vendors, supportRequests] = await Promise.all([
+    listDeals(),
+    listSyncEvents(),
+    listApprovedVendors(),
+    listSupportRequests(),
+  ]);
 
   return (
     <>
@@ -15,7 +20,16 @@ export default async function DealRegistrationsPage() {
         primaryHref="/app/deal-registrations"
       />
       <div className="app-content">
-        <AdminDealManager deals={deals} />
+        <AdminDealManager deals={deals} syncEvents={syncEvents} vendors={vendors} />
+        <article className="workspace-card">
+          <h3>Review guardrails</h3>
+          <ul>
+            <li>{deals.filter((deal) => deal.status === "submitted").length} new submissions still need first review.</li>
+            <li>{deals.filter((deal) => deal.status === "approved").length} approved deals are ready for HubSpot creation.</li>
+            <li>{deals.filter((deal) => deal.status === "synced_to_hubspot").length} deals are active in HubSpot.</li>
+            <li>{supportRequests.filter((request) => request.status !== "resolved").length} open vendor support requests may affect deal progress.</li>
+          </ul>
+        </article>
         <article className="workspace-card">
           <h3>Planned next</h3>
           <ul>

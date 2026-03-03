@@ -18,6 +18,7 @@ import {
   getVendorById,
   listApprovedVendors,
   listDeals,
+  listSupportRequests,
   listSyncEvents,
   listVendorApplications,
 } from "@/lib/goaccess-store";
@@ -58,11 +59,12 @@ export async function getPartnerNavigationData(): Promise<WorkspaceNavItem[]> {
 }
 
 export async function getVendorDashboardFromStore(): Promise<VendorDashboardData> {
-  const [applications, vendors, deals, syncEvents] = await Promise.all([
+  const [applications, vendors, deals, syncEvents, supportRequests] = await Promise.all([
     listVendorApplications(),
     listApprovedVendors(),
     listDeals(),
     listSyncEvents(),
+    listSupportRequests(),
   ]);
 
   const currentRmr = deals
@@ -96,6 +98,14 @@ export async function getVendorDashboardFromStore(): Promise<VendorDashboardData
       .map((deal) => `${deal.companyName}: ${titleCaseStatus(deal.status)}`),
   };
 
+  const supportQueue: QueueGroup = {
+    title: "Vendor support",
+    items: supportRequests
+      .filter((request) => request.status !== "resolved")
+      .slice(0, 3)
+      .map((request) => `${request.subject}: ${titleCaseStatus(request.status)}`),
+  };
+
   return {
     metrics: [
       {
@@ -116,10 +126,10 @@ export async function getVendorDashboardFromStore(): Promise<VendorDashboardData
       {
         label: "Projected monthly RMR",
         value: formatCurrency(forecastRmr),
-        delta: `${formatCurrency(currentRmr)} currently closed won`,
+        delta: `${formatCurrency(currentRmr)} currently closed won · ${supportRequests.filter((item) => item.status !== "resolved").length} open support items`,
       },
     ],
-    queues: [approvalQueue, onboardingQueue, reviewQueue],
+    queues: [approvalQueue, onboardingQueue, reviewQueue, supportQueue],
     programs: applications.slice(0, 6).map((application) => ({
       name: application.companyName,
       partners: titleCaseStatus(application.status),
@@ -222,7 +232,11 @@ export async function getHubSpotSyncFromStore(): Promise<CommissionsPageData> {
 }
 
 export async function getPartnerDashboardFromStore(): Promise<PartnerDashboardData> {
-  const [vendor, deals] = await Promise.all([getVendorById(CURRENT_VENDOR_ID), listDeals(CURRENT_VENDOR_ID)]);
+  const [vendor, deals, supportRequests] = await Promise.all([
+    getVendorById(CURRENT_VENDOR_ID),
+    listDeals(CURRENT_VENDOR_ID),
+    listSupportRequests(CURRENT_VENDOR_ID),
+  ]);
 
   const currentRmr = await getCurrentMonthlyRmrForVendor(CURRENT_VENDOR_ID);
   const forecastRmr = await getForecastMonthlyRmrForVendor(CURRENT_VENDOR_ID);
@@ -256,7 +270,7 @@ export async function getPartnerDashboardFromStore(): Promise<PartnerDashboardDa
         items: [
           `${formatCurrency(currentRmr)} current monthly RMR`,
           `${formatCurrency(forecastRmr)} projected monthly RMR`,
-          "Statements update from the same underlying deal records",
+          `${supportRequests.filter((request) => request.status !== "resolved").length} open support requests`,
         ],
       },
     ],

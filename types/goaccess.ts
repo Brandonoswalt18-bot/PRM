@@ -20,6 +20,23 @@ export type DealStatus =
 
 export type SyncEventStatus = "queued" | "synced" | "held" | "failed";
 
+export type SupportRequestStatus = "open" | "in_progress" | "resolved";
+
+export type SupportRequestCategory =
+  | "deal_registration"
+  | "hubspot_sync"
+  | "profile_update"
+  | "rmr_question"
+  | "portal_access"
+  | "general";
+
+export type TimelineEntry = {
+  title: string;
+  detail: string;
+  timestamp: string;
+  tone?: "neutral" | "success" | "warning" | "danger";
+};
+
 export type VendorApplication = {
   id: string;
   companyName: string;
@@ -121,6 +138,7 @@ export type PortalStore = {
   deals: DealRegistration[];
   syncEvents: DealSyncEvent[];
   notifications: VendorNotification[];
+  supportRequests: SupportRequest[];
 };
 
 export type CreateVendorApplicationInput = {
@@ -145,6 +163,23 @@ export type CreateDealInput = {
   monthlyRmr: number;
   productInterest: string;
   notes: string;
+};
+
+export type SupportRequest = {
+  id: string;
+  vendorId: string;
+  subject: string;
+  category: SupportRequestCategory;
+  message: string;
+  status: SupportRequestStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateSupportRequestInput = {
+  subject: string;
+  category: SupportRequestCategory;
+  message: string;
 };
 
 export type DealStatusUpdateOptions = {

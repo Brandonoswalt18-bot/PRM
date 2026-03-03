@@ -8,12 +8,15 @@ import {
 import type {
   ApprovedVendor,
   CreateDealInput,
+  CreateSupportRequestInput,
   CreateVendorApplicationInput,
   DealRegistration,
   DealStatus,
   DealStatusUpdateOptions,
   DealSyncEvent,
   PortalStore,
+  SupportRequest,
+  TimelineEntry,
   VendorNotification,
   VendorApplication,
   VendorApplicationStatus,
@@ -257,6 +260,28 @@ const seedStore: PortalStore = {
       createdAt: "2026-02-27T13:20:00.000Z",
     },
   ],
+  supportRequests: [
+    {
+      id: "support-blue-haven-sync",
+      vendorId: "vendor-blue-haven",
+      subject: "Deal sync status for Northstar",
+      category: "hubspot_sync",
+      message: "Need clarification on why the Northstar registration is still being held for review.",
+      status: "in_progress",
+      createdAt: "2026-03-23T10:15:00.000Z",
+      updatedAt: "2026-03-23T11:30:00.000Z",
+    },
+    {
+      id: "support-blue-haven-rmr",
+      vendorId: "vendor-blue-haven",
+      subject: "March RMR statement question",
+      category: "rmr_question",
+      message: "Please confirm whether Brightline is included in the projected March recurring revenue total.",
+      status: "open",
+      createdAt: "2026-03-29T09:45:00.000Z",
+      updatedAt: "2026-03-29T09:45:00.000Z",
+    },
+  ],
 };
 
 function getStorePath() {
@@ -294,6 +319,10 @@ function makeId(prefix: string) {
 
 function nowIso() {
   return new Date().toISOString();
+}
+
+function titleCaseStatus(value: string) {
+  return value.replaceAll("_", " ");
 }
 
 function slugify(value: string) {
@@ -334,6 +363,14 @@ export async function listVendorNotifications() {
   return [...store.notifications].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+export async function listSupportRequests(vendorId?: string) {
+  const store = await readStore();
+  const items = vendorId
+    ? store.supportRequests.filter((request) => request.vendorId === vendorId)
+    : store.supportRequests;
+  return [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
 export async function getDealById(dealId: string) {
   const store = await readStore();
   return store.deals.find((item) => item.id === dealId) ?? null;
@@ -342,6 +379,157 @@ export async function getDealById(dealId: string) {
 export async function getVendorByInviteToken(inviteToken: string) {
   const store = await readStore();
   return store.approvedVendors.find((item) => item.inviteToken === inviteToken) ?? null;
+}
+
+export function buildApplicationTimeline(
+  application: VendorApplication,
+  vendor: ApprovedVendor | null,
+  notifications: VendorNotification[]
+): TimelineEntry[] {
+  const entries: TimelineEntry[] = [
+    {
+      title: "Application submitted",
+      detail: `${application.companyName} entered the GoAccess review queue.`,
+      timestamp: application.createdAt,
+      tone: "neutral",
+    },
+  ];
+
+  if (application.status === "under_review" || application.status === "approved" || vendor) {
+    entries.push({
+      title: "Review started",
+      detail: "GoAccess opened the vendor application for internal review.",
+      timestamp: application.updatedAt,
+      tone: "neutral",
+    });
+  }
+
+  if (application.approvalEmailSentAt) {
+    entries.push({
+      title: "Approved for onboarding",
+      detail: `Vendor ID ${vendor?.hubspotPartnerId ?? "pending"} assigned and onboarding approved.`,
+      timestamp: application.approvalEmailSentAt,
+      tone: "success",
+    });
+  }
+
+  if (application.ndaSentAt) {
+    entries.push({
+      title: "NDA sent",
+      detail: vendor?.ndaDocumentUrl
+        ? "Legal document delivered and awaiting signature."
+        : "Legal document sent to the vendor.",
+      timestamp: application.ndaSentAt,
+      tone: "warning",
+    });
+  }
+
+  if (application.ndaSignedAt) {
+    entries.push({
+      title: "NDA completed",
+      detail: "Vendor completed legal onboarding and is ready for credentials.",
+      timestamp: application.ndaSignedAt,
+      tone: "success",
+    });
+  }
+
+  if (application.credentialsIssuedAt) {
+    entries.push({
+      title: "Credentials issued",
+      detail: vendor?.inviteAcceptedAt
+        ? "Portal credentials were issued and accepted."
+        : "Portal credentials were issued and invite is pending acceptance.",
+      timestamp: application.credentialsIssuedAt,
+      tone: "success",
+    });
+  }
+
+  if (vendor?.inviteAcceptedAt) {
+    entries.push({
+      title: "Vendor activated portal access",
+      detail: "The invite link was accepted and the vendor portal is active.",
+      timestamp: vendor.inviteAcceptedAt,
+      tone: "success",
+    });
+  }
+
+  if (application.status === "rejected") {
+    entries.push({
+      title: "Application rejected",
+      detail: "The application was closed without vendor activation.",
+      timestamp: application.updatedAt,
+      tone: "danger",
+    });
+  }
+
+  for (const notification of notifications) {
+    entries.push({
+      title: notification.subject,
+      detail: `Email ${notification.status}${notification.reference ? ` · ${notification.reference}` : ""}`,
+      timestamp: notification.createdAt,
+      tone:
+        notification.status === "failed"
+          ? "danger"
+          : notification.status === "sent"
+            ? "success"
+            : "neutral",
+    });
+  }
+
+  return entries.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+}
+
+export function buildDealTimeline(
+  deal: DealRegistration,
+  syncEvents: DealSyncEvent[]
+): TimelineEntry[] {
+  const entries: TimelineEntry[] = [
+    {
+      title: "Deal submitted",
+      detail: `${deal.companyName} was registered in the vendor portal.`,
+      timestamp: deal.createdAt,
+      tone: "neutral",
+    },
+  ];
+
+  for (const event of syncEvents.filter((item) => item.dealId === deal.id)) {
+    entries.push({
+      title: event.action,
+      detail: event.reference,
+      timestamp: event.createdAt,
+      tone:
+        event.status === "failed"
+          ? "danger"
+          : event.status === "held"
+            ? "warning"
+            : event.status === "synced"
+              ? "success"
+              : "neutral",
+    });
+  }
+
+  if (deal.hubspotDealId) {
+    entries.push({
+      title: "HubSpot deal linked",
+      detail: `HubSpot deal #${deal.hubspotDealId} is attached to this registration.`,
+      timestamp: deal.updatedAt,
+      tone: "success",
+    });
+  }
+
+  if (deal.status === "closed_won" || deal.status === "closed_lost") {
+    entries.push({
+      title: `Deal marked ${titleCaseStatus(deal.status)}`,
+      detail:
+        deal.status === "closed_won"
+          ? `Recurring revenue of ${formatCurrency(deal.monthlyRmr)} is now active.`
+          : "This opportunity is closed and no longer active in the pipeline.",
+      timestamp: deal.updatedAt,
+      tone: deal.status === "closed_won" ? "success" : "danger",
+    });
+  }
+
+  return entries.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 }
 
 function buildInviteToken(companyName: string) {
@@ -781,6 +969,30 @@ export async function updateVendorProfile(vendorId: string, input: UpdateVendorP
 
   await writeStore(store);
   return vendor;
+}
+
+export async function submitSupportRequest(vendorId: string, input: CreateSupportRequestInput) {
+  const store = await readStore();
+  const vendor = store.approvedVendors.find((item) => item.id === vendorId);
+
+  if (!vendor) {
+    throw new Error("Approved vendor not found.");
+  }
+
+  const request: SupportRequest = {
+    id: makeId("support"),
+    vendorId,
+    subject: input.subject,
+    category: input.category,
+    message: input.message,
+    status: "open",
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
+  };
+
+  store.supportRequests.unshift(request);
+  await writeStore(store);
+  return request;
 }
 
 export async function getVendorById(vendorId: string) {

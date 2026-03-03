@@ -2,10 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
-import type { DealRegistration, DealStatus } from "@/types/goaccess";
+import { buildDealTimeline } from "@/lib/goaccess-timeline";
+import type { ApprovedVendor, DealRegistration, DealStatus, DealSyncEvent } from "@/types/goaccess";
 
 type AdminDealManagerProps = {
   deals: DealRegistration[];
+  syncEvents: DealSyncEvent[];
+  vendors: ApprovedVendor[];
 };
 
 const actions: Array<{ label: string; status: DealStatus }> = [
@@ -27,7 +30,7 @@ const allowedTransitions: Record<DealStatus, DealStatus[]> = {
   rejected: [],
 };
 
-export function AdminDealManager({ deals }: AdminDealManagerProps) {
+export function AdminDealManager({ deals, syncEvents, vendors }: AdminDealManagerProps) {
   const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -73,39 +76,60 @@ export function AdminDealManager({ deals }: AdminDealManagerProps) {
       {message ? <p className="table-note">{message}</p> : null}
       <div className="stack-list">
         {deals.map((deal) => (
-          <div className="stack-card" key={deal.id}>
-            <div className="stack-card-header">
-              <div>
-                <h3>{deal.companyName}</h3>
-                <p>
-                  {deal.domain} · {deal.contactName} · ${deal.estimatedValue.toLocaleString()}
+          (() => {
+            const vendor = vendors.find((item) => item.id === deal.vendorId);
+            const timeline = buildDealTimeline(deal, syncEvents).slice(0, 4);
+
+            return (
+              <div className="stack-card" key={deal.id}>
+                <div className="stack-card-header">
+                  <div>
+                    <h3>{deal.companyName}</h3>
+                    <p>
+                      {deal.domain} · {deal.contactName} · ${deal.estimatedValue.toLocaleString()}
+                    </p>
+                  </div>
+                  <span className="status-pill">{deal.status.replaceAll("_", " ")}</span>
+                </div>
+                <div className="stack-meta-grid">
+                  <span>{deal.contactEmail}</span>
+                  <span>{deal.productInterest}</span>
+                  <span>${deal.monthlyRmr.toLocaleString()} monthly RMR</span>
+                </div>
+                <p className="stack-note">
+                  Vendor: {vendor?.companyName ?? "Unknown vendor"}
+                  {deal.hubspotDealId ? ` · HubSpot deal #${deal.hubspotDealId}` : ""}
                 </p>
+                {deal.notes ? <p className="stack-note">{deal.notes}</p> : null}
+                <div className="timeline-stack compact-timeline">
+                  {timeline.map((entry) => (
+                    <div className="timeline-card" key={`${deal.id}-${entry.timestamp}-${entry.title}`}>
+                      <div className="timeline-card-topline">
+                        <strong>{entry.title}</strong>
+                        <span className={`timeline-badge timeline-${entry.tone ?? "neutral"}`}>
+                          {new Date(entry.timestamp).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p>{entry.detail}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="action-row">
+                  {actions.map((action) => (
+                    <button
+                      className="button button-secondary"
+                      key={action.status}
+                      type="button"
+                      disabled={busyId === deal.id || !allowedTransitions[deal.status].includes(action.status)}
+                      onClick={() => updateStatus(deal.id, action.status)}
+                    >
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <span className="status-pill">{deal.status.replaceAll("_", " ")}</span>
-            </div>
-            <div className="stack-meta-grid">
-              <span>{deal.contactEmail}</span>
-              <span>{deal.productInterest}</span>
-              <span>${deal.monthlyRmr.toLocaleString()} monthly RMR</span>
-            </div>
-            {deal.notes ? <p className="stack-note">{deal.notes}</p> : null}
-            {deal.hubspotDealId ? (
-              <p className="stack-note">HubSpot deal: #{deal.hubspotDealId}</p>
-            ) : null}
-            <div className="action-row">
-              {actions.map((action) => (
-                <button
-                  className="button button-secondary"
-                  key={action.status}
-                  type="button"
-                  disabled={busyId === deal.id || !allowedTransitions[deal.status].includes(action.status)}
-                  onClick={() => updateStatus(deal.id, action.status)}
-                >
-                  {action.label}
-                </button>
-              ))}
-            </div>
-          </div>
+            );
+          })()
         ))}
       </div>
     </article>
