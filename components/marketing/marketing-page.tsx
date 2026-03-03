@@ -18,9 +18,9 @@ export function MarketingPage() {
         <section className="entry-hero">
           <div className="entry-copy">
             <span className="eyebrow">GOACCESS VENDOR PORTAL</span>
-            <h1>Vendor login and application, without the noise.</h1>
+            <h1>Vendor login and application, simplified.</h1>
             <p className="lede">
-              GoAccess uses this portal for one workflow: apply, get reviewed, complete NDA, receive credentials, register deals, and track monthly RMR.
+              Apply, get reviewed, complete the NDA, receive credentials, and register deals.
             </p>
           </div>
         </section>
