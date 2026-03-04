@@ -920,7 +920,7 @@ export function canTransitionDealStatus(currentStatus: DealStatus, nextStatus: D
   }
 
   const allowedTransitions: Record<DealStatus, DealStatus[]> = {
-    submitted: ["under_review", "approved", "rejected"],
+    submitted: ["under_review", "rejected"],
     under_review: ["approved", "rejected"],
     approved: ["synced_to_hubspot", "rejected"],
     synced_to_hubspot: ["closed_won", "closed_lost"],

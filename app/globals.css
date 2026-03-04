@@ -541,7 +541,7 @@ span {
 .cta-card,
 .placeholder-card {
   border-radius: var(--radius-lg);
-  padding: 30px;
+  padding: 24px;
 }
 
 .accent-card {
@@ -786,19 +786,20 @@ li + li {
 }
 
 .app-title {
-  font-size: clamp(1.8rem, 3.8vw, 3rem);
+  font-size: clamp(1.6rem, 3vw, 2.5rem);
   max-width: none;
 }
 
 .app-subtitle {
-  margin: 12px 0 0;
-  max-width: 64ch;
+  margin: 10px 0 0;
+  max-width: 58ch;
   color: var(--muted);
+  font-size: 0.92rem;
 }
 
 .app-content {
   display: grid;
-  gap: 24px;
+  gap: 20px;
 }
 
 .product-hero {
@@ -810,7 +811,7 @@ li + li {
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-lg);
   background: var(--surface);
-  padding: 24px;
+  padding: 20px;
   box-shadow: var(--shadow);
 }
 
@@ -832,7 +833,7 @@ li + li {
 .dashboard-metrics,
 .dashboard-grid {
   display: grid;
-  gap: 20px;
+  gap: 16px;
 }
 
 .dashboard-metrics {
@@ -849,22 +850,22 @@ li + li {
 
 .metric-label {
   display: inline-block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: 0.8rem;
 }
 
 .metric-value {
   display: block;
-  font-size: 1.6rem;
+  font-size: 1.42rem;
 }
 
 .card-header-row {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: 14px;
   align-items: flex-start;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .card-header-row p {
@@ -879,11 +880,11 @@ li + li {
 
 .stack-list {
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .stack-card {
-  padding: 18px;
+  padding: 16px;
   border-radius: 18px;
   border: 1px solid rgba(31, 100, 216, 0.08);
   background: rgba(255, 255, 255, 0.88);
@@ -916,9 +917,9 @@ li + li {
 
 .stack-meta-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 14px;
+  margin-top: 12px;
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.84rem;
 }
 
 .stack-note {
@@ -1105,7 +1106,7 @@ li + li {
 }
 
 .timeline-card {
-  padding: 12px 14px;
+  padding: 11px 13px;
   border: 1px solid rgba(31, 100, 216, 0.1);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.82);

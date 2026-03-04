@@ -60,7 +60,7 @@ export default async function PartnerPortalPage() {
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="Vendor home"
-        subtitle="Register deals, see what GoAccess is reviewing, and track the monthly recurring revenue tied to your accounts."
+        subtitle="Register deals, track approvals, and watch monthly recurring revenue as accounts go live."
         primaryLabel="Register a deal"
         primaryHref="/portal/links"
       />
@@ -83,7 +83,7 @@ export default async function PartnerPortalPage() {
                 <div className="stack-card-header">
                   <div>
                     <h3>Vendor status</h3>
-                    <p>{vendor?.companyName ?? "Your company"} in the GoAccess portal.</p>
+                    <p>{vendor?.companyName ?? "Your company"} in the GoAccess workflow.</p>
                   </div>
                   <span className="status-pill">{vendor?.status ?? "unknown"}</span>
                 </div>
@@ -97,7 +97,7 @@ export default async function PartnerPortalPage() {
                 <div className="stack-card-header">
                   <div>
                     <h3>Deal queue</h3>
-                    <p>Watch what is under review before it reaches HubSpot.</p>
+                    <p>Watch what GoAccess is reviewing and what already made it into HubSpot.</p>
                   </div>
                   <span className="status-pill">
                     {deals.filter((deal) => deal.status === "submitted" || deal.status === "under_review").length} open
@@ -113,7 +113,7 @@ export default async function PartnerPortalPage() {
                 <div className="stack-card-header">
                   <div>
                     <h3>Monthly RMR</h3>
-                    <p>Closed won deals feed active recurring revenue. Synced pipeline stays forecasted until won.</p>
+                    <p>Closed won deals become active recurring revenue. Everything else stays forecast.</p>
                   </div>
                   <span className="status-pill">{formatCurrency(currentRmr)}</span>
                 </div>

@@ -84,7 +84,7 @@ export default async function VendorDashboardPage() {
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
         title="GoAccess vendor operations"
-        subtitle="Run the full vendor flow from application review through NDA, credentials, deal approvals, HubSpot sync, and monthly RMR visibility."
+        subtitle="Run the vendor flow from review through NDA, credentials, deal approval, HubSpot, and monthly RMR."
         primaryLabel="Review applications"
         primaryHref="/app/programs"
       />
@@ -96,7 +96,7 @@ export default async function VendorDashboardPage() {
             <div className="card-header-row">
               <div>
                 <h3>Application and onboarding queue</h3>
-                <p>The admin home should reflect the real path: review, NDA, credentials, then active vendor access.</p>
+                <p>Review, NDA, credentials, then active vendor access.</p>
               </div>
               <a href="/app/programs" className="button button-secondary">
                 Open applications
@@ -153,7 +153,7 @@ export default async function VendorDashboardPage() {
             <div className="card-header-row">
               <div>
                 <h3>Deal review and HubSpot sync</h3>
-                <p>Keep the decision trail visible from vendor submission through CRM sync and recurring revenue impact.</p>
+                <p>Keep the path visible from vendor submission through approval, HubSpot, and recurring revenue.</p>
               </div>
               <a href="/app/deal-registrations" className="button button-secondary">
                 Open deal queue

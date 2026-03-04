@@ -50,7 +50,7 @@ export async function PATCH(
       );
     }
 
-    if (body.status === "synced_to_hubspot") {
+    if (body.status === "approved" || body.status === "synced_to_hubspot") {
       const vendor = await getVendorById(existingDeal.vendorId);
 
       if (!vendor) {
@@ -58,35 +58,43 @@ export async function PATCH(
       }
 
       if (!isHubSpotDealSyncEnabled()) {
-        const updatedDeal = await updateDealStatus(id, body.status, {
+        const updatedDeal = await updateDealStatus(id, "synced_to_hubspot", {
           hubspotCompanyId: existingDeal.hubspotCompanyId ?? `demo-company-${existingDeal.id}`,
           hubspotContactId: existingDeal.hubspotContactId ?? `demo-contact-${existingDeal.id}`,
           hubspotDealId: existingDeal.hubspotDealId ?? `demo-deal-${existingDeal.id.slice(-6)}`,
-          syncAction: "HubSpot sync recorded in portal demo mode",
+          syncAction: "Deal approved and recorded in HubSpot demo mode",
           syncStatus: "synced",
           syncReference: "HubSpot credentials not configured in this environment",
         });
 
-        return NextResponse.json({ ok: true, deal: updatedDeal });
+        return NextResponse.json({
+          ok: true,
+          deal: updatedDeal,
+          message: "Deal approved and recorded in the portal HubSpot demo flow.",
+        });
       }
 
       try {
         const hubspot = await syncDealRegistrationToHubSpot({ vendor, deal: existingDeal });
-        const updatedDeal = await updateDealStatus(id, body.status, {
+        const updatedDeal = await updateDealStatus(id, "synced_to_hubspot", {
           hubspotCompanyId: hubspot.companyId,
           hubspotContactId: hubspot.contactId,
           hubspotDealId: hubspot.dealId,
-          syncAction: "Created or updated HubSpot company, contact, and deal",
+          syncAction: "Deal approved and written to HubSpot",
           syncStatus: "synced",
           syncReference: `HS Deal #${hubspot.dealId}`,
         });
 
-        return NextResponse.json({ ok: true, deal: updatedDeal });
+        return NextResponse.json({
+          ok: true,
+          deal: updatedDeal,
+          message: "Deal approved and written to HubSpot.",
+        });
       } catch (error) {
         await recordDealSyncEvent({
           dealId: existingDeal.id,
           vendorId: existingDeal.vendorId,
-          action: "HubSpot sync failed during admin review",
+          action: "Deal approval could not be written to HubSpot",
           status: "failed",
           reference: error instanceof Error ? error.message : "HubSpot sync failed",
         });
@@ -96,7 +104,7 @@ export async function PATCH(
             message:
               error instanceof Error
                 ? error.message
-                : "Unable to sync this deal to HubSpot.",
+                : "Unable to write this approved deal to HubSpot.",
           },
           { status: 502 }
         );

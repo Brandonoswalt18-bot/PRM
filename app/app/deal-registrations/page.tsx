@@ -15,7 +15,7 @@ export default async function DealRegistrationsPage() {
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
         title="Deal registrations"
-        subtitle="Review approved vendor submissions before they are written into HubSpot or assigned to pipeline owners."
+        subtitle="Review vendor deals, approve the right ones, and let approved records write into HubSpot."
         primaryLabel="Open review queue"
         primaryHref="/app/deal-registrations"
       />
@@ -25,8 +25,8 @@ export default async function DealRegistrationsPage() {
           <h3>Review guardrails</h3>
           <ul>
             <li>{deals.filter((deal) => deal.status === "submitted").length} new submissions still need first review.</li>
-            <li>{deals.filter((deal) => deal.status === "approved").length} approved deals are ready for HubSpot creation.</li>
-            <li>{deals.filter((deal) => deal.status === "synced_to_hubspot").length} deals are active in HubSpot.</li>
+            <li>{deals.filter((deal) => deal.status === "under_review").length} deals are sitting in active review.</li>
+            <li>{deals.filter((deal) => deal.status === "synced_to_hubspot").length} approved deals are already in HubSpot.</li>
             <li>{supportRequests.filter((request) => request.status !== "resolved").length} open vendor support requests may affect deal progress.</li>
           </ul>
         </article>

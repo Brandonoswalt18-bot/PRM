@@ -13,7 +13,7 @@ type AdminDealManagerProps = {
 };
 
 const allowedTransitions: Record<DealStatus, DealStatus[]> = {
-  submitted: ["under_review", "approved", "rejected"],
+  submitted: ["under_review", "rejected"],
   under_review: ["approved", "rejected"],
   approved: ["synced_to_hubspot", "rejected"],
   synced_to_hubspot: ["closed_won", "closed_lost"],
@@ -22,22 +22,32 @@ const allowedTransitions: Record<DealStatus, DealStatus[]> = {
   rejected: [],
 };
 
-const dealStages: Array<{ label: string; status: DealStatus }> = [
-  { label: "Submitted", status: "submitted" },
-  { label: "Under review", status: "under_review" },
-  { label: "Approved", status: "approved" },
-  { label: "Sync to HubSpot", status: "synced_to_hubspot" },
-  { label: "Closed won", status: "closed_won" },
-  { label: "Closed lost", status: "closed_lost" },
+const dealStages: Array<{
+  label: string;
+  stateStatuses: DealStatus[];
+  actionStatus?: DealStatus;
+}> = [
+  { label: "Submitted", stateStatuses: ["submitted"] },
+  { label: "Under review", stateStatuses: ["under_review"], actionStatus: "under_review" },
+  { label: "Approved", stateStatuses: ["approved", "synced_to_hubspot"], actionStatus: "approved" },
+  { label: "Closed won", stateStatuses: ["closed_won"], actionStatus: "closed_won" },
+  { label: "Closed lost", stateStatuses: ["closed_lost"], actionStatus: "closed_lost" },
 ];
 
-function getDealStageState(stageStatus: DealStatus, currentStatus: DealStatus) {
+function getCurrentDealStageIndex(currentStatus: DealStatus) {
+  return dealStages.findIndex((stage) => stage.stateStatuses.includes(currentStatus));
+}
+
+function getDealStageState(
+  stageStatuses: DealStatus[],
+  currentStatus: DealStatus
+) {
   if (currentStatus === "rejected") {
-    return stageStatus === "submitted" ? "completed" : "pending";
+    return stageStatuses.includes("submitted") ? "completed" : "pending";
   }
 
-  const currentIndex = dealStages.findIndex((stage) => stage.status === currentStatus);
-  const stageIndex = dealStages.findIndex((stage) => stage.status === stageStatus);
+  const currentIndex = getCurrentDealStageIndex(currentStatus);
+  const stageIndex = dealStages.findIndex((stage) => stage.stateStatuses === stageStatuses);
 
   if (currentIndex === -1 || stageIndex === -1) {
     return "pending";
@@ -52,6 +62,21 @@ function getDealStageState(stageStatus: DealStatus, currentStatus: DealStatus) {
   }
 
   return "pending";
+}
+
+function resolveDealStageActionStatus(
+  stage: (typeof dealStages)[number],
+  currentStatus: DealStatus
+) {
+  if (!stage.actionStatus) {
+    return null;
+  }
+
+  if (stage.actionStatus === "approved" && currentStatus === "approved") {
+    return "synced_to_hubspot";
+  }
+
+  return stage.actionStatus;
 }
 
 export function AdminDealManager({ deals, syncEvents, vendors }: AdminDealManagerProps) {
@@ -81,7 +106,7 @@ export function AdminDealManager({ deals, syncEvents, vendors }: AdminDealManage
       startTransition(() => {
         router.refresh();
       });
-      setMessage(`Deal updated to ${status.replaceAll("_", " ")}.`);
+      setMessage(payload.message ?? `Deal updated to ${status.replaceAll("_", " ")}.`);
     } catch {
       setMessage("Network error while updating deal.");
     } finally {
@@ -132,19 +157,28 @@ export function AdminDealManager({ deals, syncEvents, vendors }: AdminDealManage
                 </div>
                 <div className="stage-pill-row" aria-label="Deal lifecycle">
                   {dealStages.map((stage) => (
-                    <button
-                      className={`stage-pill stage-pill-${getDealStageState(stage.status, deal.status)}`}
-                      disabled={
-                        busyId === deal.id ||
-                        stage.status === "submitted" ||
-                        !allowedNextSteps.includes(stage.status)
-                      }
-                      key={`${deal.id}-${stage.status}`}
-                      type="button"
-                      onClick={() => updateStatus(deal.id, stage.status)}
-                    >
-                      {stage.label}
-                    </button>
+                    (() => {
+                      const actionStatus = resolveDealStageActionStatus(stage, deal.status);
+
+                      return (
+                        <button
+                          className={`stage-pill stage-pill-${getDealStageState(
+                            stage.stateStatuses,
+                            deal.status
+                          )}`}
+                          disabled={
+                            busyId === deal.id ||
+                            !actionStatus ||
+                            !allowedNextSteps.includes(actionStatus)
+                          }
+                          key={`${deal.id}-${stage.label}`}
+                          type="button"
+                          onClick={() => actionStatus && updateStatus(deal.id, actionStatus)}
+                        >
+                          {stage.label}
+                        </button>
+                      );
+                    })()
                   ))}
                   {isRejected ? <span className="stage-pill stage-pill-rejected">Rejected</span> : null}
                 </div>
