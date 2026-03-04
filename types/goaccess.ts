@@ -74,6 +74,9 @@ export type ApprovedVendor = {
   ndaSignedAt?: string;
   ndaDocumentName?: string;
   ndaDocumentUrl?: string;
+  signedNdaFileName?: string;
+  signedNdaFileUrl?: string;
+  signedNdaUploadedAt?: string;
   credentialsIssued: boolean;
   credentialsIssuedAt?: string;
   portalAccess: "not_ready" | "invited" | "active";
@@ -198,4 +201,11 @@ export type UpdateVendorProfileInput = {
   state: string;
   primaryContactName: string;
   primaryContactEmail: string;
+};
+
+export type SignedNdaUploadResult = {
+  vendorId: string;
+  fileName: string;
+  fileUrl: string;
+  uploadedAt: string;
 };

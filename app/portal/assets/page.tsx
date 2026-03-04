@@ -1,13 +1,13 @@
-import {
-  AssetRow,
-  MetricGrid,
-  SideSections,
-  TableSection,
-} from "@/components/product/product-page-sections";
+import { MetricGrid, SideSections, TableSection, AssetRow } from "@/components/product/product-page-sections";
+import { VendorNdaManager } from "@/components/product/vendor-nda-manager";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
+import { getWorkspaceSession } from "@/lib/auth";
 import { getPartnerAssetsPageData } from "@/lib/mock-data";
+import { getVendorById } from "@/lib/goaccess-store";
 
 export default async function PartnerAssetsPage() {
+  const session = await getWorkspaceSession();
+  const vendor = session?.vendorId ? await getVendorById(session.vendorId) : null;
   const data = await getPartnerAssetsPageData();
 
   return (
@@ -21,6 +21,7 @@ export default async function PartnerAssetsPage() {
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
+        <VendorNdaManager vendor={vendor} />
         <section className="dashboard-grid">
           <TableSection
             title="Available documents"

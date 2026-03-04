@@ -22,11 +22,13 @@ import type {
   VendorApplication,
   VendorApplicationStatus,
   VendorStatus,
+  SignedNdaUploadResult,
   UpdateVendorProfileInput,
 } from "@/types/goaccess";
 
 const STORE_FILENAME = "goaccess-vendor-portal.json";
 const BLOB_STORE_PATHNAME = `portal-store/${STORE_FILENAME}`;
+const SIGNED_NDA_MAX_BYTES = 10 * 1024 * 1024;
 const DEFAULT_NDA_DOCUMENT_NAME = "GoAccess Vendor NDA";
 const DEFAULT_NDA_DOCUMENT_URL = "https://docs.google.com/document/d/goaccess-vendor-nda";
 
@@ -355,6 +357,29 @@ async function writeStore(store: PortalStore) {
   const filePath = getStorePath();
   await mkdir(path.dirname(filePath), { recursive: true });
   await writeFile(filePath, JSON.stringify(store, null, 2), "utf8");
+}
+
+async function storeSignedNdaFile(vendorId: string, fileName: string, contentType: string, bytes: Uint8Array) {
+  const safeName = `${Date.now()}-${slugify(fileName.replace(/\.[^.]+$/, ""))}${path.extname(fileName).toLowerCase() || ".pdf"}`;
+  const relativePath = `signed-ndas/${vendorId}/${safeName}`;
+  const blobToken = getBlobStoreToken();
+
+  if (blobToken) {
+    const result = await putBlob(relativePath, bytes, {
+      access: "public",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType,
+      token: blobToken,
+    });
+
+    return result.url;
+  }
+
+  const filePath = path.join(process.cwd(), "public", "uploads", relativePath);
+  await mkdir(path.dirname(filePath), { recursive: true });
+  await writeFile(filePath, bytes);
+  return `/uploads/${relativePath}`;
 }
 
 function makeId(prefix: string) {
@@ -1079,6 +1104,57 @@ export async function updateSupportRequestStatus(
 export async function getVendorById(vendorId: string) {
   const store = await readStore();
   return store.approvedVendors.find((item) => item.id === vendorId) ?? null;
+}
+
+export async function uploadSignedNdaForVendor(
+  vendorId: string,
+  file: File
+): Promise<SignedNdaUploadResult> {
+  const normalizedName = file.name.trim();
+  const fileExtension = path.extname(normalizedName).toLowerCase();
+  const allowedExtensions = new Set([".pdf", ".doc", ".docx"]);
+
+  if (!normalizedName || !allowedExtensions.has(fileExtension)) {
+    throw new Error("Upload a signed NDA as a PDF, DOC, or DOCX file.");
+  }
+
+  if (file.size === 0 || file.size > SIGNED_NDA_MAX_BYTES) {
+    throw new Error("Signed NDA files must be smaller than 10 MB.");
+  }
+
+  const store = await readStore();
+  const vendor = store.approvedVendors.find((item) => item.id === vendorId);
+
+  if (!vendor) {
+    throw new Error("Approved vendor not found.");
+  }
+
+  const application = store.vendorApplications.find((item) => item.id === vendor.applicationId);
+  const uploadedAt = nowIso();
+  const fileUrl = await storeSignedNdaFile(
+    vendorId,
+    normalizedName,
+    file.type || "application/octet-stream",
+    new Uint8Array(await file.arrayBuffer())
+  );
+
+  vendor.signedNdaFileName = normalizedName;
+  vendor.signedNdaFileUrl = fileUrl;
+  vendor.signedNdaUploadedAt = uploadedAt;
+  vendor.updatedAt = uploadedAt;
+
+  if (application) {
+    application.updatedAt = uploadedAt;
+  }
+
+  await writeStore(store);
+
+  return {
+    vendorId,
+    fileName: normalizedName,
+    fileUrl,
+    uploadedAt,
+  };
 }
 
 export async function getCurrentMonthlyRmrForVendor(vendorId: string) {

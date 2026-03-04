@@ -195,6 +195,17 @@ export function AdminApplicationManager({
                     NDA doc: <a href={vendor.ndaDocumentUrl} target="_blank" rel="noreferrer">{vendor.ndaDocumentUrl}</a>
                   </p>
                 ) : null}
+                {vendor?.signedNdaFileUrl ? (
+                  <p className="stack-note">
+                    Signed NDA upload:{" "}
+                    <a href={vendor.signedNdaFileUrl} target="_blank" rel="noreferrer">
+                      {vendor.signedNdaFileName ?? vendor.signedNdaFileUrl}
+                    </a>
+                    {vendor.signedNdaUploadedAt
+                      ? ` · uploaded ${new Date(vendor.signedNdaUploadedAt).toLocaleDateString()}`
+                      : ""}
+                  </p>
+                ) : null}
                 {latestNotification ? (
                   <p className="stack-note">
                     Latest email: {latestNotification.subject} on{" "}
