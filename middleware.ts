@@ -8,14 +8,12 @@ export function middleware(request: NextRequest) {
 
   if (pathname.startsWith("/app") && role !== "vendor") {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("workspace", "vendor");
     loginUrl.searchParams.set("next", `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);
   }
 
   if (pathname.startsWith("/portal") && role !== "partner") {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("workspace", "partner");
     loginUrl.searchParams.set("next", `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);
   }

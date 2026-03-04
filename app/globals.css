@@ -1283,6 +1283,40 @@ li + li {
   font-size: 0.94rem;
 }
 
+.login-account-list {
+  display: grid;
+  gap: 22px;
+  margin: 26px 0 22px;
+}
+
+.login-account-group {
+  display: grid;
+  gap: 12px;
+}
+
+.login-account-button {
+  justify-content: flex-start;
+  align-items: flex-start;
+  min-height: 0;
+  text-align: left;
+  padding: 16px 18px;
+  font-size: 0.98rem;
+}
+
+.login-account-button small {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0.72;
+}
+
+.login-vendor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
 .login-actions,
 .login-footer {
   display: flex;

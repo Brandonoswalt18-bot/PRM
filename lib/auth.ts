@@ -3,6 +3,23 @@ import type { WorkspaceSession } from "@/types/prm";
 
 export type WorkspaceRole = "vendor" | "partner";
 
+export function resolveWorkspaceDestination(
+  role: WorkspaceRole,
+  nextPath?: string | null
+) {
+  if (nextPath?.startsWith("/")) {
+    if (role === "vendor" && nextPath.startsWith("/app")) {
+      return nextPath;
+    }
+
+    if (role === "partner" && nextPath.startsWith("/portal")) {
+      return nextPath;
+    }
+  }
+
+  return role === "vendor" ? "/app" : "/portal";
+}
+
 export async function getWorkspaceRole(): Promise<WorkspaceRole | null> {
   const { cookies } = await import("next/headers");
   const cookieStore = await cookies();

@@ -1,34 +1,42 @@
 import { NextResponse } from "next/server";
 import { SESSION_COOKIE, VENDOR_ID_COOKIE } from "@/lib/auth-constants";
-import { acceptVendorInvite, getVendorByInviteToken } from "@/lib/goaccess-store";
+import { resolveWorkspaceDestination } from "@/lib/auth";
+import { acceptVendorInvite, getVendorById } from "@/lib/goaccess-store";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const role = url.searchParams.get("role");
+  const account = url.searchParams.get("account");
   const next = url.searchParams.get("next");
   const inviteToken = url.searchParams.get("invite");
 
-  if (role !== "vendor" && role !== "partner") {
-    return NextResponse.redirect(new URL("/login", request.url));
-  }
-
+  let role: "vendor" | "partner" | null = null;
   let vendorId = "vendor-blue-haven";
 
-  if (role === "partner" && inviteToken) {
+  if (inviteToken) {
     const vendor = await acceptVendorInvite(inviteToken);
 
     if (!vendor) {
-      return NextResponse.redirect(new URL("/login?workspace=partner", request.url));
+      return NextResponse.redirect(new URL("/login", request.url));
     }
 
+    role = "partner";
     vendorId = vendor.id;
-  } else if (role === "partner" && inviteToken === null) {
-    const vendor = await getVendorByInviteToken("invite-blue-haven");
-    vendorId = vendor?.id ?? vendorId;
+  } else if (account === "admin") {
+    role = "vendor";
+  } else if (account) {
+    const vendor = await getVendorById(account);
+
+    if (vendor?.credentialsIssued) {
+      role = "partner";
+      vendorId = vendor.id;
+    }
   }
 
-  const destination =
-    next && next.startsWith("/") ? next : role === "vendor" ? "/app" : "/portal";
+  if (!role) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  const destination = resolveWorkspaceDestination(role, next);
 
   const response = NextResponse.redirect(new URL(destination, request.url));
   response.cookies.set(SESSION_COOKIE, role, {

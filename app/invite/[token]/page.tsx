@@ -49,11 +49,11 @@ export default async function InvitePage({ params }: InvitePageProps) {
         <div className="login-actions">
           <Link
             className="button button-primary"
-            href={`/auth/mock-login?role=partner&invite=${encodeURIComponent(token)}&next=/portal/profile`}
+            href={`/auth/mock-login?invite=${encodeURIComponent(token)}&next=${encodeURIComponent("/portal/profile")}`}
           >
             Activate vendor access
           </Link>
-          <Link className="button button-secondary" href="/login?workspace=partner">
+          <Link className="button button-secondary" href="/login">
             Back to login
           </Link>
         </div>

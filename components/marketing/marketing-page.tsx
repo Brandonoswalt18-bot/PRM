@@ -9,7 +9,7 @@ export function MarketingPage() {
           <span className="brand-mark brand-mark-light">G</span>
           <span className="brand-text">GoAccess Vendor Portal</span>
         </Link>
-        <Link className="button button-primary button-blue" href="/login?workspace=partner">
+        <Link className="button button-primary button-blue" href="/login">
           Vendor Login
         </Link>
       </header>
@@ -31,7 +31,7 @@ export function MarketingPage() {
             <h2>Sign in to the vendor portal</h2>
             <p>Use your issued credentials to register deals, check status, and view monthly recurring revenue.</p>
             <div className="entry-action-stack">
-              <Link className="button button-primary button-blue" href="/login?workspace=partner">
+              <Link className="button button-primary button-blue" href="/login">
                 Vendor Login
               </Link>
               <small>Access is issued only after GoAccess approval, NDA completion, and credential setup.</small>
