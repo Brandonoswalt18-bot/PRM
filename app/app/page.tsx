@@ -38,6 +38,9 @@ export default async function VendorDashboardPage() {
   const reviewDeals = deals.filter((deal) =>
     ["submitted", "under_review", "approved"].includes(deal.status)
   );
+  const outstandingSupportRequests = supportRequests.filter(
+    (request) => request.status !== "resolved"
+  );
   const activeRmr = deals
     .filter((deal) => deal.status === "closed_won")
     .reduce((sum, deal) => sum + deal.monthlyRmr, 0);
@@ -65,6 +68,14 @@ export default async function VendorDashboardPage() {
       label: "Projected monthly RMR",
       value: formatCurrency(forecastRmr),
       delta: `${formatCurrency(activeRmr)} closed won`,
+    },
+    {
+      label: "Outstanding support tickets",
+      value: String(outstandingSupportRequests.length),
+      delta:
+        outstandingSupportRequests.length > 0
+          ? `${outstandingSupportRequests.filter((request) => request.status === "in_progress").length} already in progress`
+          : "No unresolved vendor support tickets",
     },
   ];
 
@@ -123,7 +134,7 @@ export default async function VendorDashboardPage() {
               <li>{pendingApplications.length} applicants still need a GoAccess decision.</li>
               <li>{onboardingVendors.length} approved vendors are not fully through NDA or credentials.</li>
               <li>{reviewDeals.length} deal registrations are waiting on review before HubSpot write-back.</li>
-              <li>{supportRequests.filter((request) => request.status !== "resolved").length} support threads are still open.</li>
+              <li>{outstandingSupportRequests.length} support tickets still need a GoAccess response.</li>
             </ul>
           </article>
 
@@ -184,14 +195,26 @@ export default async function VendorDashboardPage() {
           </article>
 
           <article className="workspace-card">
-            <h3>Support watchlist</h3>
-            <ul>
-              {supportRequests.slice(0, 4).map((request) => (
-                <li key={request.id}>
-                  {request.subject}: {titleCaseStatus(request.status)}
-                </li>
-              ))}
-            </ul>
+            <div className="card-header-row">
+              <div>
+                <h3>Outstanding support tickets</h3>
+                <p>Keep unresolved vendor issues visible while applications and deals keep moving.</p>
+              </div>
+              <a href="/app/settings" className="button button-secondary">
+                Open support
+              </a>
+            </div>
+            {outstandingSupportRequests.length > 0 ? (
+              <ul>
+                {outstandingSupportRequests.slice(0, 4).map((request) => (
+                  <li key={request.id}>
+                    {request.subject}: {titleCaseStatus(request.status)}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No outstanding support tickets.</p>
+            )}
           </article>
         </section>
       </div>
