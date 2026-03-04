@@ -6,6 +6,7 @@ import { acceptVendorInvite, getVendorById } from "@/lib/goaccess-store";
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const account = url.searchParams.get("account");
+  const email = url.searchParams.get("email")?.trim().toLowerCase();
   const next = url.searchParams.get("next");
   const inviteToken = url.searchParams.get("invite");
 
@@ -21,8 +22,23 @@ export async function GET(request: Request) {
 
     role = "partner";
     vendorId = vendor.id;
+  } else if (email === "maya@goaccess.com") {
+    role = "vendor";
   } else if (account === "admin") {
     role = "vendor";
+  } else if (email) {
+    const { listApprovedVendors } = await import("@/lib/goaccess-store");
+    const vendor = (await listApprovedVendors()).find(
+      (item) =>
+        item.credentialsIssued &&
+        item.portalAccess === "active" &&
+        item.primaryContactEmail.trim().toLowerCase() === email
+    );
+
+    if (vendor) {
+      role = "partner";
+      vendorId = vendor.id;
+    }
   } else if (account) {
     const vendor = await getVendorById(account);
 
@@ -33,7 +49,12 @@ export async function GET(request: Request) {
   }
 
   if (!role) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("error", "not-found");
+    if (next?.startsWith("/")) {
+      loginUrl.searchParams.set("next", next);
+    }
+    return NextResponse.redirect(loginUrl);
   }
 
   const destination = resolveWorkspaceDestination(role, next);

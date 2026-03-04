@@ -1283,38 +1283,54 @@ li + li {
   font-size: 0.94rem;
 }
 
-.login-account-list {
+.login-role-row {
+  display: flex;
+  gap: 10px;
+  margin: 24px 0 18px;
+}
+
+.login-role-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--ink);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.login-form {
   display: grid;
-  gap: 22px;
-  margin: 26px 0 22px;
+  gap: 14px;
+  margin: 0 0 12px;
 }
 
-.login-account-group {
+.login-field {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
-.login-account-button {
-  justify-content: flex-start;
-  align-items: flex-start;
-  min-height: 0;
-  text-align: left;
-  padding: 16px 18px;
-  font-size: 0.98rem;
+.login-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  font: inherit;
 }
 
-.login-account-button small {
-  display: block;
-  margin-top: 4px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  opacity: 0.72;
+.login-input::placeholder {
+  color: var(--muted);
 }
 
-.login-vendor-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
+.login-submit {
+  width: fit-content;
+  min-width: 148px;
 }
 
 .login-actions,
