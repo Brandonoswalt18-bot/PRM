@@ -11,20 +11,42 @@ type AdminSupportManagerProps = {
   vendors: ApprovedVendor[];
 };
 
-const actions: Array<{ label: string; status: SupportRequestStatus }> = [
-  { label: "Open", status: "open" },
-  { label: "In progress", status: "in_progress" },
-  { label: "Resolved", status: "resolved" },
-];
-
 const allowedTransitions: Record<SupportRequestStatus, SupportRequestStatus[]> = {
   open: ["in_progress", "resolved"],
   in_progress: ["open", "resolved"],
   resolved: ["open"],
 };
 
+const supportStages: Array<{ label: string; status: SupportRequestStatus }> = [
+  { label: "Open", status: "open" },
+  { label: "In progress", status: "in_progress" },
+  { label: "Resolved", status: "resolved" },
+];
+
 function titleCase(value: string) {
   return value.replaceAll("_", " ");
+}
+
+function getSupportStageState(
+  stageStatus: SupportRequestStatus,
+  currentStatus: SupportRequestStatus
+) {
+  const currentIndex = supportStages.findIndex((stage) => stage.status === currentStatus);
+  const stageIndex = supportStages.findIndex((stage) => stage.status === stageStatus);
+
+  if (currentIndex === -1 || stageIndex === -1) {
+    return "pending";
+  }
+
+  if (stageIndex < currentIndex) {
+    return "completed";
+  }
+
+  if (stageIndex === currentIndex) {
+    return "current";
+  }
+
+  return "pending";
 }
 
 export function AdminSupportManager({
@@ -78,6 +100,7 @@ export function AdminSupportManager({
         {supportRequests.map((request) => {
           const vendor = vendors.find((item) => item.id === request.vendorId);
           const timeline = buildSupportTimeline(request);
+          const allowedNextSteps = allowedTransitions[request.status];
 
           return (
             <div className="stack-card" key={request.id}>
@@ -86,7 +109,28 @@ export function AdminSupportManager({
                   <h3>{request.subject}</h3>
                   <p>{vendor?.companyName ?? "Unknown vendor"} · {titleCase(request.category)}</p>
                 </div>
-                <span className="status-pill">{titleCase(request.status)}</span>
+                {vendor ? (
+                  <Link className="button button-ghost" href={`/app/partners?vendor=${vendor.id}`}>
+                    Open vendor
+                  </Link>
+                ) : null}
+              </div>
+              <div className="stage-pill-row" aria-label="Support status">
+                {supportStages.map((stage) => (
+                  <button
+                    className={`stage-pill stage-pill-${getSupportStageState(stage.status, request.status)}`}
+                    disabled={
+                      busyId === request.id ||
+                      stage.status === request.status ||
+                      !allowedNextSteps.includes(stage.status)
+                    }
+                    key={`${request.id}-${stage.status}`}
+                    type="button"
+                    onClick={() => updateStatus(request.id, stage.status)}
+                  >
+                    {stage.label}
+                  </button>
+                ))}
               </div>
               <p className="stack-note">{request.message}</p>
               <div className="stack-meta-grid">
@@ -106,24 +150,6 @@ export function AdminSupportManager({
                     <p>{entry.detail}</p>
                   </div>
                 ))}
-              </div>
-              <div className="action-row">
-                {actions.map((action) => (
-                  <button
-                    className="button button-secondary"
-                    key={action.status}
-                    type="button"
-                    disabled={busyId === request.id || !allowedTransitions[request.status].includes(action.status)}
-                    onClick={() => updateStatus(request.id, action.status)}
-                  >
-                    {action.label}
-                  </button>
-                ))}
-                {vendor ? (
-                  <Link className="button button-ghost" href={`/app/partners?vendor=${vendor.id}`}>
-                    Open vendor
-                  </Link>
-                ) : null}
               </div>
             </div>
           );
