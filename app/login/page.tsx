@@ -17,12 +17,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <div className="login-card">
         <span className="eyebrow">GOACCESS</span>
         <h1>Portal sign in</h1>
-        <p>Use your GoAccess admin or approved vendor email. Access is assigned automatically.</p>
-
-        <div className="login-role-row" aria-hidden="true">
-          <span className="login-role-pill">Admin</span>
-          <span className="login-role-pill">Vendor</span>
-        </div>
+        <p>Use the email tied to your portal access. Access is assigned automatically.</p>
 
         <form action="/auth/mock-login" className="login-form" method="get">
           <label className="login-field">
@@ -48,7 +43,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         >
           {showError
             ? "We could not match that email to an active GoAccess admin or approved vendor account."
-            : "Use the email tied to your GoAccess admin account or approved vendor credentials."}
+            : "Use the email tied to your portal access."}
         </p>
 
         <div className="login-footer">
