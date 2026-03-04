@@ -22,6 +22,7 @@ import type {
   VendorApplication,
   VendorApplicationStatus,
   VendorStatus,
+  SignedNdaUploadInput,
   SignedNdaUploadResult,
   UpdateVendorProfileInput,
 } from "@/types/goaccess";
@@ -1108,9 +1109,9 @@ export async function getVendorById(vendorId: string) {
 
 export async function uploadSignedNdaForVendor(
   vendorId: string,
-  file: File
+  file: SignedNdaUploadInput
 ): Promise<SignedNdaUploadResult> {
-  const normalizedName = file.name.trim();
+  const normalizedName = file.fileName.trim();
   const fileExtension = path.extname(normalizedName).toLowerCase();
   const allowedExtensions = new Set([".pdf", ".doc", ".docx"]);
 
@@ -1134,8 +1135,8 @@ export async function uploadSignedNdaForVendor(
   const fileUrl = await storeSignedNdaFile(
     vendorId,
     normalizedName,
-    file.type || "application/octet-stream",
-    new Uint8Array(await file.arrayBuffer())
+    file.contentType || "application/octet-stream",
+    file.bytes
   );
 
   vendor.signedNdaFileName = normalizedName;

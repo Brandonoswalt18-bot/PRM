@@ -33,7 +33,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await uploadSignedNdaForVendor(session.vendorId, ndaFile);
+    const result = await uploadSignedNdaForVendor(session.vendorId, {
+      fileName: ndaFile.name,
+      contentType: ndaFile.type,
+      size: ndaFile.size,
+      bytes: new Uint8Array(await ndaFile.arrayBuffer()),
+    });
     const vendor = await getVendorById(session.vendorId);
 
     return NextResponse.json({

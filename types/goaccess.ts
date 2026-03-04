@@ -209,3 +209,10 @@ export type SignedNdaUploadResult = {
   fileUrl: string;
   uploadedAt: string;
 };
+
+export type SignedNdaUploadInput = {
+  fileName: string;
+  contentType: string;
+  size: number;
+  bytes: Uint8Array;
+};
