@@ -12,15 +12,6 @@ type AdminDealManagerProps = {
   vendors: ApprovedVendor[];
 };
 
-const actions: Array<{ label: string; status: DealStatus }> = [
-  { label: "Under review", status: "under_review" },
-  { label: "Approve", status: "approved" },
-  { label: "Sync to HubSpot", status: "synced_to_hubspot" },
-  { label: "Closed won", status: "closed_won" },
-  { label: "Closed lost", status: "closed_lost" },
-  { label: "Reject", status: "rejected" },
-];
-
 const allowedTransitions: Record<DealStatus, DealStatus[]> = {
   submitted: ["under_review", "approved", "rejected"],
   under_review: ["approved", "rejected"],
@@ -30,6 +21,38 @@ const allowedTransitions: Record<DealStatus, DealStatus[]> = {
   closed_lost: ["closed_won"],
   rejected: [],
 };
+
+const dealStages: Array<{ label: string; status: DealStatus }> = [
+  { label: "Submitted", status: "submitted" },
+  { label: "Under review", status: "under_review" },
+  { label: "Approved", status: "approved" },
+  { label: "Sync to HubSpot", status: "synced_to_hubspot" },
+  { label: "Closed won", status: "closed_won" },
+  { label: "Closed lost", status: "closed_lost" },
+];
+
+function getDealStageState(stageStatus: DealStatus, currentStatus: DealStatus) {
+  if (currentStatus === "rejected") {
+    return stageStatus === "submitted" ? "completed" : "pending";
+  }
+
+  const currentIndex = dealStages.findIndex((stage) => stage.status === currentStatus);
+  const stageIndex = dealStages.findIndex((stage) => stage.status === stageStatus);
+
+  if (currentIndex === -1 || stageIndex === -1) {
+    return "pending";
+  }
+
+  if (stageIndex < currentIndex) {
+    return "completed";
+  }
+
+  if (stageIndex === currentIndex) {
+    return "current";
+  }
+
+  return "pending";
+}
 
 export function AdminDealManager({ deals, syncEvents, vendors }: AdminDealManagerProps) {
   const router = useRouter();
@@ -80,6 +103,8 @@ export function AdminDealManager({ deals, syncEvents, vendors }: AdminDealManage
           (() => {
             const vendor = vendors.find((item) => item.id === deal.vendorId);
             const timeline = buildDealTimeline(deal, syncEvents).slice(0, 4);
+            const allowedNextSteps = allowedTransitions[deal.status];
+            const isRejected = deal.status === "rejected";
 
             return (
               <div className="stack-card" key={deal.id}>
@@ -90,7 +115,38 @@ export function AdminDealManager({ deals, syncEvents, vendors }: AdminDealManage
                       {deal.domain} · {deal.contactName} · ${deal.estimatedValue.toLocaleString()}
                     </p>
                   </div>
-                  <span className="status-pill">{deal.status.replaceAll("_", " ")}</span>
+                  <div className="stage-actions-topline">
+                    <Link className="button button-ghost" href={`/app/deal-registrations/${deal.id}`}>
+                      Open detail
+                    </Link>
+                    <button
+                      className="button button-secondary button-inline-danger"
+                      key="rejected"
+                      type="button"
+                      disabled={busyId === deal.id || !allowedNextSteps.includes("rejected")}
+                      onClick={() => updateStatus(deal.id, "rejected")}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+                <div className="stage-pill-row" aria-label="Deal lifecycle">
+                  {dealStages.map((stage) => (
+                    <button
+                      className={`stage-pill stage-pill-${getDealStageState(stage.status, deal.status)}`}
+                      disabled={
+                        busyId === deal.id ||
+                        stage.status === "submitted" ||
+                        !allowedNextSteps.includes(stage.status)
+                      }
+                      key={`${deal.id}-${stage.status}`}
+                      type="button"
+                      onClick={() => updateStatus(deal.id, stage.status)}
+                    >
+                      {stage.label}
+                    </button>
+                  ))}
+                  {isRejected ? <span className="stage-pill stage-pill-rejected">Rejected</span> : null}
                 </div>
                 <div className="stack-meta-grid">
                   <span>{deal.contactEmail}</span>
@@ -113,22 +169,6 @@ export function AdminDealManager({ deals, syncEvents, vendors }: AdminDealManage
                       </div>
                       <p>{entry.detail}</p>
                     </div>
-                  ))}
-                </div>
-                <div className="action-row">
-                  <Link className="button button-ghost" href={`/app/deal-registrations/${deal.id}`}>
-                    Open detail
-                  </Link>
-                  {actions.map((action) => (
-                    <button
-                      className="button button-secondary"
-                      key={action.status}
-                      type="button"
-                      disabled={busyId === deal.id || !allowedTransitions[deal.status].includes(action.status)}
-                      onClick={() => updateStatus(deal.id, action.status)}
-                    >
-                      {action.label}
-                    </button>
                   ))}
                 </div>
               </div>

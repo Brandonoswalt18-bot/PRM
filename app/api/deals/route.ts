@@ -14,6 +14,12 @@ type DealPayload = {
   notes?: string;
 };
 
+function isLikelyDomain(value: string) {
+  return /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i.test(
+    value.trim()
+  );
+}
+
 export async function GET() {
   const session = await getWorkspaceSession();
   const deals = await listDeals(session?.vendorId);
@@ -54,6 +60,13 @@ export async function POST(request: Request) {
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
     return NextResponse.json({ message: "Enter a valid contact email." }, { status: 400 });
+  }
+
+  if (!isLikelyDomain(domain)) {
+    return NextResponse.json(
+      { message: "Enter a valid company domain like example.com." },
+      { status: 400 }
+    );
   }
 
   if (!estimatedValue || estimatedValue < 0 || !monthlyRmr || monthlyRmr < 0) {

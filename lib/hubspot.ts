@@ -37,6 +37,12 @@ type HubSpotApiError = Error & {
 
 const HUBSPOT_BASE_URL = "https://api.hubapi.com";
 
+function isLikelyDomain(value: string) {
+  return /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i.test(
+    value.trim()
+  );
+}
+
 export function isHubSpotLeadRoutingEnabled() {
   return Boolean(
     process.env.HUBSPOT_ACCESS_TOKEN &&
@@ -119,12 +125,16 @@ async function getContactByEmail(email: string) {
 }
 
 async function createOrUpdateCompany(deal: DealRegistration) {
-  const properties = {
+  const normalizedDomain = deal.domain.trim().toLowerCase();
+  const properties: Record<string, string> = {
     name: deal.companyName,
-    domain: deal.domain,
   };
 
-  const companyId = await searchCompanyByDomain(deal.domain);
+  if (isLikelyDomain(normalizedDomain)) {
+    properties.domain = normalizedDomain;
+  }
+
+  const companyId = properties.domain ? await searchCompanyByDomain(properties.domain) : null;
 
   if (companyId) {
     await hubSpotRequest<HubSpotObjectResponse>(`/crm/v3/objects/companies/${companyId}`, {
