@@ -74,8 +74,8 @@ export function SupportRequestForm() {
     <article className="workspace-card wide-card">
       <div className="card-header-row">
         <div>
-          <h3>Open support request</h3>
-          <p>Use this for deal review issues, HubSpot questions, profile changes, or monthly RMR questions.</p>
+          <h3>Support request</h3>
+          <p>Use this for deal issues, HubSpot questions, profile changes, or RMR questions.</p>
         </div>
       </div>
       <form className="cta-form" onSubmit={handleSubmit}>
@@ -106,7 +106,7 @@ export function SupportRequestForm() {
           required
         />
         <button className="button button-primary" type="submit" disabled={status === "submitting"}>
-          {status === "submitting" ? "Submitting..." : "Submit support request"}
+          {status === "submitting" ? "Submitting..." : "Submit request"}
         </button>
         <p
           className={`form-message ${

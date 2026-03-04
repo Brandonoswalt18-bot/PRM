@@ -45,8 +45,8 @@ export default async function VendorSettingsPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
-        title="Support and delivery ops"
-        subtitle="Review support volume, email delivery status, and the operational guardrails behind onboarding and vendor access."
+        title="Support and delivery"
+        subtitle="Review support volume, email delivery, and the issues still blocking vendors."
         primaryLabel="Open deal review"
         primaryHref="/app/deal-registrations"
       />
@@ -59,8 +59,8 @@ export default async function VendorSettingsPage() {
             <ul>
               <li>Workflow emails will only send to real recipients after the GoAccess sender domain is verified in Resend.</li>
               <li>Applicant and internal notification failures remain visible on application cards with the delivery reason.</li>
-              <li>Support requests can move between open, in progress, and resolved directly from this screen.</li>
-              <li>HubSpot sync should stay review-first until duplicate checks are stronger.</li>
+              <li>Support requests move between open, in progress, and resolved from this screen.</li>
+              <li>Approved deals are the only deals that should reach HubSpot.</li>
             </ul>
           </article>
         </section>

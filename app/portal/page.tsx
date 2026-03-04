@@ -36,7 +36,7 @@ export default async function PartnerPortalPage() {
     {
       label: "Registered deals",
       value: String(deals.length),
-      delta: `${deals.filter((deal) => deal.status === "submitted" || deal.status === "under_review").length} waiting on GoAccess review`,
+      delta: `${deals.filter((deal) => deal.status === "submitted" || deal.status === "under_review").length} still in review`,
     },
     {
       label: "Current monthly RMR",
@@ -51,7 +51,7 @@ export default async function PartnerPortalPage() {
     {
       label: "Open support requests",
       value: String(supportRequests.filter((request) => request.status !== "resolved").length),
-      delta: vendor?.credentialsIssued ? "Portal credentials are active" : "Credentials still pending",
+      delta: vendor?.credentialsIssued ? "Access active" : "Credentials pending",
     },
   ];
 
@@ -72,7 +72,7 @@ export default async function PartnerPortalPage() {
             <div className="card-header-row">
               <div>
                 <h3>What needs attention</h3>
-                <p>Your home page should make the next step obvious: finish onboarding, register a deal, or check what is still under review.</p>
+                <p>Finish onboarding, register a deal, or check what is still in review.</p>
               </div>
               <a href="/portal/profile" className="button button-secondary">
                 Open profile
@@ -113,7 +113,7 @@ export default async function PartnerPortalPage() {
                 <div className="stack-card-header">
                   <div>
                     <h3>Monthly RMR</h3>
-                    <p>Closed won deals become active recurring revenue. Everything else stays forecast.</p>
+                    <p>Closed won deals become active recurring revenue.</p>
                   </div>
                   <span className="status-pill">{formatCurrency(currentRmr)}</span>
                 </div>
@@ -137,14 +137,18 @@ export default async function PartnerPortalPage() {
           </article>
 
           <article className="workspace-card">
-            <h3>Latest support</h3>
-            <ul>
-              {supportRequests.slice(0, 4).map((request) => (
-                <li key={request.id}>
-                  {request.subject}: {titleCaseStatus(request.status)}
-                </li>
-              ))}
-            </ul>
+            <h3>Support status</h3>
+            {supportRequests.length > 0 ? (
+              <ul>
+                {supportRequests.slice(0, 4).map((request) => (
+                  <li key={request.id}>
+                    {request.subject}: {titleCaseStatus(request.status)}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No open support items.</p>
+            )}
           </article>
         </section>
 
@@ -153,7 +157,7 @@ export default async function PartnerPortalPage() {
             <div className="card-header-row">
               <div>
                 <h3>Recent deal registrations</h3>
-                <p>Each line shows what you submitted, when it was sent, and whether GoAccess or HubSpot has advanced it.</p>
+                <p>What you submitted, when it was sent, and where it stands.</p>
               </div>
               <a href="/portal/deals" className="button button-secondary">
                 Open all deals
@@ -181,7 +185,7 @@ export default async function PartnerPortalPage() {
             <h3>How this portal works</h3>
             <ul>
               <li>You apply once, complete NDA and credentials, then work from this portal.</li>
-              <li>Registered deals are reviewed before HubSpot creation or assignment.</li>
+              <li>Approved deals are written into HubSpot.</li>
               <li>Monthly RMR becomes visible here when deals move into active recurring revenue.</li>
             </ul>
           </article>

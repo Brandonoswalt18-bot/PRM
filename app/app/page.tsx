@@ -153,7 +153,7 @@ export default async function VendorDashboardPage() {
             <div className="card-header-row">
               <div>
                 <h3>Deal review and HubSpot sync</h3>
-                <p>Keep the path visible from vendor submission through approval, HubSpot, and recurring revenue.</p>
+                <p>Track each deal from submission through approval, HubSpot, and recurring revenue.</p>
               </div>
               <a href="/app/deal-registrations" className="button button-secondary">
                 Open deal queue
@@ -185,13 +185,17 @@ export default async function VendorDashboardPage() {
 
           <article className="workspace-card">
             <h3>Latest sync activity</h3>
-            <ul>
-              {syncEvents.slice(0, 4).map((event) => (
-                <li key={event.id}>
-                  {formatShortDate(event.createdAt)}: {event.action} ({titleCaseStatus(event.status)})
-                </li>
-              ))}
-            </ul>
+            {syncEvents.length > 0 ? (
+              <ul>
+                {syncEvents.slice(0, 4).map((event) => (
+                  <li key={event.id}>
+                    {formatShortDate(event.createdAt)}: {event.action} ({titleCaseStatus(event.status)})
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No recent sync activity.</p>
+            )}
           </article>
 
           <article className="workspace-card">
