@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { syncDealRegistrationToHubSpot } from "@/lib/hubspot";
+import { isHubSpotDealSyncEnabled, syncDealRegistrationToHubSpot } from "@/lib/hubspot";
 import {
   canTransitionDealStatus,
   getDealById,
@@ -55,6 +55,19 @@ export async function PATCH(
 
       if (!vendor) {
         return NextResponse.json({ message: "Approved vendor not found for this deal." }, { status: 404 });
+      }
+
+      if (!isHubSpotDealSyncEnabled()) {
+        const updatedDeal = await updateDealStatus(id, body.status, {
+          hubspotCompanyId: existingDeal.hubspotCompanyId ?? `demo-company-${existingDeal.id}`,
+          hubspotContactId: existingDeal.hubspotContactId ?? `demo-contact-${existingDeal.id}`,
+          hubspotDealId: existingDeal.hubspotDealId ?? `demo-deal-${existingDeal.id.slice(-6)}`,
+          syncAction: "HubSpot sync recorded in portal demo mode",
+          syncStatus: "synced",
+          syncReference: "HubSpot credentials not configured in this environment",
+        });
+
+        return NextResponse.json({ ok: true, deal: updatedDeal });
       }
 
       try {
