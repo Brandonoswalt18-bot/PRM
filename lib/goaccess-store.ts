@@ -786,6 +786,14 @@ export async function updateVendorApplicationStatus(
   }
 
   if (vendor) {
+    if (nextStatus === "nda_signed" && !vendor.signedNdaFileUrl) {
+      throw new Error("Signed NDA upload is required before marking NDA as signed.");
+    }
+
+    if (nextStatus === "credentials_issued" && !vendor.signedNdaFileUrl) {
+      throw new Error("Signed NDA upload is required before issuing credentials.");
+    }
+
     if (nextStatus === "approved") {
       application.approvalEmailSentAt = nowIso();
       store.notifications.unshift(

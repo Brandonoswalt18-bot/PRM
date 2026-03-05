@@ -74,6 +74,10 @@ function getStageActionLabel(status: VendorApplicationStatus) {
   }
 }
 
+function requiresSignedNdaUpload(status: VendorApplicationStatus) {
+  return status === "nda_signed" || status === "credentials_issued";
+}
+
 export function AdminApplicationManager({
   applications,
   vendors,
@@ -132,6 +136,7 @@ export function AdminApplicationManager({
             const timeline = buildApplicationTimeline(application, vendor ?? null, appNotifications).slice(0, 4);
             const isRejected = application.status === "rejected";
             const allowedNextSteps = allowedTransitions[application.status];
+            const hasSignedNdaUpload = Boolean(vendor?.signedNdaFileUrl);
 
             return (
               <div className="stack-card" key={application.id}>
@@ -165,7 +170,8 @@ export function AdminApplicationManager({
                       disabled={
                         busyId === application.id ||
                         stage.status === "submitted" ||
-                        !allowedNextSteps.includes(stage.status)
+                        !allowedNextSteps.includes(stage.status) ||
+                        (requiresSignedNdaUpload(stage.status) && !hasSignedNdaUpload)
                       }
                       key={`${application.id}-${stage.status}`}
                       type="button"
@@ -205,6 +211,9 @@ export function AdminApplicationManager({
                       ? ` · uploaded ${new Date(vendor.signedNdaUploadedAt).toLocaleDateString()}`
                       : ""}
                   </p>
+                ) : null}
+                {allowedNextSteps.includes("nda_signed") && !hasSignedNdaUpload ? (
+                  <p className="stack-note">Signed NDA upload required before NDA signed or credentials can be set.</p>
                 ) : null}
                 {latestNotification ? (
                   <p className="stack-note">
