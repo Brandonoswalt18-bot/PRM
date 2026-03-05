@@ -49,7 +49,7 @@ export async function GET(request: Request) {
 
     return new NextResponse(result.stream as unknown as ReadableStream, {
       headers: {
-        "Content-Type": result.contentType || "application/octet-stream",
+        "Content-Type": result.headers.get("content-type") || "application/octet-stream",
         "Content-Disposition": `inline; filename="${vendor.signedNdaFileName ?? "signed-nda.pdf"}"`,
       },
     });
