@@ -1,7 +1,22 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { SESSION_COOKIE } from "@/lib/auth-constants";
-import { normalizeWorkspaceRole } from "@/lib/auth";
+
+function normalizeWorkspaceRole(rawRole: string | null | undefined) {
+  if (!rawRole) {
+    return null;
+  }
+
+  if (rawRole === "admin" || rawRole === "vendor") {
+    return rawRole;
+  }
+
+  if (rawRole === "partner") {
+    return "vendor";
+  }
+
+  return null;
+}
 
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
