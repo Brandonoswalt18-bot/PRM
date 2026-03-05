@@ -220,6 +220,10 @@ export function AdminDealManager({
         {deals.map((deal) => (
           (() => {
             const vendor = vendors.find((item) => item.id === deal.vendorId);
+            const dealEvents = syncEvents
+              .filter((item) => item.dealId === deal.id)
+              .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+            const latestSyncEvent = dealEvents[0];
             const timeline = buildDealTimeline(deal, syncEvents).slice(0, 4);
             const allowedNextSteps = allowedTransitions[deal.status];
             const isRejected = deal.status === "rejected";
@@ -252,6 +256,12 @@ export function AdminDealManager({
                   <span>{deal.productInterest}</span>
                   <span>{getDealQueueReason(deal)}</span>
                 </div>
+                {latestSyncEvent && latestSyncEvent.status !== "synced" ? (
+                  <p className={`stack-note ${latestSyncEvent.status === "failed" ? "table-note-danger" : ""}`.trim()}>
+                    {latestSyncEvent.status === "failed" ? "Latest sync issue: " : "Latest hold: "}
+                    {latestSyncEvent.reference}
+                  </p>
+                ) : null}
                 {isSelected ? (
                   <>
                     <div className="stage-pill-row" aria-label="Deal lifecycle">

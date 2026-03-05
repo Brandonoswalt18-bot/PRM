@@ -954,6 +954,10 @@ li + li {
   color: var(--muted);
 }
 
+.table-note-danger {
+  color: #a63d3d;
+}
+
 .stack-meta-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 12px;
