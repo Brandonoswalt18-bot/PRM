@@ -12,6 +12,20 @@ function titleCaseStatus(value: string) {
   return value.replaceAll("_", " ");
 }
 
+function getEmailReadiness() {
+  const missingEnvVars = ["RESEND_API_KEY", "EMAIL_FROM_ADDRESS"].filter(
+    (key) => !process.env[key]?.trim()
+  );
+
+  return {
+    enabled: missingEnvVars.length === 0,
+    missingEnvVars,
+    fromAddress: process.env.EMAIL_FROM_ADDRESS?.trim() || null,
+    portalNotifications:
+      process.env.GOACCESS_APPLICATION_NOTIFICATION_EMAIL?.trim() || null,
+  };
+}
+
 type VendorSettingsPageProps = {
   searchParams?: Promise<{
     queue?: string;
@@ -28,6 +42,7 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
   ]);
   const hubspotDealSyncConfig = getHubSpotDealSyncConfig();
   const hubspotLeadRoutingConfig = getHubSpotLeadRoutingConfig();
+  const emailReadiness = getEmailReadiness();
   const activeQueue =
     params.queue === "open" || params.queue === "in_progress" || params.queue === "resolved"
       ? params.queue
@@ -99,7 +114,23 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
           <article className="workspace-card">
             <h3>Email status</h3>
             <ul>
-              <li>Workflow emails will only send to real recipients after the GoAccess sender domain is verified in Resend.</li>
+              <li>
+                Delivery:{" "}
+                {emailReadiness.enabled
+                  ? "env configured"
+                  : `missing ${emailReadiness.missingEnvVars.join(", ")}`}
+              </li>
+              <li>
+                Sender:{" "}
+                {emailReadiness.fromAddress ?? "EMAIL_FROM_ADDRESS not set"}
+              </li>
+              <li>
+                Internal alerts:{" "}
+                {emailReadiness.portalNotifications ??
+                  "GOACCESS_APPLICATION_NOTIFICATION_EMAIL not set"}
+              </li>
+              <li>Workflow emails still require the GoAccess sender domain to be verified in Resend before real external delivery will work.</li>
+              <li>Resend test-mode senders only deliver to the account owner until domain verification is complete.</li>
               <li>{notifications.filter((item) => item.status === "failed").length} delivery failures are still visible.</li>
               <li>{notifications.filter((item) => item.status === "sent").length} workflow emails have been sent successfully.</li>
             </ul>
