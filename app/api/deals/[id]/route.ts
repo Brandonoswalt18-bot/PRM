@@ -50,7 +50,21 @@ export async function PATCH(
       );
     }
 
-    if (body.status === "approved" || body.status === "synced_to_hubspot") {
+    if (body.status === "approved") {
+      const approvedDeal = await updateDealStatus(id, "approved", {
+        syncAction: "Deal approved and ready for HubSpot sync",
+        syncStatus: "held",
+        syncReference: "Awaiting HubSpot sync",
+      });
+
+      return NextResponse.json({
+        ok: true,
+        deal: approvedDeal,
+        message: "Deal approved. Sync it to HubSpot when ready.",
+      });
+    }
+
+    if (body.status === "synced_to_hubspot") {
       const vendor = await getVendorById(existingDeal.vendorId);
 
       if (!vendor) {
@@ -58,20 +72,13 @@ export async function PATCH(
       }
 
       if (!isHubSpotDealSyncEnabled()) {
-        const updatedDeal = await updateDealStatus(id, "synced_to_hubspot", {
-          hubspotCompanyId: existingDeal.hubspotCompanyId ?? `demo-company-${existingDeal.id}`,
-          hubspotContactId: existingDeal.hubspotContactId ?? `demo-contact-${existingDeal.id}`,
-          hubspotDealId: existingDeal.hubspotDealId ?? `demo-deal-${existingDeal.id.slice(-6)}`,
-          syncAction: "Deal approved and recorded in HubSpot demo mode",
-          syncStatus: "synced",
-          syncReference: "HubSpot credentials not configured in this environment",
-        });
-
-        return NextResponse.json({
-          ok: true,
-          deal: updatedDeal,
-          message: "Deal approved and recorded in the portal HubSpot demo flow.",
-        });
+        return NextResponse.json(
+          {
+            message:
+              "HubSpot deal sync is not configured. Add the HubSpot production credentials before syncing approved deals.",
+          },
+          { status: 503 }
+        );
       }
 
       try {

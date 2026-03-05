@@ -192,6 +192,9 @@ function buildDealProperties(payload: HubSpotDealSyncPayload) {
   const pipelineId = process.env.HUBSPOT_DEAL_PIPELINE_ID;
   const vendorIdProperty = process.env.HUBSPOT_VENDOR_ID_PROPERTY;
   const vendorEmailProperty = process.env.HUBSPOT_VENDOR_EMAIL_PROPERTY;
+  const monthlyRmrProperty = process.env.HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY;
+  const productInterestProperty = process.env.HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY;
+  const vendorNameProperty = process.env.HUBSPOT_DEAL_VENDOR_NAME_PROPERTY;
 
   if (!stageId) {
     throw new Error("HubSpot deal stage is not configured.");
@@ -223,6 +226,18 @@ function buildDealProperties(payload: HubSpotDealSyncPayload) {
 
   if (vendorEmailProperty) {
     properties[vendorEmailProperty] = payload.vendor.primaryContactEmail;
+  }
+
+  if (monthlyRmrProperty) {
+    properties[monthlyRmrProperty] = String(payload.deal.monthlyRmr);
+  }
+
+  if (productInterestProperty) {
+    properties[productInterestProperty] = payload.deal.productInterest;
+  }
+
+  if (vendorNameProperty) {
+    properties[vendorNameProperty] = payload.vendor.companyName;
   }
 
   return properties;
