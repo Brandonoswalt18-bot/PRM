@@ -53,13 +53,13 @@ export default async function VendorDashboardPage() {
       label: "Pending applications",
       value: String(pendingApplications.length),
       delta: `${vendors.length} approved vendors in portal`,
-      href: "/app/programs",
+      href: "/app/programs?queue=pending",
     },
     {
       label: "NDA or access holds",
       value: String(onboardingVendors.length),
       delta: `${vendors.filter((vendor) => vendor.credentialsIssued).length} vendors have credentials`,
-      href: "/app/programs",
+      href: "/app/programs?queue=onboarding",
     },
     {
       label: "Deal review queue",

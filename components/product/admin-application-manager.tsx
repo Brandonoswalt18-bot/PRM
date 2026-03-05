@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
 import { buildApplicationTimeline } from "@/lib/goaccess-timeline";
@@ -14,6 +15,13 @@ type AdminApplicationManagerProps = {
   applications: VendorApplication[];
   vendors: ApprovedVendor[];
   notifications: VendorNotification[];
+  activeQueue: "all" | "pending" | "onboarding";
+  selectedApplicationId?: string;
+  queueCounts: {
+    all: number;
+    pending: number;
+    onboarding: number;
+  };
 };
 
 const allowedTransitions: Record<VendorApplicationStatus, VendorApplicationStatus[]> = {
@@ -78,10 +86,52 @@ function requiresSignedNdaUpload(status: VendorApplicationStatus) {
   return status === "nda_signed" || status === "credentials_issued";
 }
 
+function titleCaseStatus(status: string) {
+  return status.replaceAll("_", " ");
+}
+
+function getQueueReason(application: VendorApplication, vendor?: ApprovedVendor) {
+  if (!vendor) {
+    return application.status === "under_review" ? "Awaiting GoAccess decision" : "New application received";
+  }
+
+  if (vendor.ndaStatus !== "signed") {
+    return vendor.signedNdaFileUrl ? "Signed NDA uploaded and awaiting review" : "NDA still needs to be completed";
+  }
+
+  if (!vendor.credentialsIssued) {
+    return "Ready for credentials";
+  }
+
+  if (vendor.portalAccess !== "active") {
+    return "Credentials issued, waiting for vendor sign-in";
+  }
+
+  return "Portal access is active";
+}
+
+function buildProgramsHref(activeQueue: "all" | "pending" | "onboarding", applicationId?: string) {
+  const params = new URLSearchParams();
+
+  if (activeQueue !== "all") {
+    params.set("queue", activeQueue);
+  }
+
+  if (applicationId) {
+    params.set("application", applicationId);
+  }
+
+  const query = params.toString();
+  return query ? `/app/programs?${query}` : "/app/programs";
+}
+
 export function AdminApplicationManager({
   applications,
   vendors,
   notifications,
+  activeQueue,
+  selectedApplicationId,
+  queueCounts,
 }: AdminApplicationManagerProps) {
   const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -122,10 +172,34 @@ export function AdminApplicationManager({
       <div className="card-header-row">
         <div>
           <h3>Live application queue</h3>
-          <p>Review vendor applications, send NDAs, and issue credentials from one queue.</p>
+          <p>Open a partner only when you need the full NDA, credential, and email trail.</p>
         </div>
       </div>
+      <div className="queue-filter-row" aria-label="Application queue filters">
+        <Link
+          className={`queue-filter-pill${activeQueue === "all" ? " queue-filter-pill-active" : ""}`}
+          href="/app/programs"
+        >
+          All
+          <span>{queueCounts.all}</span>
+        </Link>
+        <Link
+          className={`queue-filter-pill${activeQueue === "pending" ? " queue-filter-pill-active" : ""}`}
+          href="/app/programs?queue=pending"
+        >
+          Pending review
+          <span>{queueCounts.pending}</span>
+        </Link>
+        <Link
+          className={`queue-filter-pill${activeQueue === "onboarding" ? " queue-filter-pill-active" : ""}`}
+          href="/app/programs?queue=onboarding"
+        >
+          NDA / access holds
+          <span>{queueCounts.onboarding}</span>
+        </Link>
+      </div>
       {message ? <p className="table-note">{message}</p> : null}
+      {applications.length === 0 ? <p className="table-note">No applications in this queue.</p> : null}
       <div className="stack-list">
         {applications.map((application) => (
           (() => {
@@ -137,12 +211,21 @@ export function AdminApplicationManager({
             const isRejected = application.status === "rejected";
             const allowedNextSteps = allowedTransitions[application.status];
             const hasSignedNdaUpload = Boolean(vendor?.signedNdaFileUrl);
+            const isSelected = selectedApplicationId === application.id;
+            const createdLabel = new Date(application.createdAt).toLocaleDateString();
+            const latestNotificationDate = latestNotification
+              ? new Date(latestNotification.createdAt).toLocaleDateString()
+              : null;
 
             return (
-              <div className="stack-card" key={application.id}>
+              <div className={`stack-card application-queue-card${isSelected ? " application-queue-card-selected" : ""}`} key={application.id}>
                 <div className="stack-card-header">
                   <div>
-                    <h3>{application.companyName}</h3>
+                    <h3>
+                      <Link className="stack-card-title-link" href={buildProgramsHref(activeQueue, isSelected ? undefined : application.id)}>
+                        {application.companyName}
+                      </Link>
+                    </h3>
                     <p>
                       {[application.city, application.state].filter(Boolean).join(", ") ||
                         application.region}{" "}
@@ -150,97 +233,110 @@ export function AdminApplicationManager({
                     </p>
                   </div>
                   <div className="stage-actions-topline">
-                    <button
-                      className="button button-secondary button-inline-danger"
-                      type="button"
-                      disabled={busyId === application.id || !allowedNextSteps.includes("rejected")}
-                      onClick={() => updateStatus(application.id, "rejected")}
-                    >
-                      Reject
-                    </button>
+                    <span className={`status-pill ${isRejected ? "status-pill-danger" : "status-pill-neutral"}`}>
+                      {isRejected ? "rejected" : titleCaseStatus(application.status)}
+                    </span>
+                    <Link className="button button-secondary" href={buildProgramsHref(activeQueue, isSelected ? undefined : application.id)}>
+                      {isSelected ? "Hide details" : "Open"}
+                    </Link>
                   </div>
-                </div>
-                <div className="stage-pill-row" aria-label="Application lifecycle">
-                  {lifecycleStages.map((stage) => (
-                    <button
-                      className={`stage-pill stage-pill-${getLifecycleStageState(
-                        stage.status,
-                        application.status
-                      )}`}
-                      disabled={
-                        busyId === application.id ||
-                        stage.status === "submitted" ||
-                        !allowedNextSteps.includes(stage.status) ||
-                        (requiresSignedNdaUpload(stage.status) && !hasSignedNdaUpload)
-                      }
-                      key={`${application.id}-${stage.status}`}
-                      type="button"
-                      onClick={() => updateStatus(application.id, stage.status)}
-                    >
-                      {getStageActionLabel(stage.status)}
-                    </button>
-                  ))}
-                  {isRejected ? <span className="stage-pill stage-pill-rejected">Rejected</span> : null}
                 </div>
                 <div className="stack-meta-grid">
                   <span>{application.primaryContactEmail}</span>
                   <span>{application.website || "Website not provided"}</span>
-                  <span>Created {new Date(application.createdAt).toLocaleDateString()}</span>
+                  <span>{getQueueReason(application, vendor)}</span>
                 </div>
-                {application.notes ? <p className="stack-note">{application.notes}</p> : null}
-                {vendor ? (
-                  <p className="stack-note">
-                    NDA: {vendor.ndaStatus}
-                    {vendor.ndaSentAt ? ` · sent ${new Date(vendor.ndaSentAt).toLocaleDateString()}` : ""}
-                    {vendor.inviteSentAt ? ` · invite sent ${new Date(vendor.inviteSentAt).toLocaleDateString()}` : ""}
-                    {vendor.inviteAcceptedAt ? ` · accepted ${new Date(vendor.inviteAcceptedAt).toLocaleDateString()}` : ""}
-                  </p>
-                ) : null}
-                {vendor?.ndaDocumentUrl ? (
-                  <p className="stack-note">
-                    NDA doc: <a href={vendor.ndaDocumentUrl} target="_blank" rel="noreferrer">{vendor.ndaDocumentUrl}</a>
-                  </p>
-                ) : null}
-                {vendor?.signedNdaFileUrl ? (
-                  <p className="stack-note">
-                    Signed NDA upload:{" "}
-                    <a href={vendor.signedNdaFileUrl} target="_blank" rel="noreferrer">
-                      {vendor.signedNdaFileName ?? vendor.signedNdaFileUrl}
-                    </a>
-                    {vendor.signedNdaUploadedAt
-                      ? ` · uploaded ${new Date(vendor.signedNdaUploadedAt).toLocaleDateString()}`
-                      : ""}
-                  </p>
-                ) : null}
-                {allowedNextSteps.includes("nda_signed") && !hasSignedNdaUpload ? (
-                  <p className="stack-note">Signed NDA upload required before NDA signed or credentials can be set.</p>
-                ) : null}
-                {latestNotification ? (
-                  <p className="stack-note">
-                    Latest email: {latestNotification.subject} on{" "}
-                    {new Date(latestNotification.createdAt).toLocaleDateString()} · status{" "}
-                    {latestNotification.status}
-                    {latestNotification.reference ? ` · ${latestNotification.reference}` : ""}
-                  </p>
-                ) : null}
-                {inviteUrl ? (
-                  <p className="stack-note">
-                    Invite link: <a href={inviteUrl}>{inviteUrl}</a>
-                  </p>
-                ) : null}
-                <div className="timeline-stack compact-timeline">
-                  {timeline.map((entry) => (
-                    <div className="timeline-card" key={`${application.id}-${entry.timestamp}-${entry.title}`}>
-                      <div className="timeline-card-topline">
-                        <strong>{entry.title}</strong>
-                        <span className={`timeline-badge timeline-${entry.tone ?? "neutral"}`}>
-                          {new Date(entry.timestamp).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p>{entry.detail}</p>
+                {isSelected ? (
+                  <>
+                    <div className="stage-pill-row" aria-label="Application lifecycle">
+                      {lifecycleStages.map((stage) => (
+                        <button
+                          className={`stage-pill stage-pill-${getLifecycleStageState(
+                            stage.status,
+                            application.status
+                          )}`}
+                          disabled={
+                            busyId === application.id ||
+                            stage.status === "submitted" ||
+                            !allowedNextSteps.includes(stage.status) ||
+                            (requiresSignedNdaUpload(stage.status) && !hasSignedNdaUpload)
+                          }
+                          key={`${application.id}-${stage.status}`}
+                          type="button"
+                          onClick={() => updateStatus(application.id, stage.status)}
+                        >
+                          {getStageActionLabel(stage.status)}
+                        </button>
+                      ))}
+                      <button
+                        className="button button-secondary button-inline-danger"
+                        type="button"
+                        disabled={busyId === application.id || !allowedNextSteps.includes("rejected")}
+                        onClick={() => updateStatus(application.id, "rejected")}
+                      >
+                        Reject
+                      </button>
                     </div>
-                  ))}
-                </div>
+                    <div className="detail-fact-grid">
+                      <div className="detail-fact">
+                        <span>Created</span>
+                        <strong>{createdLabel}</strong>
+                      </div>
+                      <div className="detail-fact">
+                        <span>NDA</span>
+                        <strong>{vendor ? titleCaseStatus(vendor.ndaStatus) : "Not started"}</strong>
+                      </div>
+                      <div className="detail-fact">
+                        <span>Credentials</span>
+                        <strong>{vendor?.credentialsIssued ? "Issued" : "Pending"}</strong>
+                      </div>
+                      <div className="detail-fact">
+                        <span>Portal access</span>
+                        <strong>{vendor ? titleCaseStatus(vendor.portalAccess) : "Not ready"}</strong>
+                      </div>
+                    </div>
+                    {application.notes ? <p className="stack-note">{application.notes}</p> : null}
+                    <div className="detail-link-row">
+                      {vendor?.ndaDocumentUrl ? (
+                        <a className="detail-link-chip" href={vendor.ndaDocumentUrl} target="_blank" rel="noreferrer">
+                          Open NDA doc
+                        </a>
+                      ) : null}
+                      {vendor?.signedNdaFileUrl ? (
+                        <a className="detail-link-chip" href={vendor.signedNdaFileUrl} target="_blank" rel="noreferrer">
+                          View signed NDA
+                        </a>
+                      ) : null}
+                      {inviteUrl ? (
+                        <a className="detail-link-chip" href={inviteUrl}>
+                          Open invite
+                        </a>
+                      ) : null}
+                    </div>
+                    {allowedNextSteps.includes("nda_signed") && !hasSignedNdaUpload ? (
+                      <p className="stack-note">Signed NDA upload is required before NDA signed or credentials can be set.</p>
+                    ) : null}
+                    {latestNotification ? (
+                      <p className="stack-note">
+                        Latest email: {latestNotification.subject}
+                        {latestNotificationDate ? ` · ${latestNotificationDate}` : ""}
+                      </p>
+                    ) : null}
+                    <div className="timeline-stack compact-timeline">
+                      {timeline.map((entry) => (
+                        <div className="timeline-card" key={`${application.id}-${entry.timestamp}-${entry.title}`}>
+                          <div className="timeline-card-topline">
+                            <strong>{entry.title}</strong>
+                            <span className={`timeline-badge timeline-${entry.tone ?? "neutral"}`}>
+                              {new Date(entry.timestamp).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <p>{entry.detail}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
               </div>
             );
           })()
