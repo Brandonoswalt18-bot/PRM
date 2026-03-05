@@ -113,9 +113,48 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
               <li>
                 Lead routing: {hubspotLeadRoutingConfig.enabled ? "configured" : `missing ${hubspotLeadRoutingConfig.missingEnvVars.join(", ")}`}
               </li>
-              <li>Mapped deal fields: {hubspotDealSyncConfig.mappedFields.join(", ")}</li>
+              <li>
+                Recommended deal mappings:{" "}
+                {hubspotDealSyncConfig.missingRecommendedEnvVars.length > 0
+                  ? `still missing ${hubspotDealSyncConfig.missingRecommendedEnvVars.join(", ")}`
+                  : "complete"}
+              </li>
               <li>Only approved deals should be synced into HubSpot.</li>
             </ul>
+            <div className="mini-stack">
+              <div>
+                <strong>Always mapped</strong>
+                <ul>
+                  {hubspotDealSyncConfig.requiredFields.map((field) => (
+                    <li key={field.hubspotProperty}>
+                      {field.portalField} -&gt; {field.hubspotProperty}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <strong>Optional production mappings</strong>
+                <ul>
+                  {hubspotDealSyncConfig.optionalMappings.map((field) => (
+                    <li key={field.envVar}>
+                      {field.source} -&gt; {field.hubspotProperty ?? `${field.envVar} not set`}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <strong>Lead routing envs</strong>
+                <ul>
+                  {hubspotLeadRoutingConfig.missingEnvVars.length > 0 ? (
+                    hubspotLeadRoutingConfig.missingEnvVars.map((envVar) => (
+                      <li key={envVar}>{envVar} still needs to be added.</li>
+                    ))
+                  ) : (
+                    <li>Lead routing envs are complete.</li>
+                  )}
+                </ul>
+              </div>
+            </div>
           </article>
         </section>
       </div>

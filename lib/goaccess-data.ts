@@ -22,6 +22,7 @@ import {
   listSyncEvents,
   listVendorApplications,
 } from "@/lib/goaccess-store";
+import { getHubSpotDealSyncConfig, getHubSpotLeadRoutingConfig } from "@/lib/hubspot";
 import type {
   AssetsPageData,
   CommissionsPageData,
@@ -191,14 +192,41 @@ export async function getPartnersFromStore(): Promise<PartnersPageData> {
 }
 
 export async function getHubSpotSyncFromStore(): Promise<CommissionsPageData> {
-  const [events, dashboard, vendors] = await Promise.all([
+  const [events, vendors, deals] = await Promise.all([
     listSyncEvents(),
-    getVendorDashboardFromStore(),
     listApprovedVendors(),
+    listDeals(),
   ]);
+  const dealSyncConfig = getHubSpotDealSyncConfig();
+  const leadRoutingConfig = getHubSpotLeadRoutingConfig();
+  const failedEvents = events.filter((event) => event.status === "failed");
+  const heldEvents = events.filter((event) => event.status === "held");
+  const syncedDeals = deals.filter((deal) => deal.status === "synced_to_hubspot");
+  const readyDeals = deals.filter((deal) => deal.status === "approved");
 
   return {
-    metrics: dashboard.metrics,
+    metrics: [
+      {
+        label: "Approved, not yet synced",
+        value: String(readyDeals.length),
+        delta: "Deals approved in portal but not yet written to HubSpot",
+      },
+      {
+        label: "In HubSpot",
+        value: String(syncedDeals.length),
+        delta: `${events.length} total sync events recorded`,
+      },
+      {
+        label: "Held sync events",
+        value: String(heldEvents.length),
+        delta: "Items waiting on review or follow-up before CRM write",
+      },
+      {
+        label: "Failed sync events",
+        value: String(failedEvents.length),
+        delta: dealSyncConfig.enabled ? "Operator action required" : "Deal sync is not fully configured",
+      },
+    ],
     commissions: events.map((event) => ({
       partner: vendors.find((item) => item.id === event.vendorId)?.companyName ?? "Unknown vendor",
       program: "HubSpot sync queue",
@@ -225,6 +253,17 @@ export async function getHubSpotSyncFromStore(): Promise<CommissionsPageData> {
           "Duplicate review needs explicit admin action",
           "Closed won state should flow back into monthly RMR",
           "Failed sync events should remain visible until resolved",
+        ],
+      },
+      {
+        title: "Environment status",
+        description: "Production sync should be treated as incomplete until both groups below are configured.",
+        items: [
+          `Deal sync: ${dealSyncConfig.enabled ? "configured" : `missing ${dealSyncConfig.missingEnvVars.join(", ")}`}`,
+          `Lead routing: ${leadRoutingConfig.enabled ? "configured" : `missing ${leadRoutingConfig.missingEnvVars.join(", ")}`}`,
+          dealSyncConfig.missingRecommendedEnvVars.length > 0
+            ? `Recommended deal mappings still missing: ${dealSyncConfig.missingRecommendedEnvVars.join(", ")}`
+            : "Recommended deal mappings are configured",
         ],
       },
     ],

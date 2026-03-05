@@ -37,6 +37,14 @@ type HubSpotApiError = Error & {
 
 const HUBSPOT_BASE_URL = "https://api.hubapi.com";
 const DEAL_SYNC_REQUIRED_ENV_VARS = ["HUBSPOT_ACCESS_TOKEN", "HUBSPOT_DEAL_STAGE_ID"] as const;
+const DEAL_SYNC_RECOMMENDED_ENV_VARS = [
+  "HUBSPOT_DEAL_PIPELINE_ID",
+  "HUBSPOT_VENDOR_ID_PROPERTY",
+  "HUBSPOT_VENDOR_EMAIL_PROPERTY",
+  "HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY",
+  "HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY",
+  "HUBSPOT_DEAL_VENDOR_NAME_PROPERTY",
+] as const;
 const LEAD_ROUTING_REQUIRED_ENV_VARS = [
   "HUBSPOT_ACCESS_TOKEN",
   "HUBSPOT_PORTAL_ID",
@@ -45,10 +53,29 @@ const LEAD_ROUTING_REQUIRED_ENV_VARS = [
 
 export function getHubSpotDealSyncConfig() {
   const missingEnvVars = DEAL_SYNC_REQUIRED_ENV_VARS.filter((key) => !process.env[key]?.trim());
+  const optionalMappings = [
+    { envVar: "HUBSPOT_DEAL_PIPELINE_ID", hubspotProperty: "pipeline", source: "Portal default deal pipeline" },
+    { envVar: "HUBSPOT_VENDOR_ID_PROPERTY", hubspotProperty: process.env.HUBSPOT_VENDOR_ID_PROPERTY?.trim() || null, source: "Vendor HubSpot partner ID" },
+    { envVar: "HUBSPOT_VENDOR_EMAIL_PROPERTY", hubspotProperty: process.env.HUBSPOT_VENDOR_EMAIL_PROPERTY?.trim() || null, source: "Vendor primary contact email" },
+    { envVar: "HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY", hubspotProperty: process.env.HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY?.trim() || null, source: "Deal monthly RMR" },
+    { envVar: "HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY", hubspotProperty: process.env.HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY?.trim() || null, source: "Deal product interest" },
+    { envVar: "HUBSPOT_DEAL_VENDOR_NAME_PROPERTY", hubspotProperty: process.env.HUBSPOT_DEAL_VENDOR_NAME_PROPERTY?.trim() || null, source: "Vendor company name" },
+  ] as const;
 
   return {
     enabled: missingEnvVars.length === 0,
     missingEnvVars,
+    missingRecommendedEnvVars: DEAL_SYNC_RECOMMENDED_ENV_VARS.filter((key) => !process.env[key]?.trim()),
+    requiredFields: [
+      { portalField: "Deal name", hubspotProperty: "dealname" },
+      { portalField: "Deal stage", hubspotProperty: "dealstage" },
+      { portalField: "Estimated value", hubspotProperty: "amount" },
+      { portalField: "Submission detail", hubspotProperty: "description" },
+    ],
+    optionalMappings: optionalMappings.map((item) => ({
+      ...item,
+      configured: Boolean(process.env[item.envVar]?.trim()),
+    })),
     mappedFields: [
       "dealname",
       "dealstage",

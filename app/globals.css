@@ -971,6 +971,28 @@ li + li {
   word-break: break-word;
 }
 
+.mini-stack {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.mini-stack > div {
+  padding-top: 12px;
+  border-top: 1px solid rgba(31, 100, 216, 0.08);
+}
+
+.mini-stack strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+
+.mini-stack ul {
+  margin: 0;
+}
+
 .queue-filter-row {
   display: flex;
   flex-wrap: wrap;
