@@ -76,6 +76,7 @@ export type ApprovedVendor = {
   ndaDocumentUrl?: string;
   signedNdaFileName?: string;
   signedNdaFileUrl?: string;
+  signedNdaBlobPath?: string;
   signedNdaUploadedAt?: string;
   credentialsIssued: boolean;
   credentialsIssuedAt?: string;

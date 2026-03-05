@@ -366,21 +366,27 @@ async function storeSignedNdaFile(vendorId: string, fileName: string, contentTyp
   const blobToken = getBlobStoreToken();
 
   if (blobToken) {
-    const result = await putBlob(relativePath, Buffer.from(bytes), {
-      access: "public",
+    await putBlob(relativePath, Buffer.from(bytes), {
+      access: "private",
       addRandomSuffix: false,
       allowOverwrite: true,
       contentType,
       token: blobToken,
     });
 
-    return result.url;
+    return {
+      blobPath: relativePath,
+      directUrl: null as string | null,
+    };
   }
 
   const filePath = path.join(process.cwd(), "public", "uploads", relativePath);
   await mkdir(path.dirname(filePath), { recursive: true });
   await writeFile(filePath, bytes);
-  return `/uploads/${relativePath}`;
+  return {
+    blobPath: null as string | null,
+    directUrl: `/uploads/${relativePath}`,
+  };
 }
 
 function makeId(prefix: string) {
@@ -1132,15 +1138,18 @@ export async function uploadSignedNdaForVendor(
 
   const application = store.vendorApplications.find((item) => item.id === vendor.applicationId);
   const uploadedAt = nowIso();
-  const fileUrl = await storeSignedNdaFile(
+  const storedFile = await storeSignedNdaFile(
     vendorId,
     normalizedName,
     file.contentType || "application/octet-stream",
     file.bytes
   );
+  const fileUrl =
+    storedFile.directUrl ?? `/api/vendor-nda/file?vendorId=${encodeURIComponent(vendorId)}`;
 
   vendor.signedNdaFileName = normalizedName;
   vendor.signedNdaFileUrl = fileUrl;
+  vendor.signedNdaBlobPath = storedFile.blobPath ?? undefined;
   vendor.signedNdaUploadedAt = uploadedAt;
   vendor.updatedAt = uploadedAt;
 
