@@ -1,26 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { SESSION_COOKIE } from "@/lib/auth-constants";
+import { readSignedSession } from "@/lib/auth-session";
 
-function normalizeWorkspaceRole(rawRole: string | null | undefined) {
-  if (!rawRole) {
-    return null;
-  }
-
-  if (rawRole === "admin" || rawRole === "vendor") {
-    return rawRole;
-  }
-
-  if (rawRole === "partner") {
-    return "vendor";
-  }
-
-  return null;
-}
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-  const role = normalizeWorkspaceRole(request.cookies.get(SESSION_COOKIE)?.value);
+  const session = await readSignedSession(request.cookies.get(SESSION_COOKIE)?.value);
+  const role = session?.role ?? null;
 
   if (pathname.startsWith("/app") && role !== "admin") {
     const loginUrl = new URL("/login", request.url);

@@ -6,6 +6,7 @@ import {
   getApplicationNotificationRecipients,
   sendVendorEmail,
 } from "@/lib/email";
+import { hashPassword, verifyPassword } from "@/lib/password";
 import type {
   ApprovedVendor,
   CreateDealInput,
@@ -102,6 +103,10 @@ const seedStore: PortalStore = {
       inviteToken: "invite-blue-haven",
       inviteSentAt: "2026-02-27T13:20:00.000Z",
       inviteAcceptedAt: "2026-02-27T15:05:00.000Z",
+      passwordSalt: "goaccess-demo-salt",
+      passwordHash:
+        "d54a2fa06254bb3b1d9558981f518939c8cf9d56d848a48bebe46f4f7015c6673cfd33d2fce60cd267694d038f36a3673fb1e51b50839cacae9192f49ee05dcb",
+      passwordConfiguredAt: "2026-02-27T15:05:00.000Z",
       hubspotPartnerId: "GA-VENDOR-018",
       createdAt: "2026-02-20T12:00:00.000Z",
       updatedAt: "2026-02-27T13:20:00.000Z",
@@ -455,6 +460,16 @@ export async function getDealById(dealId: string) {
 export async function getVendorByInviteToken(inviteToken: string) {
   const store = await readStore();
   return store.approvedVendors.find((item) => item.inviteToken === inviteToken) ?? null;
+}
+
+export async function getVendorByEmail(email: string) {
+  const store = await readStore();
+  const normalizedEmail = email.trim().toLowerCase();
+  return (
+    store.approvedVendors.find(
+      (item) => item.primaryContactEmail.trim().toLowerCase() === normalizedEmail
+    ) ?? null
+  );
 }
 
 export function buildApplicationTimeline(
@@ -911,6 +926,46 @@ export async function acceptVendorInvite(inviteToken: string) {
   vendor.updatedAt = nowIso();
   await writeStore(store);
   return vendor;
+}
+
+export async function setVendorPasswordFromInvite(inviteToken: string, password: string) {
+  const store = await readStore();
+  const vendor = store.approvedVendors.find((item) => item.inviteToken === inviteToken);
+
+  if (!vendor) {
+    throw new Error("Invite not found.");
+  }
+
+  if (!vendor.credentialsIssued) {
+    throw new Error("Credentials have not been issued for this vendor.");
+  }
+
+  const passwordRecord = await hashPassword(password);
+  vendor.passwordSalt = passwordRecord.salt;
+  vendor.passwordHash = passwordRecord.hash;
+  vendor.passwordConfiguredAt = nowIso();
+  vendor.portalAccess = "active";
+  vendor.inviteAcceptedAt = vendor.inviteAcceptedAt ?? nowIso();
+  vendor.updatedAt = nowIso();
+  await writeStore(store);
+  return vendor;
+}
+
+export async function verifyVendorPassword(email: string, password: string) {
+  const vendor = await getVendorByEmail(email);
+
+  if (
+    !vendor ||
+    !vendor.credentialsIssued ||
+    !vendor.passwordSalt ||
+    !vendor.passwordHash
+  ) {
+    return null;
+  }
+
+  const isValid = await verifyPassword(password, vendor.passwordSalt, vendor.passwordHash);
+
+  return isValid ? vendor : null;
 }
 
 export async function submitDealForVendor(vendorId: string, input: CreateDealInput) {

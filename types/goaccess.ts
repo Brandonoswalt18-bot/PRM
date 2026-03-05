@@ -84,6 +84,9 @@ export type ApprovedVendor = {
   inviteToken?: string;
   inviteSentAt?: string;
   inviteAcceptedAt?: string;
+  passwordSalt?: string;
+  passwordHash?: string;
+  passwordConfiguredAt?: string;
   hubspotPartnerId: string;
   createdAt: string;
   updatedAt: string;

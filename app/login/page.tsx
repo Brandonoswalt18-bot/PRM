@@ -10,16 +10,27 @@ type LoginPageProps = {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = (await searchParams) ?? {};
   const nextPath = params.next && params.next.startsWith("/") ? params.next : undefined;
-  const showError = params.error === "not-found";
+  const error = params.error;
+  const message =
+    error === "invalid-credentials"
+      ? "Email or password is incorrect."
+      : error === "missing-credentials"
+        ? "Enter both email and password."
+        : error === "mock-disabled"
+          ? "The old demo login route is disabled."
+          : error === "not-found"
+            ? "We could not match that email to an active GoAccess account."
+            : "Use the email and password tied to your portal access.";
+  const showError = Boolean(error);
 
   return (
     <main className="login-shell">
       <div className="login-card">
         <span className="eyebrow">GOACCESS</span>
         <h1>Portal sign in</h1>
-        <p>Use the email tied to your portal access. Access is assigned automatically.</p>
+        <p>Use the email and password tied to your portal access. Vendors set their password from the invite link.</p>
 
-        <form action="/auth/mock-login" className="login-form" method="get">
+        <form action="/auth/login" className="login-form" method="post">
           <label className="login-field">
             <span className="access-label">Email address</span>
             <input
@@ -29,6 +40,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               placeholder="name@company.com"
               required
               type="email"
+            />
+          </label>
+          <label className="login-field">
+            <span className="access-label">Password</span>
+            <input
+              autoComplete="current-password"
+              className="login-input"
+              name="password"
+              placeholder="Enter your password"
+              required
+              type="password"
             />
           </label>
           {nextPath ? <input name="next" type="hidden" value={nextPath} /> : null}
@@ -41,9 +63,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           className={`form-message ${showError ? "form-message-error" : ""}`.trim()}
           aria-live="polite"
         >
-          {showError
-            ? "We could not match that email to an active GoAccess admin or approved vendor account."
-            : "Use the email tied to your portal access."}
+          {message}
         </p>
 
         <div className="login-footer">
