@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
-import { getWorkspaceSession } from "@/lib/auth";
+import { requireVendorRouteAccess } from "@/lib/auth-guards";
 import { getVendorById, uploadSignedNdaForVendor } from "@/lib/goaccess-store";
 
 export async function GET() {
-  const session = await getWorkspaceSession();
+  const auth = await requireVendorRouteAccess();
 
-  if (!session?.vendorId) {
-    return NextResponse.json({ message: "Approved vendor session required." }, { status: 401 });
+  if (auth.error) {
+    return auth.error;
   }
+
+  const session = auth.session;
 
   const vendor = await getVendorById(session.vendorId);
 
@@ -19,11 +21,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = await getWorkspaceSession();
+  const auth = await requireVendorRouteAccess();
 
-  if (!session?.vendorId) {
-    return NextResponse.json({ message: "Approved vendor session required." }, { status: 401 });
+  if (auth.error) {
+    return auth.error;
   }
+
+  const session = auth.session;
 
   const formData = await request.formData();
   const ndaFile = formData.get("signedNda");

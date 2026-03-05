@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getWorkspaceSession } from "@/lib/auth";
+import { requireVendorRouteAccess } from "@/lib/auth-guards";
 import { listSupportRequests, submitSupportRequest } from "@/lib/goaccess-store";
 import type { SupportRequestCategory } from "@/types/goaccess";
 
@@ -19,17 +19,25 @@ const allowedCategories: SupportRequestCategory[] = [
 ];
 
 export async function GET() {
-  const session = await getWorkspaceSession();
+  const auth = await requireVendorRouteAccess();
+
+  if (auth.error) {
+    return auth.error;
+  }
+
+  const session = auth.session;
   const requests = await listSupportRequests(session?.vendorId);
   return NextResponse.json({ items: requests });
 }
 
 export async function POST(request: Request) {
-  const session = await getWorkspaceSession();
+  const auth = await requireVendorRouteAccess();
 
-  if (!session?.vendorId) {
-    return NextResponse.json({ message: "Approved vendor session required." }, { status: 401 });
+  if (auth.error) {
+    return auth.error;
   }
+
+  const session = auth.session;
 
   let body: SupportPayload;
 

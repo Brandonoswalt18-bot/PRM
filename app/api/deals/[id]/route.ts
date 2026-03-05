@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAdminRouteAccess } from "@/lib/auth-guards";
 import {
   getHubSpotDealSyncConfig,
   isHubSpotDealSyncEnabled,
@@ -26,6 +27,12 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const authError = await requireAdminRouteAccess();
+
+  if (authError) {
+    return authError;
+  }
+
   const { id } = await context.params;
 
   let body: { status?: DealStatus };

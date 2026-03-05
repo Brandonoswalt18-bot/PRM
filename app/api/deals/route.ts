@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getWorkspaceSession } from "@/lib/auth";
+import { requireVendorRouteAccess } from "@/lib/auth-guards";
 import { listDeals, submitDealForVendor } from "@/lib/goaccess-store";
 
 type DealPayload = {
@@ -21,17 +21,25 @@ function isLikelyDomain(value: string) {
 }
 
 export async function GET() {
-  const session = await getWorkspaceSession();
+  const auth = await requireVendorRouteAccess();
+
+  if (auth.error) {
+    return auth.error;
+  }
+
+  const session = auth.session;
   const deals = await listDeals(session?.vendorId);
   return NextResponse.json({ items: deals });
 }
 
 export async function POST(request: Request) {
-  const session = await getWorkspaceSession();
+  const auth = await requireVendorRouteAccess();
 
-  if (!session?.vendorId) {
-    return NextResponse.json({ message: "Approved vendor session required." }, { status: 401 });
+  if (auth.error) {
+    return auth.error;
   }
+
+  const session = auth.session;
 
   let body: DealPayload;
 
