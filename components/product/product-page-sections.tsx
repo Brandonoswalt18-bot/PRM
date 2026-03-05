@@ -18,11 +18,21 @@ export function MetricGrid({ metrics }: { metrics: MetricCard[] }) {
   return (
     <section className="dashboard-metrics">
       {metrics.map((metric) => (
-        <article className="feature-card" key={metric.label}>
-          <span className="metric-label">{metric.label}</span>
-          <strong className="metric-value">{metric.value}</strong>
-          <p>{metric.delta}</p>
-        </article>
+        metric.href ? (
+          <Link className="metric-card-link" href={metric.href} key={metric.label}>
+            <article className="feature-card">
+              <span className="metric-label">{metric.label}</span>
+              <strong className="metric-value">{metric.value}</strong>
+              <p>{metric.delta}</p>
+            </article>
+          </Link>
+        ) : (
+          <article className="feature-card" key={metric.label}>
+            <span className="metric-label">{metric.label}</span>
+            <strong className="metric-value">{metric.value}</strong>
+            <p>{metric.delta}</p>
+          </article>
+        )
       ))}
     </section>
   );

@@ -37,21 +37,25 @@ export default async function PartnerPortalPage() {
       label: "Registered deals",
       value: String(deals.length),
       delta: `${deals.filter((deal) => deal.status === "submitted" || deal.status === "under_review").length} still in review`,
+      href: "/portal/deals",
     },
     {
       label: "Current monthly RMR",
       value: formatCurrency(currentRmr),
       delta: `${deals.filter((deal) => deal.status === "closed_won").length} active accounts`,
+      href: "/portal/earnings",
     },
     {
       label: "Forecast monthly RMR",
       value: formatCurrency(forecastRmr),
       delta: `${deals.filter((deal) => deal.status === "synced_to_hubspot").length} accounts in HubSpot pipeline`,
+      href: "/portal/earnings",
     },
     {
       label: "Open support requests",
       value: String(supportRequests.filter((request) => request.status !== "resolved").length),
       delta: vendor?.credentialsIssued ? "Access active" : "Credentials pending",
+      href: "/portal/support",
     },
   ];
 

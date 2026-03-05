@@ -53,21 +53,25 @@ export default async function VendorDashboardPage() {
       label: "Pending applications",
       value: String(pendingApplications.length),
       delta: `${vendors.length} approved vendors in portal`,
+      href: "/app/programs",
     },
     {
       label: "NDA or access holds",
       value: String(onboardingVendors.length),
       delta: `${vendors.filter((vendor) => vendor.credentialsIssued).length} vendors have credentials`,
+      href: "/app/programs",
     },
     {
       label: "Deal review queue",
       value: String(reviewDeals.length),
       delta: `${syncEvents.length} HubSpot sync events logged`,
+      href: "/app/deal-registrations",
     },
     {
       label: "Projected monthly RMR",
       value: formatCurrency(forecastRmr),
       delta: `${formatCurrency(activeRmr)} closed won`,
+      href: "/app/payouts",
     },
     {
       label: "Outstanding support tickets",
@@ -76,6 +80,7 @@ export default async function VendorDashboardPage() {
         outstandingSupportRequests.length > 0
           ? `${outstandingSupportRequests.filter((request) => request.status === "in_progress").length} already in progress`
           : "No unresolved vendor support tickets",
+      href: "/app/settings",
     },
   ];
 

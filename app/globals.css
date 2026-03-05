@@ -840,6 +840,23 @@ li + li {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
+.metric-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.metric-card-link .feature-card {
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.metric-card-link:hover .feature-card,
+.metric-card-link:focus-visible .feature-card {
+  transform: translateY(-1px);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow);
+}
+
 .dashboard-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }

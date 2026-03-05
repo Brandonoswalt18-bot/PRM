@@ -15,6 +15,7 @@ export type MetricCard = {
   label: string;
   value: string;
   delta: string;
+  href?: string;
 };
 
 export type QueueGroup = {
