@@ -2,7 +2,15 @@ import { WorkspacePageHeader } from "@/components/product/workspace-page-header"
 import { AdminDealManager } from "@/components/product/admin-deal-manager";
 import { listApprovedVendors, listDeals, listSupportRequests, listSyncEvents } from "@/lib/goaccess-store";
 
-export default async function DealRegistrationsPage() {
+type DealRegistrationsPageProps = {
+  searchParams?: Promise<{
+    queue?: string;
+    deal?: string;
+  }>;
+};
+
+export default async function DealRegistrationsPage({ searchParams }: DealRegistrationsPageProps) {
+  const params = (await searchParams) ?? {};
   const [deals, syncEvents, vendors, supportRequests] = await Promise.all([
     listDeals(),
     listSyncEvents(),
@@ -10,33 +18,61 @@ export default async function DealRegistrationsPage() {
     listSupportRequests(),
   ]);
 
+  const activeQueue =
+    params.queue === "review" || params.queue === "hubspot" || params.queue === "closed"
+      ? params.queue
+      : "all";
+  const reviewDeals = deals.filter((deal) => ["submitted", "under_review", "approved"].includes(deal.status));
+  const hubspotDeals = deals.filter((deal) => deal.status === "approved" || deal.status === "synced_to_hubspot");
+  const closedDeals = deals.filter((deal) => deal.status === "closed_won" || deal.status === "closed_lost");
+  const filteredDeals =
+    activeQueue === "review"
+      ? reviewDeals
+      : activeQueue === "hubspot"
+        ? hubspotDeals
+        : activeQueue === "closed"
+          ? closedDeals
+          : deals;
+  const selectedDealId = filteredDeals.some((deal) => deal.id === params.deal) ? params.deal : undefined;
+
   return (
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
         title="Deal registrations"
-        subtitle="Review vendor deals, approve the right ones, and let approved records write into HubSpot."
-        primaryLabel="Open review queue"
+        subtitle="Use filtered queues for fast review. Open one deal only when you need the full record."
+        primaryLabel="Show full queue"
         primaryHref="/app/deal-registrations"
       />
       <div className="app-content">
-        <AdminDealManager deals={deals} syncEvents={syncEvents} vendors={vendors} />
+        <AdminDealManager
+          deals={filteredDeals}
+          syncEvents={syncEvents}
+          vendors={vendors}
+          activeQueue={activeQueue}
+          selectedDealId={selectedDealId}
+          queueCounts={{
+            all: deals.length,
+            review: reviewDeals.length,
+            hubspot: hubspotDeals.length,
+            closed: closedDeals.length,
+          }}
+        />
         <article className="workspace-card">
-          <h3>Review guardrails</h3>
+          <h3>Queue summary</h3>
           <ul>
-            <li>{deals.filter((deal) => deal.status === "submitted").length} new submissions still need first review.</li>
-            <li>{deals.filter((deal) => deal.status === "under_review").length} deals are sitting in active review.</li>
-            <li>{deals.filter((deal) => deal.status === "synced_to_hubspot").length} approved deals are already in HubSpot.</li>
+            <li>{reviewDeals.filter((deal) => deal.status === "submitted").length} new submissions still need first review.</li>
+            <li>{reviewDeals.filter((deal) => deal.status === "under_review").length} deals are sitting in active review.</li>
+            <li>{hubspotDeals.filter((deal) => deal.status === "synced_to_hubspot").length} approved deals are already in HubSpot.</li>
             <li>{supportRequests.filter((request) => request.status !== "resolved").length} open vendor support requests may affect deal progress.</li>
           </ul>
         </article>
         <article className="workspace-card">
-          <h3>Planned next</h3>
+          <h3>Operating rule</h3>
           <ul>
-            <li>Automatic duplicate scoring before the admin opens a record</li>
-            <li>Company/contact match preview from HubSpot search</li>
-            <li>Owner assignment and territory routing</li>
-            <li>Vendor-visible review notes after status changes</li>
+            <li>Only approved deals should move into HubSpot.</li>
+            <li>Closed won should follow sync, not bypass it.</li>
+            <li>Support issues should stay visible if they block deal progress.</li>
           </ul>
         </article>
       </div>

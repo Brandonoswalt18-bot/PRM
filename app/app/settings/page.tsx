@@ -11,23 +11,51 @@ function titleCaseStatus(value: string) {
   return value.replaceAll("_", " ");
 }
 
-export default async function VendorSettingsPage() {
+type VendorSettingsPageProps = {
+  searchParams?: Promise<{
+    queue?: string;
+    request?: string;
+  }>;
+};
+
+export default async function VendorSettingsPage({ searchParams }: VendorSettingsPageProps) {
+  const params = (await searchParams) ?? {};
   const [supportRequests, notifications, vendors] = await Promise.all([
     listSupportRequests(),
     listVendorNotifications(),
     listApprovedVendors(),
   ]);
+  const activeQueue =
+    params.queue === "open" || params.queue === "in_progress" || params.queue === "resolved"
+      ? params.queue
+      : "all";
+  const openRequests = supportRequests.filter((item) => item.status === "open");
+  const inProgressRequests = supportRequests.filter((item) => item.status === "in_progress");
+  const resolvedRequests = supportRequests.filter((item) => item.status === "resolved");
+  const filteredRequests =
+    activeQueue === "open"
+      ? openRequests
+      : activeQueue === "in_progress"
+        ? inProgressRequests
+        : activeQueue === "resolved"
+          ? resolvedRequests
+          : supportRequests;
+  const selectedRequestId = filteredRequests.some((item) => item.id === params.request)
+    ? params.request
+    : undefined;
 
   const metrics = [
     {
       label: "Open support requests",
-      value: String(supportRequests.filter((item) => item.status === "open").length),
+      value: String(openRequests.length),
       delta: "New items that need a GoAccess response",
+      href: "/app/settings?queue=open",
     },
     {
       label: "In-progress requests",
-      value: String(supportRequests.filter((item) => item.status === "in_progress").length),
+      value: String(inProgressRequests.length),
       delta: "Vendor support currently being handled",
+      href: "/app/settings?queue=in_progress",
     },
     {
       label: "Failed emails",
@@ -46,21 +74,31 @@ export default async function VendorSettingsPage() {
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
         title="Support and delivery"
-        subtitle="Review support volume, email delivery, and the issues still blocking vendors."
+        subtitle="Use the support queue for quick triage. Open one request only when you need the full message and history."
         primaryLabel="Open deal review"
-        primaryHref="/app/deal-registrations"
+        primaryHref="/app/deal-registrations?queue=review"
       />
       <div className="app-content">
         <MetricGrid metrics={metrics} />
         <section className="dashboard-grid">
-          <AdminSupportManager supportRequests={supportRequests} vendors={vendors} />
+          <AdminSupportManager
+            supportRequests={filteredRequests}
+            vendors={vendors}
+            activeQueue={activeQueue}
+            selectedRequestId={selectedRequestId}
+            queueCounts={{
+              all: supportRequests.length,
+              open: openRequests.length,
+              in_progress: inProgressRequests.length,
+              resolved: resolvedRequests.length,
+            }}
+          />
           <article className="workspace-card">
-            <h3>Email and onboarding notes</h3>
+            <h3>Email status</h3>
             <ul>
               <li>Workflow emails will only send to real recipients after the GoAccess sender domain is verified in Resend.</li>
-              <li>Applicant and internal notification failures remain visible on application cards with the delivery reason.</li>
-              <li>Support requests move between open, in progress, and resolved from this screen.</li>
-              <li>Approved deals are the only deals that should reach HubSpot.</li>
+              <li>{notifications.filter((item) => item.status === "failed").length} delivery failures are still visible.</li>
+              <li>{notifications.filter((item) => item.status === "sent").length} workflow emails have been sent successfully.</li>
             </ul>
           </article>
         </section>

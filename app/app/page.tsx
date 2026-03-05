@@ -65,7 +65,7 @@ export default async function VendorDashboardPage() {
       label: "Deal review queue",
       value: String(reviewDeals.length),
       delta: `${syncEvents.length} HubSpot sync events logged`,
-      href: "/app/deal-registrations",
+      href: "/app/deal-registrations?queue=review",
     },
     {
       label: "Projected monthly RMR",
@@ -80,7 +80,7 @@ export default async function VendorDashboardPage() {
         outstandingSupportRequests.length > 0
           ? `${outstandingSupportRequests.filter((request) => request.status === "in_progress").length} already in progress`
           : "No unresolved vendor support tickets",
-      href: "/app/settings",
+      href: "/app/settings?queue=open",
     },
   ];
 
