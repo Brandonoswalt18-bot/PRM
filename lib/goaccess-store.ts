@@ -366,7 +366,7 @@ async function storeSignedNdaFile(vendorId: string, fileName: string, contentTyp
   const blobToken = getBlobStoreToken();
 
   if (blobToken) {
-    const result = await putBlob(relativePath, bytes, {
+    const result = await putBlob(relativePath, Buffer.from(bytes), {
       access: "public",
       addRandomSuffix: false,
       allowOverwrite: true,
