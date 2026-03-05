@@ -16,6 +16,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       ? "Email or password is incorrect."
       : error === "missing-credentials"
         ? "Enter both email and password."
+        : error === "admin-not-configured"
+          ? "Admin login is not configured yet. Add GOACCESS_ADMIN_PASSWORD in Vercel."
         : error === "mock-disabled"
           ? "The old demo login route is disabled."
           : error === "not-found"

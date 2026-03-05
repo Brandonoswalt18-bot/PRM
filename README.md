@@ -108,6 +108,8 @@ Required auth env vars for production:
 - `AUTH_SECRET`
 - `GOACCESS_ADMIN_PASSWORD`
 
+Without `GOACCESS_ADMIN_PASSWORD`, the admin account cannot sign in on production.
+
 Optional auth env vars:
 
 - `GOACCESS_ADMIN_EMAIL`

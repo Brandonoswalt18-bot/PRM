@@ -50,8 +50,13 @@ export async function POST(request: Request) {
   let role: "admin" | "vendor" | null = null;
   let vendorId: string | undefined;
   const adminPassword = getAdminPassword();
+  const adminEmail = getAdminEmail();
 
-  if (adminPassword && email === getAdminEmail() && password === adminPassword) {
+  if (!adminPassword && email === adminEmail) {
+    return NextResponse.redirect(buildLoginRedirect(request, "admin-not-configured", next), 303);
+  }
+
+  if (adminPassword && email === adminEmail && password === adminPassword) {
     role = "admin";
   } else {
     const vendor = await verifyVendorPassword(email, password);
