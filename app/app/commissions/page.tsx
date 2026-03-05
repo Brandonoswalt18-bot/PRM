@@ -15,18 +15,18 @@ export default async function CommissionsPage() {
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
         title="HubSpot sync"
-        subtitle="Review approved vendor-submitted deals before they create or update companies, contacts, and deals in HubSpot."
-        primaryLabel="Open deal review"
-        primaryHref="/app/deal-registrations"
+        subtitle="Watch the CRM queue, failed writes, and environment readiness."
+        primaryLabel="Open HubSpot-ready deals"
+        primaryHref="/app/deal-registrations?queue=hubspot"
       />
       <div className="app-content">
         <MetricGrid metrics={data.metrics} />
         <section className="dashboard-grid">
           <TableSection
             title="Sync activity"
-            description="Every CRM write should explain what was reviewed, created, linked, or held."
-            actionLabel="Open deal queue"
-            actionHref="/app/deal-registrations"
+            description="Each event shows what was reviewed, written, held, or failed."
+            actionLabel="Open settings"
+            actionHref="/app/settings"
             headers={["Vendor", "Queue", "Event", "Reference", "Status"]}
             rows={data.commissions}
             renderRow={CommissionRow}

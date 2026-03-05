@@ -40,7 +40,7 @@ export default async function DealRegistrationsPage({ searchParams }: DealRegist
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
         title="Deal registrations"
-        subtitle="Use filtered queues for fast review. Open one deal only when you need the full record."
+        subtitle="Review the queue, open one deal when needed, and move approved deals into HubSpot."
         primaryLabel="Show full queue"
         primaryHref="/app/deal-registrations"
       />
@@ -68,7 +68,7 @@ export default async function DealRegistrationsPage({ searchParams }: DealRegist
           </ul>
         </article>
         <article className="workspace-card">
-          <h3>Operating rule</h3>
+          <h3>Rules</h3>
           <ul>
             <li>Only approved deals should move into HubSpot.</li>
             <li>Closed won should follow sync, not bypass it.</li>
