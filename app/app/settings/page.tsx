@@ -1,6 +1,7 @@
 import { AdminSupportManager } from "@/components/product/admin-support-manager";
 import { MetricGrid } from "@/components/product/product-page-sections";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
+import { getHubSpotDealSyncConfig, getHubSpotLeadRoutingConfig } from "@/lib/hubspot";
 import {
   listApprovedVendors,
   listSupportRequests,
@@ -25,6 +26,8 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
     listVendorNotifications(),
     listApprovedVendors(),
   ]);
+  const hubspotDealSyncConfig = getHubSpotDealSyncConfig();
+  const hubspotLeadRoutingConfig = getHubSpotLeadRoutingConfig();
   const activeQueue =
     params.queue === "open" || params.queue === "in_progress" || params.queue === "resolved"
       ? params.queue
@@ -99,6 +102,19 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
               <li>Workflow emails will only send to real recipients after the GoAccess sender domain is verified in Resend.</li>
               <li>{notifications.filter((item) => item.status === "failed").length} delivery failures are still visible.</li>
               <li>{notifications.filter((item) => item.status === "sent").length} workflow emails have been sent successfully.</li>
+            </ul>
+          </article>
+          <article className="workspace-card">
+            <h3>HubSpot readiness</h3>
+            <ul>
+              <li>
+                Deal sync: {hubspotDealSyncConfig.enabled ? "configured" : `missing ${hubspotDealSyncConfig.missingEnvVars.join(", ")}`}
+              </li>
+              <li>
+                Lead routing: {hubspotLeadRoutingConfig.enabled ? "configured" : `missing ${hubspotLeadRoutingConfig.missingEnvVars.join(", ")}`}
+              </li>
+              <li>Mapped deal fields: {hubspotDealSyncConfig.mappedFields.join(", ")}</li>
+              <li>Only approved deals should be synced into HubSpot.</li>
             </ul>
           </article>
         </section>

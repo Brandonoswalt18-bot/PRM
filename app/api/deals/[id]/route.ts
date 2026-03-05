@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { isHubSpotDealSyncEnabled, syncDealRegistrationToHubSpot } from "@/lib/hubspot";
+import {
+  getHubSpotDealSyncConfig,
+  isHubSpotDealSyncEnabled,
+  syncDealRegistrationToHubSpot,
+} from "@/lib/hubspot";
 import {
   canTransitionDealStatus,
   getDealById,
@@ -72,10 +76,10 @@ export async function PATCH(
       }
 
       if (!isHubSpotDealSyncEnabled()) {
+        const config = getHubSpotDealSyncConfig();
         return NextResponse.json(
           {
-            message:
-              "HubSpot deal sync is not configured. Add the HubSpot production credentials before syncing approved deals.",
+            message: `HubSpot deal sync is not configured. Missing: ${config.missingEnvVars.join(", ")}.`,
           },
           { status: 503 }
         );

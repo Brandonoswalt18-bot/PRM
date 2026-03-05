@@ -10,8 +10,9 @@ Next.js app-router app for GoAccess vendor onboarding, deal registration, HubSpo
 - `app/invite/[token]/page.tsx`: vendor invite acceptance entrypoint
 - `app/api/deals/route.ts`: vendor deal registration API
 - `app/api/track/route.ts`: lightweight analytics collector endpoint
-- `app/login/page.tsx`: mock login selector for admin vs vendor workspace
-- `app/auth/mock-login/route.ts`: cookie-backed mock session login
+- `app/login/page.tsx`: shared portal login
+- `app/auth/login/route.ts`: password-backed login route
+- `app/auth/activate/route.ts`: vendor invite password setup
 - `app/auth/logout/route.ts`: clears mock session
 - `components/marketing/`: reusable landing-page sections
 - `components/product/`: product shell components for future app surfaces
@@ -20,7 +21,9 @@ Next.js app-router app for GoAccess vendor onboarding, deal registration, HubSpo
 - `lib/goaccess-store.ts`: file-backed prototype persistence for vendor applications, deals, and sync events
 - `lib/goaccess-store.ts`: file-backed prototype persistence for vendor applications, NDA/invite state, deals, sync events, and notifications
 - `lib/analytics.ts`: browser analytics helper
-- `lib/auth.ts`: mock workspace auth helpers
+- `lib/auth.ts`: workspace auth helpers
+- `lib/auth-session.ts`: signed session cookie helpers
+- `lib/password.ts`: password hashing and verification
 - `middleware.ts`: route protection for `/app` and `/portal`
 
 ## Run locally
@@ -73,7 +76,6 @@ Portal workflow env vars:
 Typical production follow-up:
 
 - replace the file-backed store with a real database
-- add real auth and invitation delivery for approved vendors
 - finalize HubSpot pipeline, stage, and custom property mappings
 
 ## Analytics
@@ -87,18 +89,31 @@ Tracked events:
 - `demo_request_succeeded`
 - `demo_request_failed`
 
-## Mock auth
+## Auth
 
 Protected routes:
 
-- `/app/*` requires the `vendor` role
-- `/portal/*` requires the `partner` role
+- `/app/*` requires the `admin` role
+- `/portal/*` requires the `vendor` role
 
-Current prototype auth flow:
+Current auth flow:
 
 - visit `/login`
-- choose admin or vendor workspace
-- a cookie-backed session is set
+- sign in with email + password
 - middleware redirects unauthorized role access back to login
-- when credentials are issued, the vendor invite route `/invite/[token]` can activate portal access and log the vendor into the approved portal
-Deployment trigger
+- when credentials are issued, the vendor invite route `/invite/[token]` is used to create the vendor password and activate portal access
+
+Required auth env vars for production:
+
+- `AUTH_SECRET`
+- `GOACCESS_ADMIN_PASSWORD`
+
+Optional auth env vars:
+
+- `GOACCESS_ADMIN_EMAIL`
+
+Optional HubSpot deal property env vars:
+
+- `HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY`
+- `HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY`
+- `HUBSPOT_DEAL_VENDOR_NAME_PROPERTY`

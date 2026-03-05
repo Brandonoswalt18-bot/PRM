@@ -36,6 +36,42 @@ type HubSpotApiError = Error & {
 };
 
 const HUBSPOT_BASE_URL = "https://api.hubapi.com";
+const DEAL_SYNC_REQUIRED_ENV_VARS = ["HUBSPOT_ACCESS_TOKEN", "HUBSPOT_DEAL_STAGE_ID"] as const;
+const LEAD_ROUTING_REQUIRED_ENV_VARS = [
+  "HUBSPOT_ACCESS_TOKEN",
+  "HUBSPOT_PORTAL_ID",
+  "HUBSPOT_DEMO_FORM_GUID",
+] as const;
+
+export function getHubSpotDealSyncConfig() {
+  const missingEnvVars = DEAL_SYNC_REQUIRED_ENV_VARS.filter((key) => !process.env[key]?.trim());
+
+  return {
+    enabled: missingEnvVars.length === 0,
+    missingEnvVars,
+    mappedFields: [
+      "dealname",
+      "dealstage",
+      "amount",
+      "description",
+      process.env.HUBSPOT_DEAL_PIPELINE_ID?.trim() ? "pipeline" : null,
+      process.env.HUBSPOT_VENDOR_ID_PROPERTY?.trim() || null,
+      process.env.HUBSPOT_VENDOR_EMAIL_PROPERTY?.trim() || null,
+      process.env.HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY?.trim() || null,
+      process.env.HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY?.trim() || null,
+      process.env.HUBSPOT_DEAL_VENDOR_NAME_PROPERTY?.trim() || null,
+    ].filter(Boolean) as string[],
+  };
+}
+
+export function getHubSpotLeadRoutingConfig() {
+  const missingEnvVars = LEAD_ROUTING_REQUIRED_ENV_VARS.filter((key) => !process.env[key]?.trim());
+
+  return {
+    enabled: missingEnvVars.length === 0,
+    missingEnvVars,
+  };
+}
 
 function isLikelyDomain(value: string) {
   return /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i.test(
@@ -44,15 +80,11 @@ function isLikelyDomain(value: string) {
 }
 
 export function isHubSpotLeadRoutingEnabled() {
-  return Boolean(
-    process.env.HUBSPOT_ACCESS_TOKEN &&
-      process.env.HUBSPOT_PORTAL_ID &&
-      process.env.HUBSPOT_DEMO_FORM_GUID
-  );
+  return getHubSpotLeadRoutingConfig().enabled;
 }
 
 export function isHubSpotDealSyncEnabled() {
-  return Boolean(process.env.HUBSPOT_ACCESS_TOKEN && process.env.HUBSPOT_DEAL_STAGE_ID);
+  return getHubSpotDealSyncConfig().enabled;
 }
 
 function getHubSpotAccessToken() {
