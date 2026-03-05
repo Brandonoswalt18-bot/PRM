@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: "Portal session required." }, { status: 401 });
   }
 
-  if (role === "partner" && session.vendorId !== vendorId) {
+  if (role === "vendor" && session.vendorId !== vendorId) {
     return NextResponse.json({ message: "You can only access your own NDA file." }, { status: 403 });
   }
 

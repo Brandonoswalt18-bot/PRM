@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const next = url.searchParams.get("next");
   const inviteToken = url.searchParams.get("invite");
 
-  let role: "vendor" | "partner" | null = null;
+  let role: "admin" | "vendor" | null = null;
   let vendorId = "vendor-blue-haven";
 
   if (inviteToken) {
@@ -20,12 +20,12 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
-    role = "partner";
+    role = "vendor";
     vendorId = vendor.id;
   } else if (email === "maya@goaccess.com") {
-    role = "vendor";
+    role = "admin";
   } else if (account === "admin") {
-    role = "vendor";
+    role = "admin";
   } else if (email) {
     const { listApprovedVendors } = await import("@/lib/goaccess-store");
     const vendor = (await listApprovedVendors()).find(
@@ -36,14 +36,14 @@ export async function GET(request: Request) {
     );
 
     if (vendor) {
-      role = "partner";
+      role = "vendor";
       vendorId = vendor.id;
     }
   } else if (account) {
     const vendor = await getVendorById(account);
 
     if (vendor?.credentialsIssued) {
-      role = "partner";
+      role = "vendor";
       vendorId = vendor.id;
     }
   }

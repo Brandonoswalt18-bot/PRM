@@ -1,35 +1,45 @@
 import { SESSION_COOKIE, VENDOR_ID_COOKIE } from "@/lib/auth-constants";
 import type { WorkspaceSession } from "@/types/prm";
 
-export type WorkspaceRole = "vendor" | "partner";
+export type WorkspaceRole = "admin" | "vendor";
+
+export function normalizeWorkspaceRole(rawRole: string | null | undefined): WorkspaceRole | null {
+  if (!rawRole) {
+    return null;
+  }
+
+  if (rawRole === "admin" || rawRole === "vendor") {
+    return rawRole;
+  }
+
+  if (rawRole === "partner") {
+    return "vendor";
+  }
+
+  return null;
+}
 
 export function resolveWorkspaceDestination(
   role: WorkspaceRole,
   nextPath?: string | null
 ) {
   if (nextPath?.startsWith("/")) {
-    if (role === "vendor" && nextPath.startsWith("/app")) {
+    if (role === "admin" && nextPath.startsWith("/app")) {
       return nextPath;
     }
 
-    if (role === "partner" && nextPath.startsWith("/portal")) {
+    if (role === "vendor" && nextPath.startsWith("/portal")) {
       return nextPath;
     }
   }
 
-  return role === "vendor" ? "/app" : "/portal";
+  return role === "admin" ? "/app" : "/portal";
 }
 
 export async function getWorkspaceRole(): Promise<WorkspaceRole | null> {
   const { cookies } = await import("next/headers");
   const cookieStore = await cookies();
-  const role = cookieStore.get(SESSION_COOKIE)?.value;
-
-  if (role === "vendor" || role === "partner") {
-    return role;
-  }
-
-  return null;
+  return normalizeWorkspaceRole(cookieStore.get(SESSION_COOKIE)?.value);
 }
 
 export async function getWorkspaceSession(): Promise<WorkspaceSession | null> {
@@ -38,7 +48,7 @@ export async function getWorkspaceSession(): Promise<WorkspaceSession | null> {
   const cookieStore = await cookies();
   const vendorId = cookieStore.get(VENDOR_ID_COOKIE)?.value;
 
-  if (role === "vendor") {
+  if (role === "admin") {
     return {
       fullName: "Maya Chen",
       email: "maya@goaccess.com",
@@ -47,7 +57,7 @@ export async function getWorkspaceSession(): Promise<WorkspaceSession | null> {
     };
   }
 
-  if (role === "partner") {
+  if (role === "vendor") {
     const { getVendorById } = await import("@/lib/goaccess-store");
     const vendor = await getVendorById(vendorId ?? "vendor-blue-haven");
 

@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { SESSION_COOKIE } from "@/lib/auth-constants";
+import { normalizeWorkspaceRole } from "@/lib/auth";
 
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-  const role = request.cookies.get(SESSION_COOKIE)?.value;
+  const role = normalizeWorkspaceRole(request.cookies.get(SESSION_COOKIE)?.value);
 
-  if (pathname.startsWith("/app") && role !== "vendor") {
+  if (pathname.startsWith("/app") && role !== "admin") {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);
   }
 
-  if (pathname.startsWith("/portal") && role !== "partner") {
+  if (pathname.startsWith("/portal") && role !== "vendor") {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);
