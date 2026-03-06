@@ -2,7 +2,11 @@ import { handleUpload } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
 import { getWorkspaceSession } from "@/lib/auth";
 import { requireAdminRouteAccess } from "@/lib/auth-guards";
-import { createExternalTrainingAsset, finalizeTrainingUpload } from "@/lib/goaccess-store";
+import {
+  createExternalTrainingAsset,
+  finalizeTrainingUpload,
+  uploadTrainingAssetFile,
+} from "@/lib/goaccess-store";
 import type { TrainingAssetType } from "@/types/goaccess";
 
 const allowedTypes: TrainingAssetType[] = ["video", "document"];
@@ -129,9 +133,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Choose a training file to upload." }, { status: 400 });
   }
 
+  if (type === "document") {
+    try {
+      const asset = await uploadTrainingAssetFile({
+        title,
+        description,
+        type,
+        fileName: file.name,
+        contentType: file.type,
+        size: file.size,
+        bytes: new Uint8Array(await file.arrayBuffer()),
+        uploadedBy,
+      });
+
+      return NextResponse.json({ ok: true, asset, message: "Training document uploaded." });
+    } catch (error) {
+      return NextResponse.json(
+        { message: error instanceof Error ? error.message : "Unable to upload training document." },
+        { status: 400 }
+      );
+    }
+  }
+
   return NextResponse.json(
     {
-      message: "Direct training uploads are required for files. Use the Learning page uploader.",
+      message: "Video uploads use direct blob upload. If this stalls, use an external video link instead.",
       fileName: file.name,
     },
     { status: 400 }

@@ -44,6 +44,30 @@ export function AdminLearningManager({ assets }: { assets: TrainingAsset[] }) {
           return;
         }
 
+        if (type === "document") {
+          const response = await fetch("/api/training-assets", {
+            method: "POST",
+            body: formData,
+          });
+
+          const payload = (await response.json()) as { message?: string };
+
+          if (!response.ok) {
+            setStatus("error");
+            setMessage(payload.message ?? "Unable to upload training document.");
+            return;
+          }
+
+          setStatus("success");
+          setMessage(payload.message ?? "Training document uploaded.");
+          form.reset();
+          setSource("upload");
+          startTransition(() => {
+            router.refresh();
+          });
+          return;
+        }
+
         await upload(buildUploadPath(type, file.name), file, {
           access: "private",
           contentType: file.type || "application/octet-stream",
