@@ -10,6 +10,8 @@ Next.js app-router app for GoAccess vendor onboarding, deal registration, HubSpo
 - `app/invite/[token]/page.tsx`: vendor invite acceptance entrypoint
 - `app/api/deals/route.ts`: vendor deal registration API
 - `app/api/track/route.ts`: lightweight analytics collector endpoint
+- `app/api/training-assets/route.ts`: admin training upload and external-link endpoint
+- `app/api/training-assets/file/route.ts`: gated training file delivery endpoint for admin/vendor sessions
 - `app/login/page.tsx`: shared portal login
 - `app/auth/login/route.ts`: password-backed login route
 - `app/auth/activate/route.ts`: vendor invite password setup
@@ -35,8 +37,6 @@ npm install
 npm run dev
 ```
 
-This environment does not have Node.js or npm installed, so the codebase was scaffolded manually and not executed here.
-
 ## HubSpot integration
 
 The public application form and admin deal-sync actions can route into HubSpot.
@@ -51,6 +51,7 @@ Current behavior:
 - records outbound applicant, admin, approval, NDA, and credential invite notifications in the local store
 - uses a Google Docs NDA link for the current lightweight legal workflow
 - sends vendor lifecycle emails through Resend when email env vars are configured
+- supports admin-managed training videos and documents for vendor learning
 
 Required env vars for HubSpot routing:
 
@@ -70,6 +71,7 @@ Portal workflow env vars:
 - `GOACCESS_NDA_DOCUMENT_URL`
 - `GOACCESS_PORTAL_BASE_URL`
 - `GOACCESS_APPLICATION_NOTIFICATION_EMAIL`
+- `BLOB_READ_WRITE_TOKEN`
 - `RESEND_API_KEY`
 - `EMAIL_FROM_ADDRESS`
 
@@ -77,6 +79,18 @@ Typical production follow-up:
 
 - replace the file-backed store with a real database
 - finalize HubSpot pipeline, stage, and custom property mappings
+
+## Learning library
+
+Admins can upload private training videos and documents, or add external links, from `/app/learning`.
+
+Approved vendors can open the published library from `/portal/learning`.
+
+Notes:
+
+- private uploaded files require `BLOB_READ_WRITE_TOKEN`
+- external links do not require blob storage
+- file opens are gated by the active admin or vendor session
 
 ## Analytics
 
