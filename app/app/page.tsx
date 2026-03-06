@@ -1,5 +1,6 @@
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { MetricGrid } from "@/components/product/product-page-sections";
+import { getHubSpotDealSyncConfig, getHubSpotLeadRoutingConfig } from "@/lib/hubspot";
 import {
   formatCurrency,
   listApprovedVendors,
@@ -18,6 +19,18 @@ function formatShortDate(value: string) {
     month: "short",
     day: "numeric",
   });
+}
+
+function getEmailReadiness() {
+  const missingEnvVars = ["RESEND_API_KEY", "EMAIL_FROM_ADDRESS"].filter(
+    (key) => !process.env[key]?.trim()
+  );
+
+  return {
+    enabled: missingEnvVars.length === 0,
+    missingEnvVars,
+    fromAddress: process.env.EMAIL_FROM_ADDRESS?.trim() || null,
+  };
 }
 
 export default async function VendorDashboardPage() {
@@ -47,6 +60,31 @@ export default async function VendorDashboardPage() {
   const forecastRmr = deals
     .filter((deal) => deal.status === "closed_won" || deal.status === "synced_to_hubspot")
     .reduce((sum, deal) => sum + deal.monthlyRmr, 0);
+  const hubspotDealSyncConfig = getHubSpotDealSyncConfig();
+  const hubspotLeadRoutingConfig = getHubSpotLeadRoutingConfig();
+  const emailReadiness = getEmailReadiness();
+  const authConfigured = Boolean(
+    process.env.AUTH_SECRET?.trim() && process.env.GOACCESS_ADMIN_PASSWORD?.trim()
+  );
+  const goLiveBlockers = [
+    !authConfigured ? "Auth envs still need to be configured." : null,
+    !emailReadiness.enabled
+      ? `Email envs still missing: ${emailReadiness.missingEnvVars.join(", ")}.`
+      : null,
+    emailReadiness.fromAddress?.endsWith("@resend.dev")
+      ? "Resend is still using a test sender. Switch to a verified GoAccess domain sender before launch."
+      : null,
+    "Workflow email still depends on verifying the GoAccess sender domain in Resend.",
+    !hubspotDealSyncConfig.enabled
+      ? `HubSpot deal sync still missing: ${hubspotDealSyncConfig.missingEnvVars.join(", ")}.`
+      : null,
+    hubspotDealSyncConfig.missingRecommendedEnvVars.length > 0
+      ? `HubSpot recommended mappings still missing: ${hubspotDealSyncConfig.missingRecommendedEnvVars.join(", ")}.`
+      : null,
+    !hubspotLeadRoutingConfig.enabled
+      ? `HubSpot lead routing still missing: ${hubspotLeadRoutingConfig.missingEnvVars.join(", ")}.`
+      : null,
+  ].filter(Boolean) as string[];
 
   const metrics = [
     {
@@ -144,12 +182,27 @@ export default async function VendorDashboardPage() {
           </article>
 
           <article className="workspace-card">
-            <h3>Portal scope</h3>
-            <ul>
-              <li>This workspace is vendor onboarding and deal operations only.</li>
-              <li>HubSpot should receive reviewed deals, not raw submissions.</li>
-              <li>Monthly RMR reporting stays tied to approved deal records.</li>
-            </ul>
+            <div className="card-header-row">
+              <div>
+                <h3>Go-live blockers</h3>
+                <p>What still needs to be true before the portal is production-ready.</p>
+              </div>
+              <a href="/app/settings" className="button button-secondary">
+                Open readiness
+              </a>
+            </div>
+            {goLiveBlockers.length > 0 ? (
+              <ul>
+                {goLiveBlockers.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <ul>
+                <li>App-level auth, HubSpot, and email env checks are complete.</li>
+                <li>Run the full lifecycle QA pass before announcing go-live.</li>
+              </ul>
+            )}
           </article>
         </section>
 
