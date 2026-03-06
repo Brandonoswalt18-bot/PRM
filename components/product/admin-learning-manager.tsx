@@ -1,5 +1,6 @@
 "use client";
 
+import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
 import { TrainingLibrary } from "@/components/product/training-library";
@@ -10,17 +11,67 @@ export function AdminLearningManager({ assets }: { assets: TrainingAsset[] }) {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "error" | "success">("idle");
   const [source, setSource] = useState<"upload" | "external">("upload");
+  const [progressMessage, setProgressMessage] = useState("");
+
+  function buildUploadPath(type: "video" | "document", fileName: string) {
+    const extension = fileName.includes(".") ? fileName.slice(fileName.lastIndexOf(".")).toLowerCase() : "";
+    const baseName = fileName.replace(/\.[^.]+$/, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const safeBaseName = baseName || "training-file";
+    const folder = type === "video" ? "videos" : "documents";
+    return `training-assets/${folder}/${Date.now()}-${safeBaseName}${extension || (type === "video" ? ".mp4" : ".pdf")}`;
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus("submitting");
     setMessage("");
+    setProgressMessage("");
 
     const form = event.currentTarget;
     const formData = new FormData(form);
     formData.set("source", source);
 
     try {
+      if (source === "upload") {
+        const title = String(formData.get("title") ?? "").trim();
+        const description = String(formData.get("description") ?? "").trim();
+        const type = String(formData.get("type") ?? "video").trim() as "video" | "document";
+        const file = formData.get("file");
+
+        if (!(file instanceof File) || !file.name) {
+          setStatus("error");
+          setMessage("Choose a file to upload.");
+          return;
+        }
+
+        await upload(buildUploadPath(type, file.name), file, {
+          access: "private",
+          contentType: file.type || "application/octet-stream",
+          handleUploadUrl: "/api/training-assets",
+          multipart: file.size > 50 * 1024 * 1024,
+          clientPayload: JSON.stringify({
+            title,
+            description,
+            type,
+            fileName: file.name,
+            contentType: file.type || "application/octet-stream",
+          }),
+          onUploadProgress(progress) {
+            setProgressMessage(`Uploading... ${Math.round(progress.percentage)}%`);
+          },
+        });
+
+        setStatus("success");
+        setMessage("Training file uploaded.");
+        setProgressMessage("");
+        form.reset();
+        setSource("upload");
+        startTransition(() => {
+          router.refresh();
+        });
+        return;
+      }
+
       const response = await fetch("/api/training-assets", {
         method: "POST",
         body: formData,
@@ -43,6 +94,7 @@ export function AdminLearningManager({ assets }: { assets: TrainingAsset[] }) {
       });
     } catch {
       setStatus("error");
+      setProgressMessage("");
       setMessage("Network error while saving the training asset.");
     }
   }
@@ -122,7 +174,7 @@ export function AdminLearningManager({ assets }: { assets: TrainingAsset[] }) {
             status === "success" ? "form-message-success" : ""
           } ${status === "error" ? "form-message-error" : ""}`.trim()}
         >
-          {message || "Videos and documents added here will be visible to vendors in the Learning section."}
+          {message || progressMessage || "Videos and documents added here will be visible to vendors in the Learning section."}
         </p>
       </article>
     </section>
