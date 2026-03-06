@@ -30,6 +30,9 @@ export type SupportRequestCategory =
   | "portal_access"
   | "general";
 
+export type TrainingAssetType = "video" | "document";
+export type TrainingAssetSource = "upload" | "external";
+
 export type TimelineEntry = {
   title: string;
   detail: string;
@@ -139,6 +142,22 @@ export type VendorNotification = {
   createdAt: string;
 };
 
+export type TrainingAsset = {
+  id: string;
+  title: string;
+  description: string;
+  type: TrainingAssetType;
+  source: TrainingAssetSource;
+  fileName?: string;
+  contentType?: string;
+  externalUrl?: string;
+  fileUrl?: string;
+  blobPath?: string;
+  uploadedBy: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type PortalStore = {
   vendorApplications: VendorApplication[];
   approvedVendors: ApprovedVendor[];
@@ -146,6 +165,7 @@ export type PortalStore = {
   syncEvents: DealSyncEvent[];
   notifications: VendorNotification[];
   supportRequests: SupportRequest[];
+  trainingAssets: TrainingAsset[];
 };
 
 export type CreateVendorApplicationInput = {
@@ -219,4 +239,23 @@ export type SignedNdaUploadInput = {
   contentType: string;
   size: number;
   bytes: Uint8Array;
+};
+
+export type TrainingUploadFinalizeInput = {
+  title: string;
+  description: string;
+  type: TrainingAssetType;
+  fileName: string;
+  contentType: string;
+  fileUrl?: string;
+  blobPath?: string;
+  uploadedBy: string;
+};
+
+export type CreateExternalTrainingAssetInput = {
+  title: string;
+  description: string;
+  type: TrainingAssetType;
+  externalUrl: string;
+  uploadedBy: string;
 };

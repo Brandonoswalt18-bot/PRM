@@ -25,6 +25,9 @@ import type {
   VendorStatus,
   SignedNdaUploadInput,
   SignedNdaUploadResult,
+  TrainingAsset,
+  TrainingUploadFinalizeInput,
+  CreateExternalTrainingAssetInput,
   UpdateVendorProfileInput,
 } from "@/types/goaccess";
 
@@ -292,6 +295,52 @@ const seedStore: PortalStore = {
       updatedAt: "2026-03-29T09:45:00.000Z",
     },
   ],
+  trainingAssets: [
+    {
+      id: "training-loom-1",
+      title: "Portal training video 1",
+      description: "Loom walkthrough for vendor portal training.",
+      type: "video",
+      source: "external",
+      externalUrl: "https://www.loom.com/share/c98a580663c442049fa2bf12ab77b8d9",
+      uploadedBy: "maya@goaccess.com",
+      createdAt: "2026-03-05T18:00:00.000Z",
+      updatedAt: "2026-03-05T18:00:00.000Z",
+    },
+    {
+      id: "training-loom-2",
+      title: "Portal training video 2",
+      description: "Loom walkthrough for vendor portal training.",
+      type: "video",
+      source: "external",
+      externalUrl: "https://www.loom.com/share/e09a985b9e824f50aeb19d585ed527c6",
+      uploadedBy: "maya@goaccess.com",
+      createdAt: "2026-03-05T18:01:00.000Z",
+      updatedAt: "2026-03-05T18:01:00.000Z",
+    },
+    {
+      id: "training-loom-3",
+      title: "Portal training video 3",
+      description: "Loom walkthrough for vendor portal training.",
+      type: "video",
+      source: "external",
+      externalUrl: "https://www.loom.com/share/b1e117a531d944c586478c9ee28ee21d",
+      uploadedBy: "maya@goaccess.com",
+      createdAt: "2026-03-05T18:02:00.000Z",
+      updatedAt: "2026-03-05T18:02:00.000Z",
+    },
+    {
+      id: "training-loom-4",
+      title: "Portal training video 4",
+      description: "Loom walkthrough for vendor portal training.",
+      type: "video",
+      source: "external",
+      externalUrl: "https://www.loom.com/share/c7fcce606d2b4185946945fe1af496a4",
+      uploadedBy: "maya@goaccess.com",
+      createdAt: "2026-03-05T18:03:00.000Z",
+      updatedAt: "2026-03-05T18:03:00.000Z",
+    },
+  ],
 };
 
 function getStorePath() {
@@ -304,6 +353,20 @@ function getStorePath() {
 
 function cloneSeedStore(): PortalStore {
   return JSON.parse(JSON.stringify(seedStore)) as PortalStore;
+}
+
+function normalizeStore(store: PortalStore | Partial<PortalStore>): PortalStore {
+  const seed = cloneSeedStore();
+
+  return {
+    vendorApplications: store.vendorApplications ?? seed.vendorApplications,
+    approvedVendors: store.approvedVendors ?? seed.approvedVendors,
+    deals: store.deals ?? seed.deals,
+    syncEvents: store.syncEvents ?? seed.syncEvents,
+    notifications: store.notifications ?? seed.notifications,
+    supportRequests: store.supportRequests ?? seed.supportRequests,
+    trainingAssets: store.trainingAssets ?? seed.trainingAssets,
+  };
 }
 
 function getBlobStoreToken() {
@@ -323,7 +386,7 @@ async function readBlobStore(token: string): Promise<PortalStore> {
     }
 
     const raw = await new Response(result.stream).text();
-    return JSON.parse(raw) as PortalStore;
+    return normalizeStore(JSON.parse(raw) as Partial<PortalStore>);
   } catch {
     return cloneSeedStore();
   }
@@ -340,7 +403,7 @@ async function readStore(): Promise<PortalStore> {
 
   try {
     const raw = await readFile(filePath, "utf8");
-    return JSON.parse(raw) as PortalStore;
+    return normalizeStore(JSON.parse(raw) as Partial<PortalStore>);
   } catch {
     return cloneSeedStore();
   }
@@ -388,6 +451,38 @@ async function storeSignedNdaFile(vendorId: string, fileName: string, contentTyp
   const filePath = path.join(process.cwd(), "public", "uploads", relativePath);
   await mkdir(path.dirname(filePath), { recursive: true });
   await writeFile(filePath, bytes);
+  return {
+    blobPath: null as string | null,
+    directUrl: `/uploads/${relativePath}`,
+  };
+}
+
+async function storeTrainingFile(assetType: "video" | "document", fileName: string, contentType: string, bytes: Uint8Array) {
+  const extension =
+    path.extname(fileName).toLowerCase() || (assetType === "video" ? ".mp4" : ".pdf");
+  const safeName = `${Date.now()}-${slugify(fileName.replace(/\.[^.]+$/, ""))}${extension}`;
+  const relativePath = `training-assets/${assetType}s/${safeName}`;
+  const blobToken = getBlobStoreToken();
+
+  if (blobToken) {
+    await putBlob(relativePath, Buffer.from(bytes), {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType,
+      token: blobToken,
+    });
+
+    return {
+      blobPath: relativePath,
+      directUrl: null as string | null,
+    };
+  }
+
+  const filePath = path.join(process.cwd(), "public", "uploads", relativePath);
+  await mkdir(path.dirname(filePath), { recursive: true });
+  await writeFile(filePath, bytes);
+
   return {
     blobPath: null as string | null,
     directUrl: `/uploads/${relativePath}`,
@@ -450,6 +545,16 @@ export async function listSupportRequests(vendorId?: string) {
     ? store.supportRequests.filter((request) => request.vendorId === vendorId)
     : store.supportRequests;
   return [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function listTrainingAssets() {
+  const store = await readStore();
+  return [...store.trainingAssets].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function getTrainingAssetById(assetId: string) {
+  const store = await readStore();
+  return store.trainingAssets.find((item) => item.id === assetId) ?? null;
 }
 
 export async function getDealById(dealId: string) {
@@ -1234,6 +1339,94 @@ export async function uploadSignedNdaForVendor(
     fileUrl,
     uploadedAt,
   };
+}
+
+export async function createExternalTrainingAsset(input: CreateExternalTrainingAssetInput) {
+  const store = await readStore();
+  const timestamp = nowIso();
+  const asset: TrainingAsset = {
+    id: makeId("training"),
+    title: input.title.trim(),
+    description: input.description.trim(),
+    type: input.type,
+    source: "external",
+    externalUrl: input.externalUrl.trim(),
+    uploadedBy: input.uploadedBy.trim(),
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+
+  store.trainingAssets.unshift(asset);
+  await writeStore(store);
+  return asset;
+}
+
+export async function finalizeTrainingUpload(input: TrainingUploadFinalizeInput) {
+  const store = await readStore();
+  const timestamp = nowIso();
+  const asset: TrainingAsset = {
+    id: makeId("training"),
+    title: input.title.trim(),
+    description: input.description.trim(),
+    type: input.type,
+    source: "upload",
+    fileName: input.fileName.trim(),
+    contentType: input.contentType.trim(),
+    fileUrl: input.fileUrl?.trim() || undefined,
+    blobPath: input.blobPath?.trim() || undefined,
+    uploadedBy: input.uploadedBy.trim(),
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+
+  store.trainingAssets.unshift(asset);
+  await writeStore(store);
+  return asset;
+}
+
+export async function uploadTrainingAssetFile(input: {
+  title: string;
+  description: string;
+  type: "video" | "document";
+  fileName: string;
+  contentType: string;
+  size: number;
+  bytes: Uint8Array;
+  uploadedBy: string;
+}) {
+  const normalizedName = input.fileName.trim();
+
+  if (!normalizedName || input.size === 0) {
+    throw new Error("Choose a valid training file.");
+  }
+
+  const maxBytes = input.type === "video" ? 1024 * 1024 * 1024 : 25 * 1024 * 1024;
+
+  if (input.size > maxBytes) {
+    throw new Error(
+      input.type === "video"
+        ? "Training videos must be smaller than 1 GB."
+        : "Training documents must be smaller than 25 MB."
+    );
+  }
+
+  const storedFile = await storeTrainingFile(
+    input.type,
+    normalizedName,
+    input.contentType || "application/octet-stream",
+    input.bytes
+  );
+
+  return finalizeTrainingUpload({
+    title: input.title,
+    description: input.description,
+    type: input.type,
+    fileName: normalizedName,
+    contentType: input.contentType || "application/octet-stream",
+    fileUrl: storedFile.directUrl ?? undefined,
+    blobPath: storedFile.blobPath ?? undefined,
+    uploadedBy: input.uploadedBy,
+  });
 }
 
 export async function getCurrentMonthlyRmrForVendor(vendorId: string) {
