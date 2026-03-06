@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { getWorkspaceRole, getWorkspaceSession } from "@/lib/auth";
+import type { WorkspaceSession } from "@/types/prm";
+
+type VendorWorkspaceSession = WorkspaceSession & { vendorId: string };
 
 export async function requireAdminRouteAccess() {
   const [role, session] = await Promise.all([getWorkspaceRole(), getWorkspaceSession()]);
@@ -23,6 +26,6 @@ export async function requireVendorRouteAccess() {
 
   return {
     error: null,
-    session,
+    session: session as VendorWorkspaceSession,
   };
 }
