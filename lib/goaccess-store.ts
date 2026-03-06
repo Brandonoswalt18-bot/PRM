@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { get as getBlob, put as putBlob } from "@vercel/blob";
+import { get as getBlob, list as listBlob, put as putBlob } from "@vercel/blob";
 import {
   buildInviteUrl,
   getApplicationNotificationRecipients,
@@ -33,6 +33,7 @@ import type {
 
 const STORE_FILENAME = "goaccess-vendor-portal.json";
 const BLOB_STORE_PATHNAME = `portal-store/${STORE_FILENAME}`;
+const TRAINING_ASSET_METADATA_PREFIX = "training-assets/records/";
 const SIGNED_NDA_MAX_BYTES = 10 * 1024 * 1024;
 const DEFAULT_NDA_DOCUMENT_NAME = "GoAccess Vendor NDA";
 const DEFAULT_NDA_DOCUMENT_URL = "https://docs.google.com/document/d/goaccess-vendor-nda";
@@ -373,6 +374,53 @@ function getBlobStoreToken() {
   return process.env.BLOB_READ_WRITE_TOKEN?.trim() || null;
 }
 
+function getTrainingAssetRecordPath(assetId: string) {
+  return `${TRAINING_ASSET_METADATA_PREFIX}${assetId}.json`;
+}
+
+async function listDedicatedTrainingAssets(token: string) {
+  const assets: TrainingAsset[] = [];
+  let cursor: string | undefined;
+
+  do {
+    const result = await listBlob({
+      token,
+      prefix: TRAINING_ASSET_METADATA_PREFIX,
+      cursor,
+      limit: 100,
+    });
+
+    for (const blob of result.blobs) {
+      const record = await getBlob(blob.pathname, {
+        access: "private",
+        token,
+        useCache: false,
+      });
+
+      if (!record || record.statusCode !== 200) {
+        continue;
+      }
+
+      const raw = await new Response(record.stream).text();
+      assets.push(JSON.parse(raw) as TrainingAsset);
+    }
+
+    cursor = result.hasMore ? result.cursor : undefined;
+  } while (cursor);
+
+  return assets;
+}
+
+async function writeDedicatedTrainingAsset(asset: TrainingAsset, token: string) {
+  await putBlob(getTrainingAssetRecordPath(asset.id), JSON.stringify(asset, null, 2), {
+    access: "private",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: "application/json",
+    token,
+  });
+}
+
 async function readBlobStore(token: string): Promise<PortalStore> {
   try {
     const result = await getBlob(BLOB_STORE_PATHNAME, {
@@ -549,10 +597,50 @@ export async function listSupportRequests(vendorId?: string) {
 
 export async function listTrainingAssets() {
   const store = await readStore();
-  return [...store.trainingAssets].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const blobToken = getBlobStoreToken();
+
+  if (!blobToken) {
+    return [...store.trainingAssets].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
+  try {
+    const dedicatedAssets = await listDedicatedTrainingAssets(blobToken);
+    const mergedAssets = new Map<string, TrainingAsset>();
+
+    for (const asset of store.trainingAssets) {
+      mergedAssets.set(asset.id, asset);
+    }
+
+    for (const asset of dedicatedAssets) {
+      mergedAssets.set(asset.id, asset);
+    }
+
+    return [...mergedAssets.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  } catch {
+    return [...store.trainingAssets].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
 }
 
 export async function getTrainingAssetById(assetId: string) {
+  const blobToken = getBlobStoreToken();
+
+  if (blobToken) {
+    try {
+      const record = await getBlob(getTrainingAssetRecordPath(assetId), {
+        access: "private",
+        token: blobToken,
+        useCache: false,
+      });
+
+      if (record && record.statusCode === 200) {
+        const raw = await new Response(record.stream).text();
+        return JSON.parse(raw) as TrainingAsset;
+      }
+    } catch {
+      // Fall back to the shared store below.
+    }
+  }
+
   const store = await readStore();
   return store.trainingAssets.find((item) => item.id === assetId) ?? null;
 }
@@ -1342,7 +1430,6 @@ export async function uploadSignedNdaForVendor(
 }
 
 export async function createExternalTrainingAsset(input: CreateExternalTrainingAssetInput) {
-  const store = await readStore();
   const timestamp = nowIso();
   const asset: TrainingAsset = {
     id: makeId("training"),
@@ -1356,13 +1443,20 @@ export async function createExternalTrainingAsset(input: CreateExternalTrainingA
     updatedAt: timestamp,
   };
 
+  const blobToken = getBlobStoreToken();
+
+  if (blobToken) {
+    await writeDedicatedTrainingAsset(asset, blobToken);
+    return asset;
+  }
+
+  const store = await readStore();
   store.trainingAssets.unshift(asset);
   await writeStore(store);
   return asset;
 }
 
 export async function finalizeTrainingUpload(input: TrainingUploadFinalizeInput) {
-  const store = await readStore();
   const timestamp = nowIso();
   const asset: TrainingAsset = {
     id: makeId("training"),
@@ -1380,6 +1474,14 @@ export async function finalizeTrainingUpload(input: TrainingUploadFinalizeInput)
     updatedAt: timestamp,
   };
 
+  const blobToken = getBlobStoreToken();
+
+  if (blobToken) {
+    await writeDedicatedTrainingAsset(asset, blobToken);
+    return asset;
+  }
+
+  const store = await readStore();
   store.trainingAssets.unshift(asset);
   await writeStore(store);
   return asset;
