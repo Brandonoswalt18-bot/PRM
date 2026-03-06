@@ -7,12 +7,104 @@ import {
 import { VendorProfileForm } from "@/components/product/vendor-profile-form";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
-import { getVendorById } from "@/lib/goaccess-store";
-import { getPartnerProfilePageData } from "@/lib/mock-data";
+import { getCurrentMonthlyRmrForVendor, getForecastMonthlyRmrForVendor, getVendorById, listDeals, listSupportRequests } from "@/lib/goaccess-store";
+import type { InfoListSection, MetricCard, ProfileField } from "@/types/prm";
+
+function buildMetrics(dealCount: number, openSupport: number, hasCredentials: boolean, rmr: number, forecast: number): MetricCard[] {
+  return [
+    {
+      label: "Registered deals",
+      value: String(dealCount),
+      delta: `${openSupport} support items in queue`,
+    },
+    {
+      label: "Open support",
+      value: String(openSupport),
+      delta: openSupport === 0 ? "No vendor issues waiting" : "Vendor follow-up needed",
+    },
+    {
+      label: "Current monthly RMR",
+      value: `$${rmr.toLocaleString()}`,
+      delta: `${hasCredentials ? "Credentials active" : "Credentials pending"}`,
+    },
+    {
+      label: "Forecast monthly RMR",
+      value: `$${forecast.toLocaleString()}`,
+      delta: "Forecast includes closed won and synced pipeline",
+    },
+  ];
+}
+
+function buildProfile(vendorName: string) {
+  return vendorName ? [
+    { label: "Vendor", value: vendorName },
+  ] : [];
+}
+
+function buildSections(vendor: Awaited<ReturnType<typeof getVendorById>>, openDeals: number, closedWon: number): InfoListSection[] {
+  return [
+    {
+      title: "Profile status",
+      items: [
+        `Status: ${vendor?.status ?? "pending"}`,
+        `NDA: ${vendor?.ndaStatus ?? "not started"}`,
+        `Credentials: ${vendor?.credentialsIssued ? "issued" : "not issued"}`,
+      ],
+    },
+    {
+      title: "Deal posture",
+      items: [
+        `Open deals: ${openDeals}`,
+        `Closed won: ${closedWon}`,
+        "Review each new registration before CRM write",
+      ],
+    },
+    {
+      title: "Actions",
+      items: [
+        "Update contact details as needed",
+        "Request support for review delays",
+        "Verify portal access on first login",
+      ],
+    },
+  ];
+}
 
 export default async function PartnerProfilePage() {
-  const [data, session] = await Promise.all([getPartnerProfilePageData(), getWorkspaceSession()]);
+  const session = await getWorkspaceSession();
   const vendor = session?.vendorId ? await getVendorById(session.vendorId) : null;
+  const vendorId = vendor?.id ?? session?.vendorId;
+  const [deals, supportRequests, currentRmr, forecastRmr] = await Promise.all(
+    vendorId
+      ? [
+          listDeals(vendorId),
+          listSupportRequests(vendorId),
+          getCurrentMonthlyRmrForVendor(vendorId),
+          getForecastMonthlyRmrForVendor(vendorId),
+        ]
+      : [Promise.resolve([]), Promise.resolve([]), Promise.resolve(0), Promise.resolve(0)]
+  );
+  const openDeals = deals.filter((deal) => deal.status === "submitted" || deal.status === "under_review").length;
+  const closedWon = deals.filter((deal) => deal.status === "closed_won").length;
+  const openSupport = supportRequests.filter((request) => request.status !== "resolved").length;
+  const metrics = vendor
+    ? buildMetrics(deals.length, openSupport, Boolean(vendor.credentialsIssued), currentRmr, forecastRmr)
+    : [];
+  const profileRows: ProfileField[] = vendor
+    ? [
+        { label: "Company", value: vendor.companyName },
+        { label: "Contact", value: vendor.primaryContactName },
+        { label: "Email", value: vendor.primaryContactEmail },
+        { label: "Website", value: vendor.website },
+        { label: "Region", value: vendor.region },
+        { label: "Vendor type", value: vendor.vendorType },
+        ...(vendor.city ? [{ label: "City", value: vendor.city }] : []),
+        ...(vendor.state ? [{ label: "State", value: vendor.state }] : []),
+        { label: "NDA status", value: vendor.ndaStatus },
+        { label: "Credentials", value: vendor.credentialsIssued ? "Active" : "Pending" },
+      ]
+    : buildProfile(vendor?.companyName ?? "");
+  const sections = vendor ? buildSections(vendor, openDeals, closedWon) : [];
 
   return (
     <>
@@ -24,7 +116,7 @@ export default async function PartnerProfilePage() {
         primaryHref="/portal/links"
       />
       <div className="app-content">
-        <MetricGrid metrics={data.metrics} />
+        <MetricGrid metrics={metrics} />
         <section className="dashboard-grid">
           {vendor ? <VendorProfileForm vendor={vendor} /> : null}
           <TableSection
@@ -33,12 +125,12 @@ export default async function PartnerProfilePage() {
             actionLabel="Open deal registrations"
             actionHref="/portal/deals"
             headers={["Field", "Value"]}
-            rows={data.profile}
+            rows={profileRows}
             renderRow={ProfileRow}
           />
         </section>
         <section className="dashboard-grid">
-          <SideSections sections={data.sections} />
+          <SideSections sections={sections} />
         </section>
       </div>
     </>
