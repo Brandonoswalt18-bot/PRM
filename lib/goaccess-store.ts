@@ -1085,6 +1085,61 @@ export async function updateVendorApplicationStatus(
   return application;
 }
 
+export async function reissueVendorInvite(applicationId: string) {
+  const store = await readStore();
+  const application = store.vendorApplications.find((item) => item.id === applicationId);
+
+  if (!application) {
+    throw new Error("Application not found.");
+  }
+
+  const vendor = store.approvedVendors.find((item) => item.applicationId === application.id);
+
+  if (!vendor) {
+    throw new Error("Approved vendor record not found.");
+  }
+
+  if (!vendor.credentialsIssued) {
+    throw new Error("Issue credentials before resending the invite.");
+  }
+
+  const inviteToken = buildInviteToken(application.companyName);
+  const inviteUrl = buildInviteUrl(inviteToken);
+  const sentAt = nowIso();
+
+  vendor.status = "active";
+  vendor.portalAccess = "invited";
+  vendor.inviteToken = inviteToken;
+  vendor.inviteSentAt = sentAt;
+  vendor.inviteAcceptedAt = undefined;
+  vendor.passwordSalt = undefined;
+  vendor.passwordHash = undefined;
+  vendor.passwordConfiguredAt = undefined;
+  vendor.updatedAt = sentAt;
+  application.credentialsIssuedAt = sentAt;
+  application.updatedAt = sentAt;
+
+  store.notifications.unshift(
+    await recordWorkflowEmail({
+      applicationId: application.id,
+      vendorId: vendor.id,
+      recipientEmail: application.primaryContactEmail,
+      subject: "Your GoAccess vendor portal credentials are ready",
+      category: "credentials_issued",
+      reference: inviteUrl,
+      text: `Hi ${application.primaryContactName},\n\nYour GoAccess vendor portal access has been reissued.\n\nActivate your account here:\n${inviteUrl}\n\nAfter logging in, you can complete your vendor profile and register deals.\n\nGoAccess`,
+      html: `<p>Hi ${application.primaryContactName},</p><p>Your GoAccess vendor portal access has been reissued.</p><p><a href="${inviteUrl}">Activate your account</a></p><p>After logging in, you can complete your vendor profile and register deals.</p><p>GoAccess</p>`,
+    })
+  );
+
+  await writeStore(store);
+
+  return {
+    application,
+    inviteUrl,
+  };
+}
+
 export function canTransitionApplicationStatus(
   currentStatus: VendorApplicationStatus,
   nextStatus: VendorApplicationStatus

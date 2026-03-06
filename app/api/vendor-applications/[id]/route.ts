@@ -3,6 +3,7 @@ import { requireAdminRouteAccess } from "@/lib/auth-guards";
 import {
   canTransitionApplicationStatus,
   listVendorApplications,
+  reissueVendorInvite,
   updateVendorApplicationStatus,
 } from "@/lib/goaccess-store";
 import type { VendorApplicationStatus } from "@/types/goaccess";
@@ -28,12 +29,29 @@ export async function PATCH(
 
   const { id } = await context.params;
 
-  let body: { status?: VendorApplicationStatus };
+  let body: { status?: VendorApplicationStatus; action?: "reissue_invite" };
 
   try {
-    body = (await request.json()) as { status?: VendorApplicationStatus };
+    body = (await request.json()) as { status?: VendorApplicationStatus; action?: "reissue_invite" };
   } catch {
     return NextResponse.json({ message: "Invalid status payload." }, { status: 400 });
+  }
+
+  if (body.action === "reissue_invite") {
+    try {
+      const result = await reissueVendorInvite(id);
+
+      return NextResponse.json({
+        ok: true,
+        application: result.application,
+        inviteUrl: result.inviteUrl,
+      });
+    } catch (error) {
+      return NextResponse.json(
+        { message: error instanceof Error ? error.message : "Unable to reissue invite." },
+        { status: 404 }
+      );
+    }
   }
 
   if (!body.status || !allowedStatuses.includes(body.status)) {

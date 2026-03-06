@@ -191,6 +191,39 @@ export function AdminApplicationManager({
     }
   }
 
+  async function reissueInvite(applicationId: string) {
+    setBusyId(applicationId);
+    setMessage("");
+
+    try {
+      const response = await fetch(`/api/vendor-applications/${applicationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reissue_invite" }),
+      });
+
+      const payload = (await response.json()) as { message?: string; inviteUrl?: string };
+
+      if (!response.ok) {
+        setMessage(payload.message ?? "Unable to reissue invite.");
+        return;
+      }
+
+      startTransition(() => {
+        router.refresh();
+      });
+      setMessage(
+        payload.inviteUrl
+          ? `Invite reissued. Fresh activation link: ${payload.inviteUrl}`
+          : "Invite reissued."
+      );
+    } catch {
+      setMessage("Network error while reissuing invite.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return (
     <article className="workspace-card wide-card">
       <div className="card-header-row">
@@ -337,6 +370,16 @@ export function AdminApplicationManager({
                         <a className="detail-link-chip" href={inviteUrl}>
                           Invite link
                         </a>
+                      ) : null}
+                      {vendor?.credentialsIssued ? (
+                        <button
+                          className="detail-link-chip"
+                          type="button"
+                          disabled={busyId === application.id}
+                          onClick={() => reissueInvite(application.id)}
+                        >
+                          Reissue invite
+                        </button>
                       ) : null}
                     </div>
                     {latestNotification ? (
