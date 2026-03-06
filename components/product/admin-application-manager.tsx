@@ -110,6 +110,30 @@ function getQueueReason(application: VendorApplication, vendor?: ApprovedVendor)
   return "Portal access is active";
 }
 
+function getApplicationActionNote(
+  application: VendorApplication,
+  vendor: ApprovedVendor | undefined,
+  hasSignedNdaUpload: boolean
+) {
+  if (!vendor) {
+    return application.status === "under_review" ? "Review and approve or reject." : "Open and start review.";
+  }
+
+  if (vendor.ndaStatus !== "signed") {
+    return hasSignedNdaUpload ? "Signed NDA uploaded. Review before marking complete." : "Waiting on signed NDA upload.";
+  }
+
+  if (!vendor.credentialsIssued) {
+    return "NDA is complete. Issue credentials next.";
+  }
+
+  if (vendor.portalAccess !== "active") {
+    return "Credentials issued. Waiting for vendor activation.";
+  }
+
+  return "Vendor is active in the portal.";
+}
+
 function buildProgramsHref(activeQueue: "all" | "pending" | "onboarding", applicationId?: string) {
   const params = new URLSearchParams();
 
@@ -213,9 +237,7 @@ export function AdminApplicationManager({
             const hasSignedNdaUpload = Boolean(vendor?.signedNdaFileUrl);
             const isSelected = selectedApplicationId === application.id;
             const createdLabel = new Date(application.createdAt).toLocaleDateString();
-            const latestNotificationDate = latestNotification
-              ? new Date(latestNotification.createdAt).toLocaleDateString()
-              : null;
+            const actionNote = getApplicationActionNote(application, vendor, hasSignedNdaUpload);
 
             return (
               <div className={`stack-card application-queue-card${isSelected ? " application-queue-card-selected" : ""}`} key={application.id}>
@@ -246,6 +268,7 @@ export function AdminApplicationManager({
                   <span>{application.website || "Website not provided"}</span>
                   <span>{getQueueReason(application, vendor)}</span>
                 </div>
+                <p className="stack-note">{actionNote}</p>
                 {isSelected ? (
                   <>
                     <div className="stage-pill-row" aria-label="Application lifecycle">
@@ -283,6 +306,10 @@ export function AdminApplicationManager({
                         <strong>{createdLabel}</strong>
                       </div>
                       <div className="detail-fact">
+                        <span>Contact</span>
+                        <strong>{application.primaryContactName}</strong>
+                      </div>
+                      <div className="detail-fact">
                         <span>NDA</span>
                         <strong>{vendor ? titleCaseStatus(vendor.ndaStatus) : "Not started"}</strong>
                       </div>
@@ -295,7 +322,6 @@ export function AdminApplicationManager({
                         <strong>{vendor ? titleCaseStatus(vendor.portalAccess) : "Not ready"}</strong>
                       </div>
                     </div>
-                    {application.notes ? <p className="stack-note">{application.notes}</p> : null}
                     <div className="detail-link-row">
                       {vendor?.ndaDocumentUrl ? (
                         <a className="detail-link-chip" href={vendor.ndaDocumentUrl} target="_blank" rel="noreferrer">
@@ -309,17 +335,13 @@ export function AdminApplicationManager({
                       ) : null}
                       {inviteUrl ? (
                         <a className="detail-link-chip" href={inviteUrl}>
-                          Open invite
+                          Invite link
                         </a>
                       ) : null}
                     </div>
-                    {allowedNextSteps.includes("nda_signed") && !hasSignedNdaUpload ? (
-                      <p className="stack-note">Signed NDA upload is required before NDA signed or credentials can be set.</p>
-                    ) : null}
                     {latestNotification ? (
                       <p className="stack-note">
                         Latest email: {latestNotification.subject}
-                        {latestNotificationDate ? ` · ${latestNotificationDate}` : ""}
                       </p>
                     ) : null}
                     <div className="timeline-stack compact-timeline">
