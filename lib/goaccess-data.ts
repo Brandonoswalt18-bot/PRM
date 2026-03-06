@@ -285,7 +285,7 @@ export async function getPartnerDashboardFromStore(): Promise<PartnerDashboardDa
       { label: "Registered deals", value: String(deals.length), delta: `${deals.filter((item) => item.createdAt.startsWith("2026-03")).length} submitted in March` },
       { label: "In HubSpot pipeline", value: String(deals.filter((item) => item.status === "synced_to_hubspot").length), delta: `${deals.filter((item) => item.status === "under_review").length} awaiting review` },
       { label: "Closed won", value: String(deals.filter((item) => item.status === "closed_won").length), delta: `${formatCurrency(currentRmr)} active monthly RMR` },
-      { label: "Current monthly RMR", value: formatCurrency(forecastRmr), delta: `${vendor?.ndaStatus === "signed" ? "NDA complete" : "NDA pending"} / ${vendor?.credentialsIssued ? "credentials active" : "credentials pending"}` },
+      { label: "Current monthly RMR", value: formatCurrency(currentRmr), delta: `${formatCurrency(forecastRmr)} forecast / ${vendor?.credentialsIssued ? "credentials active" : "credentials pending"}` },
     ],
     highlights: [
       {

@@ -41,8 +41,10 @@ export default async function PartnerDealsPage() {
     },
     {
       label: "Held or rejected",
-      value: String(deals.filter((deal) => deal.status === "rejected").length),
-      delta: `${deals.filter((deal) => deal.status === "under_review").length} waiting on GoAccess review`,
+      value: String(
+        deals.filter((deal) => deal.status === "under_review" || deal.status === "rejected").length
+      ),
+      delta: `${deals.filter((deal) => deal.status === "approved").length} approved and waiting on HubSpot sync`,
     },
   ];
 
