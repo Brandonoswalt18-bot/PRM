@@ -1374,6 +1374,7 @@ export async function finalizeTrainingUpload(input: TrainingUploadFinalizeInput)
     contentType: input.contentType.trim(),
     fileUrl: input.fileUrl?.trim() || undefined,
     blobPath: input.blobPath?.trim() || undefined,
+    embeddedDataBase64: input.embeddedDataBase64?.trim() || undefined,
     uploadedBy: input.uploadedBy.trim(),
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -1408,6 +1409,18 @@ export async function uploadTrainingAssetFile(input: {
         ? "Training videos must be smaller than 1 GB."
         : "Training documents must be smaller than 25 MB."
     );
+  }
+
+  if (input.type === "document") {
+    return finalizeTrainingUpload({
+      title: input.title,
+      description: input.description,
+      type: input.type,
+      fileName: normalizedName,
+      contentType: input.contentType || "application/octet-stream",
+      embeddedDataBase64: Buffer.from(input.bytes).toString("base64"),
+      uploadedBy: input.uploadedBy,
+    });
   }
 
   const storedFile = await storeTrainingFile(

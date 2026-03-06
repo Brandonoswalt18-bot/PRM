@@ -26,8 +26,17 @@ export async function GET(request: Request) {
     return NextResponse.redirect(asset.externalUrl);
   }
 
-  if (!asset.fileUrl) {
+  if (!asset.fileUrl && !asset.blobPath && !asset.embeddedDataBase64) {
     return NextResponse.json({ message: "Training file not found." }, { status: 404 });
+  }
+
+  if (asset.embeddedDataBase64) {
+    return new NextResponse(Buffer.from(asset.embeddedDataBase64, "base64"), {
+      headers: {
+        "Content-Type": asset.contentType || "application/octet-stream",
+        "Content-Disposition": `inline; filename="${asset.fileName ?? "training-file"}"`,
+      },
+    });
   }
 
   if (asset.blobPath) {
@@ -53,6 +62,10 @@ export async function GET(request: Request) {
         "Content-Disposition": `inline; filename="${asset.fileName ?? "training-file"}"`,
       },
     });
+  }
+
+  if (!asset.fileUrl) {
+    return NextResponse.json({ message: "Training file not found." }, { status: 404 });
   }
 
   return NextResponse.redirect(new URL(asset.fileUrl, request.url));

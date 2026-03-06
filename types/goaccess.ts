@@ -153,6 +153,7 @@ export type TrainingAsset = {
   externalUrl?: string;
   fileUrl?: string;
   blobPath?: string;
+  embeddedDataBase64?: string;
   uploadedBy: string;
   createdAt: string;
   updatedAt: string;
@@ -249,6 +250,7 @@ export type TrainingUploadFinalizeInput = {
   contentType: string;
   fileUrl?: string;
   blobPath?: string;
+  embeddedDataBase64?: string;
   uploadedBy: string;
 };
 
