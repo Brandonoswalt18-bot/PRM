@@ -956,6 +956,8 @@ export async function verifyVendorPassword(email: string, password: string) {
 
   if (
     !vendor ||
+    vendor.status !== "active" ||
+    vendor.portalAccess !== "active" ||
     !vendor.credentialsIssued ||
     !vendor.passwordSalt ||
     !vendor.passwordHash
@@ -974,6 +976,10 @@ export async function submitDealForVendor(vendorId: string, input: CreateDealInp
 
   if (!vendor) {
     throw new Error("Approved vendor not found.");
+  }
+
+  if (vendor.status !== "active" || vendor.portalAccess !== "active" || !vendor.credentialsIssued) {
+    throw new Error("Only active vendors with issued credentials can submit deals.");
   }
 
   const timestamp = nowIso();
