@@ -103,7 +103,7 @@ export default async function PartnerProfilePage() {
         { label: "NDA status", value: vendor.ndaStatus },
         { label: "Credentials", value: vendor.credentialsIssued ? "Active" : "Pending" },
       ]
-    : buildProfile(vendor?.companyName ?? "");
+    : buildProfile("");
   const sections = vendor ? buildSections(vendor, openDeals, closedWon) : [];
 
   return (
