@@ -25,20 +25,8 @@ export function MarketingPage() {
           </div>
         </section>
 
-        <section className="access-shell access-shell-quiet">
-          <aside className="access-sidecard access-sidecard-primary">
-            <span className="access-label">Approved vendors</span>
-            <h2>Sign in to the vendor portal</h2>
-            <p>Use your issued credentials to register deals, check status, and view monthly recurring revenue.</p>
-            <div className="entry-action-stack">
-              <Link className="button button-primary button-blue" href="/login">
-                Vendor Login
-              </Link>
-              <small>Access is issued only after GoAccess approval, NDA completion, and credential setup.</small>
-            </div>
-          </aside>
-
-          <article className="access-panel" id="application">
+        <section className="access-shell">
+          <article className="access-panel" id="application" style={{ gridColumn: "1 / -1" }}>
             <div className="access-panel-copy">
               <span className="access-label">New vendors</span>
               <h2>Apply for review</h2>
