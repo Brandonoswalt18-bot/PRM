@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { startTransition, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { buildApplicationTimeline } from "@/lib/goaccess-timeline";
 import type {
   ApprovedVendor,
@@ -158,8 +158,18 @@ export function AdminApplicationManager({
   queueCounts,
 }: AdminApplicationManagerProps) {
   const router = useRouter();
+  const [applicationRows, setApplicationRows] = useState(applications);
+  const [vendorRows, setVendorRows] = useState(vendors);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    setApplicationRows(applications);
+  }, [applications]);
+
+  useEffect(() => {
+    setVendorRows(vendors);
+  }, [vendors]);
 
   async function updateStatus(applicationId: string, status: VendorApplicationStatus) {
     setBusyId(applicationId);
@@ -172,12 +182,38 @@ export function AdminApplicationManager({
         body: JSON.stringify({ status }),
       });
 
-      const payload = (await response.json()) as { message?: string };
+      const payload = (await response.json()) as {
+        message?: string;
+        application?: VendorApplication;
+        vendor?: ApprovedVendor | null;
+      };
 
       if (!response.ok) {
         setMessage(payload.message ?? "Unable to update application.");
         setBusyId(null);
         return;
+      }
+
+      if (payload.application) {
+        setApplicationRows((current) =>
+          current.map((application) =>
+            application.id === payload.application?.id ? payload.application : application
+          )
+        );
+      }
+
+      if (payload.vendor) {
+        setVendorRows((current) => {
+          const existingIndex = current.findIndex((vendor) => vendor.id === payload.vendor?.id);
+
+          if (existingIndex === -1) {
+            return [payload.vendor as ApprovedVendor, ...current];
+          }
+
+          return current.map((vendor) =>
+            vendor.id === payload.vendor?.id ? (payload.vendor as ApprovedVendor) : vendor
+          );
+        });
       }
 
       startTransition(() => {
@@ -256,11 +292,11 @@ export function AdminApplicationManager({
         </Link>
       </div>
       {message ? <p className="table-note">{message}</p> : null}
-      {applications.length === 0 ? <p className="table-note">No applications in this queue.</p> : null}
+      {applicationRows.length === 0 ? <p className="table-note">No applications in this queue.</p> : null}
       <div className="stack-list">
-        {applications.map((application) => (
+        {applicationRows.map((application) => (
           (() => {
-            const vendor = vendors.find((item) => item.applicationId === application.id);
+            const vendor = vendorRows.find((item) => item.applicationId === application.id);
             const appNotifications = notifications.filter((item) => item.applicationId === application.id);
             const latestNotification = appNotifications[0];
             const inviteUrl = vendor?.inviteToken ? `/invite/${vendor.inviteToken}` : null;

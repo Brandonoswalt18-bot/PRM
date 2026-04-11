@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminRouteAccess } from "@/lib/auth-guards";
 import {
   canTransitionApplicationStatus,
+  listApprovedVendors,
   listVendorApplications,
   reissueVendorInvite,
   updateVendorApplicationStatus,
@@ -74,7 +75,10 @@ export async function PATCH(
     }
 
     const application = await updateVendorApplicationStatus(id, body.status);
-    return NextResponse.json({ ok: true, application });
+    const vendors = await listApprovedVendors();
+    const vendor = vendors.find((item) => item.applicationId === application.id) ?? null;
+
+    return NextResponse.json({ ok: true, application, vendor });
   } catch (error) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "Unable to update application." },
