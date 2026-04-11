@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useState } from "react";
 import { buildApplicationTimeline } from "@/lib/goaccess-timeline";
 import type {
   ApprovedVendor,
@@ -149,6 +149,14 @@ function buildProgramsHref(activeQueue: "all" | "pending" | "onboarding", applic
   return query ? `/app/programs?${query}` : "/app/programs";
 }
 
+function pickLatestRecord<T extends { updatedAt: string }>(serverValue: T, optimisticValue?: T) {
+  if (!optimisticValue) {
+    return serverValue;
+  }
+
+  return optimisticValue.updatedAt > serverValue.updatedAt ? optimisticValue : serverValue;
+}
+
 export function AdminApplicationManager({
   applications,
   vendors,
@@ -158,18 +166,10 @@ export function AdminApplicationManager({
   queueCounts,
 }: AdminApplicationManagerProps) {
   const router = useRouter();
-  const [applicationRows, setApplicationRows] = useState(applications);
-  const [vendorRows, setVendorRows] = useState(vendors);
+  const [optimisticApplications, setOptimisticApplications] = useState<Record<string, VendorApplication>>({});
+  const [optimisticVendors, setOptimisticVendors] = useState<Record<string, ApprovedVendor>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    setApplicationRows(applications);
-  }, [applications]);
-
-  useEffect(() => {
-    setVendorRows(vendors);
-  }, [vendors]);
 
   async function updateStatus(applicationId: string, status: VendorApplicationStatus) {
     setBusyId(applicationId);
@@ -195,25 +195,17 @@ export function AdminApplicationManager({
       }
 
       if (payload.application) {
-        setApplicationRows((current) =>
-          current.map((application) =>
-            application.id === payload.application?.id ? payload.application : application
-          )
-        );
+        setOptimisticApplications((current) => ({
+          ...current,
+          [payload.application!.id]: payload.application!,
+        }));
       }
 
       if (payload.vendor) {
-        setVendorRows((current) => {
-          const existingIndex = current.findIndex((vendor) => vendor.id === payload.vendor?.id);
-
-          if (existingIndex === -1) {
-            return [payload.vendor as ApprovedVendor, ...current];
-          }
-
-          return current.map((vendor) =>
-            vendor.id === payload.vendor?.id ? (payload.vendor as ApprovedVendor) : vendor
-          );
-        });
+        setOptimisticVendors((current) => ({
+          ...current,
+          [payload.vendor!.applicationId]: payload.vendor!,
+        }));
       }
 
       startTransition(() => {
@@ -292,21 +284,27 @@ export function AdminApplicationManager({
         </Link>
       </div>
       {message ? <p className="table-note">{message}</p> : null}
-      {applicationRows.length === 0 ? <p className="table-note">No applications in this queue.</p> : null}
+      {applications.length === 0 ? <p className="table-note">No applications in this queue.</p> : null}
       <div className="stack-list">
-        {applicationRows.map((application) => (
+        {applications.map((application) => (
           (() => {
-            const vendor = vendorRows.find((item) => item.applicationId === application.id);
+            const resolvedApplication = pickLatestRecord(
+              application,
+              optimisticApplications[application.id]
+            );
+            const vendor =
+              optimisticVendors[resolvedApplication.id] ??
+              vendors.find((item) => item.applicationId === resolvedApplication.id);
             const appNotifications = notifications.filter((item) => item.applicationId === application.id);
             const latestNotification = appNotifications[0];
             const inviteUrl = vendor?.inviteToken ? `/invite/${vendor.inviteToken}` : null;
-            const timeline = buildApplicationTimeline(application, vendor ?? null, appNotifications).slice(0, 4);
-            const isRejected = application.status === "rejected";
-            const allowedNextSteps = allowedTransitions[application.status];
+            const timeline = buildApplicationTimeline(resolvedApplication, vendor ?? null, appNotifications).slice(0, 4);
+            const isRejected = resolvedApplication.status === "rejected";
+            const allowedNextSteps = allowedTransitions[resolvedApplication.status];
             const hasSignedNdaUpload = Boolean(vendor?.signedNdaFileUrl);
             const isSelected = selectedApplicationId === application.id;
-            const createdLabel = new Date(application.createdAt).toLocaleDateString();
-            const actionNote = getApplicationActionNote(application, vendor, hasSignedNdaUpload);
+            const createdLabel = new Date(resolvedApplication.createdAt).toLocaleDateString();
+            const actionNote = getApplicationActionNote(resolvedApplication, vendor, hasSignedNdaUpload);
 
             return (
               <div className={`stack-card application-queue-card${isSelected ? " application-queue-card-selected" : ""}`} key={application.id}>
@@ -314,18 +312,18 @@ export function AdminApplicationManager({
                   <div>
                     <h3>
                       <Link className="stack-card-title-link" href={buildProgramsHref(activeQueue, isSelected ? undefined : application.id)}>
-                        {application.companyName}
+                        {resolvedApplication.companyName}
                       </Link>
                     </h3>
                     <p>
-                      {[application.city, application.state].filter(Boolean).join(", ") ||
-                        application.region}{" "}
-                      · {application.primaryContactName}
+                      {[resolvedApplication.city, resolvedApplication.state].filter(Boolean).join(", ") ||
+                        resolvedApplication.region}{" "}
+                      · {resolvedApplication.primaryContactName}
                     </p>
                   </div>
                   <div className="stage-actions-topline">
                     <span className={`status-pill ${isRejected ? "status-pill-danger" : "status-pill-neutral"}`}>
-                      {isRejected ? "rejected" : titleCaseStatus(application.status)}
+                      {isRejected ? "rejected" : titleCaseStatus(resolvedApplication.status)}
                     </span>
                     <Link className="button button-secondary" href={buildProgramsHref(activeQueue, isSelected ? undefined : application.id)}>
                       {isSelected ? "Hide details" : "Open"}
@@ -333,9 +331,9 @@ export function AdminApplicationManager({
                   </div>
                 </div>
                 <div className="stack-meta-grid">
-                  <span>{application.primaryContactEmail}</span>
-                  <span>{application.website || "Website not provided"}</span>
-                  <span>{getQueueReason(application, vendor)}</span>
+                  <span>{resolvedApplication.primaryContactEmail}</span>
+                  <span>{resolvedApplication.website || "Website not provided"}</span>
+                  <span>{getQueueReason(resolvedApplication, vendor)}</span>
                 </div>
                 <p className="stack-note">{actionNote}</p>
                 {isSelected ? (
@@ -345,7 +343,7 @@ export function AdminApplicationManager({
                         <button
                           className={`stage-pill stage-pill-${getLifecycleStageState(
                             stage.status,
-                            application.status
+                            resolvedApplication.status
                           )}`}
                           disabled={
                             busyId === application.id ||
@@ -376,7 +374,7 @@ export function AdminApplicationManager({
                       </div>
                       <div className="detail-fact">
                         <span>Contact</span>
-                        <strong>{application.primaryContactName}</strong>
+                        <strong>{resolvedApplication.primaryContactName}</strong>
                       </div>
                       <div className="detail-fact">
                         <span>NDA</span>
