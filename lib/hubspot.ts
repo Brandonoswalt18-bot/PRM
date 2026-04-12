@@ -188,7 +188,7 @@ function getHubSpotCustomDealPropertyConfig(): HubSpotCustomDealPropertyConfig {
   const missingEnvVars = HUBSPOT_CUSTOM_DEAL_PROPERTY_ENV_VARS.filter((envVar) => !envToValue[envVar]);
   const invalidEnvVars = HUBSPOT_CUSTOM_DEAL_PROPERTY_ENV_VARS.filter((envVar) => {
     const value = envToValue[envVar];
-    return Boolean(value) && !isValidHubSpotPropertyName(value);
+    return value !== null && !isValidHubSpotPropertyName(value);
   });
   const duplicateEnvVars = HUBSPOT_CUSTOM_DEAL_PROPERTY_ENV_VARS.filter((envVar, index, all) => {
     const value = envToValue[envVar];
