@@ -19,7 +19,7 @@ export function MetricGrid({ metrics }: { metrics: MetricCard[] }) {
     <section className="dashboard-metrics">
       {metrics.map((metric) => (
         metric.href ? (
-          <Link className="metric-card-link" href={metric.href} key={metric.label}>
+          <Link className="metric-card-link" href={metric.href} key={metric.label} prefetch={false}>
             <article className="feature-card">
               <span className="metric-label">{metric.label}</span>
               <strong className="metric-value">{metric.value}</strong>
@@ -82,7 +82,7 @@ export function TableSection<T>({
           <h3>{title}</h3>
           <p>{description}</p>
         </div>
-        <Link href={actionHref ?? "#"} className="button button-secondary">
+        <Link href={actionHref ?? "#"} className="button button-secondary" prefetch={false}>
           {actionLabel}
         </Link>
       </div>

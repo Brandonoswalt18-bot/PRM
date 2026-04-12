@@ -29,7 +29,7 @@ export function WorkspacePageHeader({
         <Link className="button button-ghost" href="/auth/logout">
           Sign out
         </Link>
-        <Link className="button button-primary" href={primaryHref ?? "#"}>
+        <Link className="button button-primary" href={primaryHref ?? "#"} prefetch={false}>
           {primaryLabel}
         </Link>
       </div>
