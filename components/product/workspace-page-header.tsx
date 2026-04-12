@@ -26,7 +26,7 @@ export function WorkspacePageHeader({
         <Link className="button button-secondary" href="/">
           Public page
         </Link>
-        <Link className="button button-ghost" href="/auth/logout">
+        <Link className="button button-ghost" href="/auth/logout" prefetch={false}>
           Sign out
         </Link>
         <Link className="button button-primary" href={primaryHref ?? "#"} prefetch={false}>

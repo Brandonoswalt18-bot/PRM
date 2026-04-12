@@ -24,7 +24,25 @@ function resolveRequestOrigin(request: Request) {
   return new URL(request.url).origin;
 }
 
+function isPrefetchRequest(request: Request) {
+  const purpose = request.headers.get("purpose");
+  const secPurpose = request.headers.get("sec-purpose");
+  const nextRouterPrefetch = request.headers.get("next-router-prefetch");
+  const xMiddlewarePrefetch = request.headers.get("x-middleware-prefetch");
+
+  return (
+    purpose === "prefetch" ||
+    secPurpose === "prefetch" ||
+    nextRouterPrefetch !== null ||
+    xMiddlewarePrefetch !== null
+  );
+}
+
 export async function GET(request: Request) {
+  if (isPrefetchRequest(request)) {
+    return new NextResponse(null, { status: 204 });
+  }
+
   const response = NextResponse.redirect(new URL("/login", resolveRequestOrigin(request)), 307);
   response.cookies.set(SESSION_COOKIE, "", {
     httpOnly: true,

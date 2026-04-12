@@ -64,7 +64,7 @@ export function WorkspaceLayout({
           <span>{session.role}</span>
           <span>{session.organization}</span>
           <span>{session.email}</span>
-          <Link className="button button-ghost session-signout" href="/auth/logout">
+          <Link className="button button-ghost session-signout" href="/auth/logout" prefetch={false}>
             Sign out
           </Link>
         </div>

@@ -74,7 +74,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <Link className="button button-ghost" href="/">
             Back to public page
           </Link>
-          <Link className="button button-ghost" href="/auth/logout">
+          <Link className="button button-ghost" href="/auth/logout" prefetch={false}>
             Sign out everywhere
           </Link>
         </div>
