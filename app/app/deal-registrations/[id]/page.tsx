@@ -6,6 +6,7 @@ import {
   TimelineSection,
 } from "@/components/product/product-page-sections";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
+import { formatDealLocation } from "@/lib/deal-registration";
 import { buildDealTimeline } from "@/lib/goaccess-timeline";
 import { inspectDealRegistrationForHubSpot } from "@/lib/hubspot";
 import {
@@ -91,21 +92,36 @@ export default async function AdminDealDetailPage({
     { label: "Vendor", value: vendor?.companyName ?? "Unknown vendor" },
     { label: "Vendor contact", value: vendor?.primaryContactName ?? "Unknown contact" },
     { label: "Vendor email", value: vendor?.primaryContactEmail ?? "Unknown email" },
-    { label: "Community", value: deal.companyName },
-    { label: "Domain", value: deal.domain || "Not provided" },
+    { label: "Community name", value: deal.companyName },
+    { label: "Community address", value: deal.communityAddress || "Not provided" },
+    { label: "City", value: deal.city || "Not provided" },
+    { label: "State", value: deal.state || "Not provided" },
     { label: "Buyer contact", value: deal.contactName },
     { label: "Buyer email", value: deal.contactEmail },
-    { label: "Buyer phone", value: deal.contactPhone || "Not provided" },
-    { label: "Product interest", value: deal.productInterest || "Not provided" },
-    { label: "Notes", value: deal.notes || "No notes provided" },
   ];
+
+  if (deal.domain) {
+    profileRows.push({ label: "Domain", value: deal.domain });
+  }
+
+  if (deal.contactPhone) {
+    profileRows.push({ label: "Buyer phone", value: deal.contactPhone });
+  }
+
+  if (deal.productInterest) {
+    profileRows.push({ label: "Product interest", value: deal.productInterest });
+  }
+
+  if (deal.notes) {
+    profileRows.push({ label: "Notes", value: deal.notes });
+  }
 
   return (
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
         title={deal.companyName}
-        subtitle="Inspect the full registration, vendor context, and HubSpot sync history before taking action."
+        subtitle={`Inspect the full registration for ${formatDealLocation(deal)}, vendor context, and HubSpot sync history before taking action.`}
         primaryLabel="Back to review queue"
         primaryHref="/app/deal-registrations"
       />

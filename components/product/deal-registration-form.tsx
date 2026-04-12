@@ -5,26 +5,20 @@ import { FormEvent, startTransition, useState } from "react";
 
 type DealFormState = {
   companyName: string;
-  domain: string;
+  communityAddress: string;
+  city: string;
+  state: string;
   contactName: string;
   contactEmail: string;
-  contactPhone: string;
-  estimatedValue: string;
-  monthlyRmr: string;
-  productInterest: string;
-  notes: string;
 };
 
 const initialState: DealFormState = {
   companyName: "",
-  domain: "",
+  communityAddress: "",
+  city: "",
+  state: "",
   contactName: "",
   contactEmail: "",
-  contactPhone: "",
-  estimatedValue: "",
-  monthlyRmr: "",
-  productInterest: "",
-  notes: "",
 };
 
 export function DealRegistrationForm() {
@@ -73,26 +67,43 @@ export function DealRegistrationForm() {
 
   return (
     <article className="workspace-card wide-card">
-        <div className="card-header-row">
-          <div>
-            <h3>Deal registration form</h3>
-            <p>Submit a complete opportunity record so GoAccess can review it before HubSpot sync.</p>
-          </div>
+      <div className="card-header-row">
+        <div>
+          <h3>Deal registration form</h3>
+          <p>Submit the community and contact details GoAccess needs to review this opportunity.</p>
+        </div>
       </div>
       <form className="cta-form" onSubmit={handleSubmit}>
         <div className="inline-form-grid">
           <input
             type="text"
-            placeholder="Community"
+            placeholder="Community name"
             value={form.companyName}
             onChange={(event) => update("companyName", event.target.value)}
             required
           />
           <input
             type="text"
-            placeholder="Company domain"
-            value={form.domain}
-            onChange={(event) => update("domain", event.target.value)}
+            placeholder="Community address"
+            value={form.communityAddress}
+            onChange={(event) => update("communityAddress", event.target.value)}
+            required
+          />
+        </div>
+        <div className="inline-form-grid">
+          <input
+            type="text"
+            placeholder="City"
+            value={form.city}
+            onChange={(event) => update("city", event.target.value)}
+            required
+          />
+          <input
+            type="text"
+            placeholder="State"
+            value={form.state}
+            onChange={(event) => update("state", event.target.value)}
+            required
           />
         </div>
         <div className="inline-form-grid">
@@ -111,45 +122,6 @@ export function DealRegistrationForm() {
             required
           />
         </div>
-        <div className="inline-form-grid">
-          <input
-            type="text"
-            placeholder="Contact phone"
-            value={form.contactPhone}
-            onChange={(event) => update("contactPhone", event.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Product interest"
-            value={form.productInterest}
-            onChange={(event) => update("productInterest", event.target.value)}
-          />
-        </div>
-        <div className="inline-form-grid">
-          <input
-            type="number"
-            min="0"
-            step="1"
-            placeholder="Estimated value"
-            value={form.estimatedValue}
-            onChange={(event) => update("estimatedValue", event.target.value)}
-          />
-          <input
-            type="number"
-            min="0"
-            step="1"
-            placeholder="Monthly RMR"
-            value={form.monthlyRmr}
-            onChange={(event) => update("monthlyRmr", event.target.value)}
-          />
-        </div>
-        <textarea
-          className="cta-textarea"
-          placeholder="Notes for GoAccess review"
-          value={form.notes}
-          onChange={(event) => update("notes", event.target.value)}
-          rows={4}
-        />
         <button className="button button-primary" type="submit" disabled={status === "submitting"}>
           {status === "submitting" ? "Submitting..." : "Submit deal for review"}
         </button>

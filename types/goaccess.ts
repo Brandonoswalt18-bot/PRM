@@ -101,6 +101,9 @@ export type DealRegistration = {
   id: string;
   vendorId: string;
   companyName: string;
+  communityAddress?: string;
+  city?: string;
+  state?: string;
   domain: string;
   contactName: string;
   contactEmail: string;
@@ -185,6 +188,9 @@ export type CreateVendorApplicationInput = {
 
 export type CreateDealInput = {
   companyName: string;
+  communityAddress: string;
+  city: string;
+  state: string;
   domain: string;
   contactName: string;
   contactEmail: string;

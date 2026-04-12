@@ -5,6 +5,7 @@ import {
   getApplicationNotificationRecipients,
   sendVendorEmail,
 } from "@/lib/email";
+import { parseDealNotes } from "@/lib/deal-registration";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { getSupabaseAdminClient, getSupabaseServerConfig } from "@/lib/supabase-server";
 import type {
@@ -104,6 +105,9 @@ type DealRegistrationRow = {
   id: string;
   vendor_id: string;
   company_name: string;
+  community_address: string | null;
+  city: string | null;
+  state: string | null;
   domain: string;
   contact_name: string;
   contact_email: string;
@@ -606,6 +610,9 @@ function dealRegistrationToRow(deal: DealRegistration): DealRegistrationRow {
     id: deal.id,
     vendor_id: deal.vendorId,
     company_name: deal.companyName,
+    community_address: deal.communityAddress ?? null,
+    city: deal.city ?? null,
+    state: deal.state ?? null,
     domain: deal.domain,
     contact_name: deal.contactName,
     contact_email: deal.contactEmail,
@@ -624,10 +631,15 @@ function dealRegistrationToRow(deal: DealRegistration): DealRegistrationRow {
 }
 
 function rowToDealRegistration(row: DealRegistrationRow): DealRegistration {
+  const parsedNotes = parseDealNotes(row.notes);
+
   return {
     id: row.id,
     vendorId: row.vendor_id,
     companyName: row.company_name,
+    communityAddress: row.community_address ?? parsedNotes.communityAddress,
+    city: row.city ?? parsedNotes.city,
+    state: row.state ?? parsedNotes.state,
     domain: row.domain,
     contactName: row.contact_name,
     contactEmail: row.contact_email,
@@ -635,7 +647,7 @@ function rowToDealRegistration(row: DealRegistrationRow): DealRegistration {
     estimatedValue: Number(row.estimated_value),
     monthlyRmr: Number(row.monthly_rmr),
     productInterest: row.product_interest,
-    notes: row.notes,
+    notes: parsedNotes.legacyNotes,
     status: row.status,
     hubspotCompanyId: row.hubspot_company_id ?? undefined,
     hubspotContactId: row.hubspot_contact_id ?? undefined,
@@ -1724,6 +1736,9 @@ export async function submitDealForVendor(vendorId: string, input: CreateDealInp
     id: makeId("deal"),
     vendorId,
     companyName: input.companyName,
+    communityAddress: input.communityAddress,
+    city: input.city,
+    state: input.state,
     domain: input.domain,
     contactName: input.contactName,
     contactEmail: input.contactEmail,

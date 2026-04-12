@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
+import { formatDealLocation } from "@/lib/deal-registration";
 import { formatDealStatusLabel } from "@/lib/goaccess-copy";
 import { buildDealTimeline } from "@/lib/goaccess-timeline";
 import type { ApprovedVendor, DealRegistration, DealStatus, DealSyncEvent } from "@/types/goaccess";
@@ -122,9 +123,9 @@ function formatOptionalDealNumber(value: number) {
 
 function summarizeDealHeader(deal: DealRegistration) {
   const parts = [
-    deal.domain || "Domain not provided",
+    formatDealLocation(deal),
     deal.contactName,
-    formatOptionalDealNumber(deal.estimatedValue),
+    deal.contactEmail,
   ];
 
   return parts.join(" · ");
@@ -262,7 +263,7 @@ export function AdminDealManager({
                 </div>
                 <div className="stack-meta-grid">
                   <span>{deal.contactEmail}</span>
-                  <span>{deal.productInterest || "Product interest not provided"}</span>
+                  <span>{formatDealLocation(deal)}</span>
                   <span>{getDealQueueReason(deal)}</span>
                 </div>
                 {latestSyncEvent && latestSyncEvent.status !== "synced" ? (
@@ -317,19 +318,14 @@ export function AdminDealManager({
                         <strong>{vendor?.companyName ?? "Unknown vendor"}</strong>
                       </div>
                       <div className="detail-fact">
-                        <span>Value</span>
-                        <strong>{formatOptionalDealNumber(deal.estimatedValue)}</strong>
-                      </div>
-                      <div className="detail-fact">
-                        <span>Monthly RMR</span>
-                        <strong>{formatOptionalDealNumber(deal.monthlyRmr)}</strong>
+                        <span>Location</span>
+                        <strong>{formatDealLocation(deal)}</strong>
                       </div>
                       <div className="detail-fact">
                         <span>HubSpot</span>
                         <strong>{deal.hubspotDealId ? `#${deal.hubspotDealId}` : "Not synced"}</strong>
                       </div>
                     </div>
-                    {deal.notes ? <p className="stack-note">{deal.notes}</p> : null}
                     <div className="detail-link-row">
                       <Link className="detail-link-chip" href={`/app/deal-registrations/${deal.id}`}>
                         Full deal detail

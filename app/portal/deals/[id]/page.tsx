@@ -7,6 +7,7 @@ import {
 } from "@/components/product/product-page-sections";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
+import { formatDealLocation } from "@/lib/deal-registration";
 import { buildDealTimeline } from "@/lib/goaccess-timeline";
 import { formatCurrency, getDealById, listSyncEvents } from "@/lib/goaccess-store";
 
@@ -54,21 +55,36 @@ export default async function PartnerDealDetailPage({
   ];
 
   const profileRows = [
-    { label: "Community", value: deal.companyName },
-    { label: "Domain", value: deal.domain || "Not provided" },
+    { label: "Community name", value: deal.companyName },
+    { label: "Community address", value: deal.communityAddress || "Not provided" },
+    { label: "City", value: deal.city || "Not provided" },
+    { label: "State", value: deal.state || "Not provided" },
     { label: "Contact", value: deal.contactName },
     { label: "Contact email", value: deal.contactEmail },
-    { label: "Contact phone", value: deal.contactPhone || "Not provided" },
-    { label: "Product interest", value: deal.productInterest || "Not provided" },
-    { label: "Notes", value: deal.notes || "No notes provided" },
   ];
+
+  if (deal.domain) {
+    profileRows.push({ label: "Domain", value: deal.domain });
+  }
+
+  if (deal.contactPhone) {
+    profileRows.push({ label: "Contact phone", value: deal.contactPhone });
+  }
+
+  if (deal.productInterest) {
+    profileRows.push({ label: "Product interest", value: deal.productInterest });
+  }
+
+  if (deal.notes) {
+    profileRows.push({ label: "Notes", value: deal.notes });
+  }
 
   return (
     <>
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title={deal.companyName}
-        subtitle="Review the deal record, its HubSpot linkage, and the full status history in one place."
+        subtitle={`Review the registration for ${formatDealLocation(deal)} and its full status history.`}
         primaryLabel="Back to deal history"
         primaryHref="/portal/deals"
       />

@@ -11,6 +11,7 @@ import {
   listDeals,
   listSyncEvents,
 } from "@/lib/goaccess-store";
+import { formatDealLocation } from "@/lib/deal-registration";
 
 export default async function PartnerDealsPage() {
   const session = await getWorkspaceSession();
@@ -66,7 +67,7 @@ export default async function PartnerDealsPage() {
           <div className="data-table">
             <div className="table-head table-cols-5">
               <span>Community</span>
-              <span>Domain</span>
+              <span>Location</span>
               <span>Submitted</span>
               <span>Status</span>
               <span>Detail</span>
@@ -74,7 +75,7 @@ export default async function PartnerDealsPage() {
             {deals.map((deal) => (
               <div className="table-row table-cols-5" key={deal.id}>
                 <span>{deal.companyName}</span>
-                <span>{deal.domain || "Not provided"}</span>
+                <span>{formatDealLocation(deal)}</span>
                 <span>{new Date(deal.createdAt).toLocaleDateString()}</span>
                 <span>{formatDealStatusLabel(deal.status)}</span>
                 <span>
@@ -98,7 +99,7 @@ export default async function PartnerDealsPage() {
             <TimelineSection
               key={deal.id}
               title={deal.companyName}
-              description={`${deal.domain || "Domain not provided"} · ${formatDealStatusLabel(deal.status)}${deal.hubspotDealId ? ` · HubSpot #${deal.hubspotDealId}` : ""}`}
+              description={`${formatDealLocation(deal)} · ${formatDealStatusLabel(deal.status)}${deal.hubspotDealId ? ` · HubSpot #${deal.hubspotDealId}` : ""}`}
               entries={buildDealTimeline(deal, syncEvents)}
             />
           ))}

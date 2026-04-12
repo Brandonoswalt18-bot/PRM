@@ -2,6 +2,7 @@ import { MetricGrid, SideSections } from "@/components/product/product-page-sect
 import { DealRegistrationForm } from "@/components/product/deal-registration-form";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
+import { formatDealLocation } from "@/lib/deal-registration";
 import {
   formatCurrency,
   getCurrentMonthlyRmrForVendor,
@@ -50,8 +51,8 @@ export default async function LinksPage() {
       title: "Submission rules",
       description: "Every vendor deal is reviewed before it is created in HubSpot.",
       items: [
-        "Use the customer’s real contact email and add the domain when you have it",
-        "Include product context and implementation notes when they will help review",
+        "Use the community’s real address, city, state, and contact email",
+        "Keep the registration focused on community and contact details",
         "Closed won accounts roll into monthly recurring revenue totals",
         "Open support if a submission looks stalled or incorrect",
       ],
@@ -95,19 +96,19 @@ export default async function LinksPage() {
               </a>
             </div>
             <div className="data-table">
-              <div className="table-head table-cols-5">
-                <span>Community</span>
-                <span>Domain</span>
-                <span>Submitted</span>
-                <span>Status</span>
-                <span>Detail</span>
-              </div>
-              {deals.slice(0, 8).map((deal) => (
-                <div className="table-row table-cols-5" key={deal.id}>
-                  <span>{deal.companyName}</span>
-                  <span>{deal.domain || "Not provided"}</span>
-                  <span>{new Date(deal.createdAt).toLocaleDateString()}</span>
-                  <span>{titleCaseStatus(deal.status)}</span>
+            <div className="table-head table-cols-5">
+              <span>Community</span>
+              <span>Location</span>
+              <span>Submitted</span>
+              <span>Status</span>
+              <span>Detail</span>
+            </div>
+            {deals.slice(0, 8).map((deal) => (
+              <div className="table-row table-cols-5" key={deal.id}>
+                <span>{deal.companyName}</span>
+                <span>{formatDealLocation(deal)}</span>
+                <span>{new Date(deal.createdAt).toLocaleDateString()}</span>
+                <span>{titleCaseStatus(deal.status)}</span>
                   <span>
                     <a href={`/portal/deals/${deal.id}`}>Open</a>
                   </span>
