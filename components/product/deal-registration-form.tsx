@@ -76,7 +76,7 @@ export function DealRegistrationForm() {
       <div className="card-header-row">
         <div>
           <h3>Deal registration form</h3>
-          <p>Submit a structured opportunity for GoAccess review before HubSpot sync.</p>
+          <p>Submit a complete opportunity record so GoAccess can review it before HubSpot sync.</p>
         </div>
       </div>
       <form className="cta-form" onSubmit={handleSubmit}>
@@ -164,7 +164,7 @@ export function DealRegistrationForm() {
           aria-live="polite"
         >
           {message ||
-            "Submitted deals are stored in the portal first, then reviewed before HubSpot sync."}
+            "Submitted deals stay in the portal review queue first, then move to HubSpot after GoAccess approval."}
         </p>
       </form>
     </article>

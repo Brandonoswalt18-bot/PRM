@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
+import { formatDealStatusLabel } from "@/lib/goaccess-copy";
 import { buildDealTimeline } from "@/lib/goaccess-timeline";
 import type { ApprovedVendor, DealRegistration, DealStatus, DealSyncEvent } from "@/types/goaccess";
 
@@ -87,10 +88,6 @@ function resolveDealStageActionStatus(
   return stage.actionStatus;
 }
 
-function titleCaseStatus(status: string) {
-  return status.replaceAll("_", " ");
-}
-
 function getDealQueueReason(deal: DealRegistration) {
   if (deal.status === "submitted") {
     return "Needs first review";
@@ -101,7 +98,7 @@ function getDealQueueReason(deal: DealRegistration) {
   }
 
   if (deal.status === "approved") {
-    return "Ready to sync to HubSpot";
+    return "Approved and waiting on HubSpot sync";
   }
 
   if (deal.status === "synced_to_hubspot") {
@@ -168,7 +165,7 @@ export function AdminDealManager({
       startTransition(() => {
         router.refresh();
       });
-      setMessage(payload.message ?? `Deal updated to ${status.replaceAll("_", " ")}.`);
+      setMessage(payload.message ?? `Deal updated to ${formatDealStatusLabel(status)}.`);
     } catch {
       setMessage("Network error while updating deal.");
     } finally {
@@ -244,7 +241,7 @@ export function AdminDealManager({
                   </div>
                   <div className="stage-actions-topline">
                     <span className={`status-pill ${isRejected ? "status-pill-danger" : "status-pill-neutral"}`}>
-                      {titleCaseStatus(deal.status)}
+                      {isRejected ? "Declined" : formatDealStatusLabel(deal.status)}
                     </span>
                     <Link className="button button-secondary" href={buildDealsHref(activeQueue, isSelected ? undefined : deal.id)}>
                       {isSelected ? "Hide details" : "Open"}
@@ -299,6 +296,10 @@ export function AdminDealManager({
                       </button>
                     </div>
                     <div className="detail-fact-grid">
+                      <div className="detail-fact">
+                        <span>Status</span>
+                        <strong>{formatDealStatusLabel(deal.status)}</strong>
+                      </div>
                       <div className="detail-fact">
                         <span>Vendor</span>
                         <strong>{vendor?.companyName ?? "Unknown vendor"}</strong>

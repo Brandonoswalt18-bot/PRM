@@ -7,6 +7,7 @@ import {
 } from "@/components/product/product-page-sections";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { buildDealTimeline } from "@/lib/goaccess-timeline";
+import { inspectDealRegistrationForHubSpot } from "@/lib/hubspot";
 import {
   formatCurrency,
   getDealById,
@@ -35,6 +36,27 @@ export default async function AdminDealDetailPage({
     getVendorById(deal.vendorId),
     listSupportRequests(deal.vendorId),
   ]);
+  const hubspotInspection =
+    vendor
+      ? await inspectDealRegistrationForHubSpot({ vendor, deal }).catch((error) => ({
+          enabled: false,
+          missingEnvVars: [],
+          customPropertyIssues: [],
+          ready: false,
+          syncDecision: "hold" as const,
+          decisionSummary: "Unable to inspect HubSpot readiness for this deal.",
+          heldReason:
+            error instanceof Error
+              ? error.message
+              : "Unable to inspect HubSpot readiness for this deal.",
+          existingCompanyId: null,
+          existingContactId: null,
+          existingSubmissionDealIds: [],
+          associatedOpenDealIds: [],
+          conflicts: [],
+          warnings: [],
+        }))
+      : null;
 
   const metrics = [
     {
@@ -95,6 +117,52 @@ export default async function AdminDealDetailPage({
             rows={profileRows}
             renderRow={ProfileRow}
           />
+          <article className="workspace-card">
+            <h3>HubSpot sync readiness</h3>
+            <ul>
+              <li>Decision: {hubspotInspection?.decisionSummary ?? "Vendor missing"}</li>
+              <li>
+                Sync state:{" "}
+                {hubspotInspection
+                  ? hubspotInspection.ready
+                    ? "ready"
+                    : hubspotInspection.enabled
+                      ? "held for review"
+                      : "not configured"
+                  : "vendor missing"}
+              </li>
+              {hubspotInspection?.missingEnvVars.length ? (
+                <li>Missing env vars: {hubspotInspection.missingEnvVars.join(", ")}</li>
+              ) : null}
+              {hubspotInspection?.customPropertyIssues.map((issue) => (
+                <li key={issue}>{issue}</li>
+              ))}
+              {hubspotInspection?.heldReason ? (
+                <li>Held reason: {hubspotInspection.heldReason}</li>
+              ) : null}
+              <li>
+                Existing company: {hubspotInspection?.existingCompanyId ?? "No company match"}
+              </li>
+              <li>
+                Existing contact: {hubspotInspection?.existingContactId ?? "No contact match"}
+              </li>
+              <li>
+                Submission-linked deals:{" "}
+                {hubspotInspection?.existingSubmissionDealIds.length
+                  ? hubspotInspection.existingSubmissionDealIds.join(", ")
+                  : "No existing submission match"}
+              </li>
+              <li>
+                Open associated deals: {hubspotInspection?.associatedOpenDealIds.length ?? 0}
+              </li>
+              {hubspotInspection?.conflicts.map((conflict) => (
+                <li key={conflict}>{conflict}</li>
+              ))}
+              {hubspotInspection?.warnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          </article>
         </section>
         <section className="dashboard-grid">
           <TimelineSection

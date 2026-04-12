@@ -3,6 +3,7 @@ type VendorEmailPayload = {
   subject: string;
   text: string;
   html: string;
+  replyTo?: string;
 };
 
 type VendorEmailResult = {
@@ -54,6 +55,7 @@ export async function sendVendorEmail(payload: VendorEmailPayload): Promise<Vend
     body: JSON.stringify({
       from,
       to: recipients,
+      reply_to: payload.replyTo,
       subject: payload.subject,
       text: payload.text,
       html: payload.html,

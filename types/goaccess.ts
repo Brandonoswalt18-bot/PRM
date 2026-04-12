@@ -32,6 +32,8 @@ export type SupportRequestCategory =
 
 export type TrainingAssetType = "video" | "document";
 export type TrainingAssetSource = "upload" | "external";
+export type RmrStatementType = "forecast" | "recognized";
+export type RmrStatementStatus = "open" | "closed";
 
 export type TimelineEntry = {
   title: string;
@@ -260,4 +262,14 @@ export type CreateExternalTrainingAssetInput = {
   type: TrainingAssetType;
   externalUrl: string;
   uploadedBy: string;
+};
+
+export type VendorRmrStatement = {
+  periodKey: string;
+  periodLabel: string;
+  type: RmrStatementType;
+  status: RmrStatementStatus;
+  amount: number;
+  dealCount: number;
+  dealIds: string[];
 };

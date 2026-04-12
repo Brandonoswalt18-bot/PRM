@@ -76,8 +76,8 @@ export function VendorProfileForm({ vendor }: VendorProfileFormProps) {
     <article className="workspace-card wide-card">
       <div className="card-header-row">
         <div>
-          <h3>Update vendor profile</h3>
-          <p>Keep your business and contact details current so GoAccess has the right onboarding and deal registration data.</p>
+          <h3>Update company details</h3>
+          <p>Keep your business and contact details current so GoAccess can review deals and support your account without delays.</p>
         </div>
       </div>
       <form className="cta-form" onSubmit={handleSubmit}>
@@ -137,7 +137,7 @@ export function VendorProfileForm({ vendor }: VendorProfileFormProps) {
           } ${status === "error" ? "form-message-error" : ""}`.trim()}
           aria-live="polite"
         >
-          {message || "These details are used across your GoAccess profile, onboarding record, and deal registration workflow."}
+          {message || "These details are used across your profile, onboarding record, support requests, and deal reviews."}
         </p>
       </form>
     </article>

@@ -2,6 +2,13 @@ import { WorkspacePageHeader } from "@/components/product/workspace-page-header"
 import { MetricGrid } from "@/components/product/product-page-sections";
 import { getWorkspaceSession } from "@/lib/auth";
 import {
+  formatDealStatusLabel,
+  formatNdaStatusLabel,
+  formatPortalAccessLabel,
+  formatVendorStatusLabel,
+  getVendorNextStep,
+} from "@/lib/goaccess-copy";
+import {
   formatCurrency,
   getCurrentMonthlyRmrForVendor,
   getForecastMonthlyRmrForVendor,
@@ -9,10 +16,6 @@ import {
   listDeals,
   listSupportRequests,
 } from "@/lib/goaccess-store";
-
-function titleCaseStatus(value: string) {
-  return value.replaceAll("_", " ");
-}
 
 function formatShortDate(value: string) {
   return new Date(value).toLocaleDateString("en-US", {
@@ -64,7 +67,7 @@ export default async function PartnerPortalPage() {
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="Vendor home"
-        subtitle="Register deals, track approvals, and watch monthly recurring revenue as accounts go live."
+        subtitle="Keep onboarding on track, register deals, and monitor recurring revenue in one place."
         primaryLabel="Register a deal"
         primaryHref="/portal/links"
       />
@@ -86,15 +89,18 @@ export default async function PartnerPortalPage() {
               <div className="stack-card">
                 <div className="stack-card-header">
                   <div>
-                    <h3>Vendor status</h3>
-                    <p>{vendor?.companyName ?? "Your company"} in the GoAccess workflow.</p>
+                    <h3>What happens next</h3>
+                    <p>{vendor?.companyName ?? "Your company"} in the GoAccess onboarding flow.</p>
                   </div>
-                  <span className="status-pill">{vendor?.status ?? "unknown"}</span>
+                  <span className="status-pill">
+                    {vendor ? formatVendorStatusLabel(vendor.status) : "Pending review"}
+                  </span>
                 </div>
+                <p className="stack-note">{getVendorNextStep(vendor)}</p>
                 <div className="stack-meta-grid">
-                  <span>NDA: {vendor?.ndaStatus ?? "unknown"}</span>
-                  <span>Credentials: {vendor?.credentialsIssued ? "issued" : "pending"}</span>
-                  <span>Portal access: {vendor?.portalAccess ?? "unknown"}</span>
+                  <span>NDA: {vendor ? formatNdaStatusLabel(vendor.ndaStatus) : "Waiting on review"}</span>
+                  <span>Portal invite: {vendor?.credentialsIssued ? "Sent" : "Pending"}</span>
+                  <span>Portal access: {vendor ? formatPortalAccessLabel(vendor.portalAccess) : "Not ready"}</span>
                 </div>
               </div>
               <div className="stack-card">
@@ -109,7 +115,7 @@ export default async function PartnerPortalPage() {
                 </div>
                 <div className="stack-meta-grid">
                   <span>{deals.filter((deal) => deal.status === "submitted").length} submitted</span>
-                  <span>{deals.filter((deal) => deal.status === "under_review").length} under review</span>
+                  <span>{deals.filter((deal) => deal.status === "under_review").length} in review</span>
                   <span>{deals.filter((deal) => deal.status === "synced_to_hubspot").length} in HubSpot</span>
                 </div>
               </div>
@@ -146,7 +152,7 @@ export default async function PartnerPortalPage() {
               <ul>
                 {supportRequests.slice(0, 4).map((request) => (
                   <li key={request.id}>
-                    {request.subject}: {titleCaseStatus(request.status)}
+                    {request.subject}: {request.status === "in_progress" ? "In progress" : request.status === "resolved" ? "Resolved" : "Open"}
                   </li>
                 ))}
               </ul>
@@ -178,7 +184,7 @@ export default async function PartnerPortalPage() {
                 <div className="table-row table-cols-4" key={deal.id}>
                   <span>{deal.companyName}</span>
                   <span>{formatShortDate(deal.createdAt)}</span>
-                  <span>{titleCaseStatus(deal.status)}</span>
+                  <span>{formatDealStatusLabel(deal.status)}</span>
                   <span>{formatCurrency(deal.monthlyRmr)}</span>
                 </div>
               ))}
@@ -188,9 +194,9 @@ export default async function PartnerPortalPage() {
           <article className="workspace-card">
             <h3>How this portal works</h3>
             <ul>
-              <li>You apply once, complete NDA and credentials, then work from this portal.</li>
-              <li>Approved deals are written into HubSpot.</li>
-              <li>Monthly RMR becomes visible here when deals move into active recurring revenue.</li>
+              <li>You complete onboarding once, then manage deals, training, and support from this portal.</li>
+              <li>GoAccess reviews each deal before it is written into HubSpot.</li>
+              <li>Monthly RMR appears here after deals become active recurring revenue.</li>
             </ul>
           </article>
         </section>

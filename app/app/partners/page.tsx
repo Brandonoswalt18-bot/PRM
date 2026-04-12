@@ -3,6 +3,11 @@ import {
 } from "@/components/product/product-page-sections";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import {
+  formatNdaStatusLabel,
+  formatPortalAccessLabel,
+  formatVendorStatusLabel,
+} from "@/lib/goaccess-copy";
+import {
   formatCurrency,
   getCurrentMonthlyRmrForVendor,
   listApprovedVendors,
@@ -63,7 +68,7 @@ export default async function PartnersPage() {
               <div className="table-head table-cols-5">
                 <span>Vendor</span>
                 <span>Location</span>
-                <span>Status</span>
+                <span>Onboarding</span>
                 <span>Portal state</span>
                 <span>Monthly RMR</span>
               </div>
@@ -71,8 +76,8 @@ export default async function PartnersPage() {
                 <div className="table-row table-cols-5" key={vendor.id}>
                   <span>{vendor.companyName}</span>
                   <span>{[vendor.city, vendor.state].filter(Boolean).join(", ") || vendor.region}</span>
-                  <span>{vendor.status.replaceAll("_", " ")}</span>
-                  <span>{vendor.portalAccess.replaceAll("_", " ")}</span>
+                  <span>{formatVendorStatusLabel(vendor.status)} · NDA {formatNdaStatusLabel(vendor.ndaStatus)}</span>
+                  <span>{formatPortalAccessLabel(vendor.portalAccess)}</span>
                   <span>{formatCurrency(vendor.currentRmr)}</span>
                 </div>
               ))}
@@ -81,10 +86,10 @@ export default async function PartnersPage() {
           <article className="workspace-card">
             <h3>Roster checks</h3>
             <ul>
-              <li>Only approved vendors should receive NDA and credential actions.</li>
-              <li>Portal access should remain invited until the vendor accepts the invite.</li>
+              <li>Only approved vendors should move into NDA and portal invite steps.</li>
+              <li>Portal access should stay at Invite sent until the vendor creates a password.</li>
               <li>Monthly RMR should tie back to closed won deals only.</li>
-              <li>Use the applications queue and support ops to resolve onboarding gaps.</li>
+              <li>Use the applications queue when a vendor is still waiting on GoAccess for the next onboarding step.</li>
             </ul>
           </article>
         </section>

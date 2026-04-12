@@ -1,12 +1,12 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { get as getBlob, list as listBlob, put as putBlob } from "@vercel/blob";
 import {
   buildInviteUrl,
   getApplicationNotificationRecipients,
   sendVendorEmail,
 } from "@/lib/email";
 import { hashPassword, verifyPassword } from "@/lib/password";
+import { getSupabaseAdminClient, getSupabaseServerConfig } from "@/lib/supabase-server";
 import type {
   ApprovedVendor,
   CreateDealInput,
@@ -29,14 +29,106 @@ import type {
   TrainingUploadFinalizeInput,
   CreateExternalTrainingAssetInput,
   UpdateVendorProfileInput,
+  VendorRmrStatement,
 } from "@/types/goaccess";
 
 const STORE_FILENAME = "goaccess-vendor-portal.json";
 const BLOB_STORE_PATHNAME = `portal-store/${STORE_FILENAME}`;
 const TRAINING_ASSET_METADATA_PREFIX = "training-assets/records/";
 const SIGNED_NDA_MAX_BYTES = 10 * 1024 * 1024;
-const DEFAULT_NDA_DOCUMENT_NAME = "GoAccess Vendor NDA";
-const DEFAULT_NDA_DOCUMENT_URL = "https://docs.google.com/document/d/goaccess-vendor-nda";
+const DEFAULT_NDA_DOCUMENT_NAME = "GoAccess Partner NDA";
+const DEFAULT_NDA_DOCUMENT_URL =
+  "https://docs.google.com/document/d/1akFHM1h4UM6mN9qe0WvJMbZs_gIT9J3C/edit";
+
+type CorePortalStore = Pick<
+  PortalStore,
+  "vendorApplications" | "approvedVendors" | "deals" | "syncEvents"
+>;
+
+type VendorApplicationRow = {
+  id: string;
+  company_name: string;
+  website: string;
+  city: string | null;
+  state: string | null;
+  region: string;
+  vendor_type: string;
+  primary_contact_name: string;
+  primary_contact_email: string;
+  notes: string;
+  status: VendorApplicationStatus;
+  nda_sent_at: string | null;
+  nda_signed_at: string | null;
+  approval_email_sent_at: string | null;
+  credentials_issued_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type ApprovedVendorRow = {
+  id: string;
+  application_id: string;
+  company_name: string;
+  website: string;
+  city: string | null;
+  state: string | null;
+  region: string;
+  vendor_type: string;
+  primary_contact_name: string;
+  primary_contact_email: string;
+  status: ApprovedVendor["status"];
+  nda_status: ApprovedVendor["ndaStatus"];
+  nda_sent_at: string | null;
+  nda_signed_at: string | null;
+  nda_document_name: string | null;
+  nda_document_url: string | null;
+  signed_nda_file_name: string | null;
+  signed_nda_file_url: string | null;
+  signed_nda_blob_path: string | null;
+  signed_nda_uploaded_at: string | null;
+  credentials_issued: boolean;
+  credentials_issued_at: string | null;
+  portal_access: ApprovedVendor["portalAccess"];
+  invite_token: string | null;
+  invite_sent_at: string | null;
+  invite_accepted_at: string | null;
+  password_salt: string | null;
+  password_hash: string | null;
+  password_configured_at: string | null;
+  hubspot_partner_id: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type DealRegistrationRow = {
+  id: string;
+  vendor_id: string;
+  company_name: string;
+  domain: string;
+  contact_name: string;
+  contact_email: string;
+  contact_phone: string;
+  estimated_value: number;
+  monthly_rmr: number;
+  product_interest: string;
+  notes: string;
+  status: DealStatus;
+  hubspot_company_id: string | null;
+  hubspot_contact_id: string | null;
+  hubspot_deal_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type DealSyncEventRow = {
+  id: string;
+  deal_id: string;
+  vendor_id: string;
+  action: string;
+  status: DealSyncEvent["status"];
+  reference: string;
+  created_at: string;
+};
 
 const seedStore: PortalStore = {
   vendorApplications: [
@@ -107,6 +199,7 @@ const seedStore: PortalStore = {
       inviteToken: "invite-blue-haven",
       inviteSentAt: "2026-02-27T13:20:00.000Z",
       inviteAcceptedAt: "2026-02-27T15:05:00.000Z",
+      // Seeded local/dev vendor test login: jordan@bluehavenintegrators.com / goaccess-vendor-demo
       passwordSalt: "goaccess-demo-salt",
       passwordHash:
         "d54a2fa06254bb3b1d9558981f518939c8cf9d56d848a48bebe46f4f7015c6673cfd33d2fce60cd267694d038f36a3673fb1e51b50839cacae9192f49ee05dcb",
@@ -370,8 +463,218 @@ function normalizeStore(store: PortalStore | Partial<PortalStore>): PortalStore 
   };
 }
 
+function getCoreSeedStore(): CorePortalStore {
+  const seed = cloneSeedStore();
+  return {
+    vendorApplications: seed.vendorApplications,
+    approvedVendors: seed.approvedVendors,
+    deals: seed.deals,
+    syncEvents: seed.syncEvents,
+  };
+}
+
+function mergeStoreWithCore(store: PortalStore, core: CorePortalStore): PortalStore {
+  return {
+    ...store,
+    vendorApplications: core.vendorApplications,
+    approvedVendors: core.approvedVendors,
+    deals: core.deals,
+    syncEvents: core.syncEvents,
+  };
+}
+
+function vendorApplicationToRow(application: VendorApplication): VendorApplicationRow {
+  return {
+    id: application.id,
+    company_name: application.companyName,
+    website: application.website,
+    city: application.city ?? null,
+    state: application.state ?? null,
+    region: application.region,
+    vendor_type: application.vendorType,
+    primary_contact_name: application.primaryContactName,
+    primary_contact_email: application.primaryContactEmail,
+    notes: application.notes,
+    status: application.status,
+    nda_sent_at: application.ndaSentAt ?? null,
+    nda_signed_at: application.ndaSignedAt ?? null,
+    approval_email_sent_at: application.approvalEmailSentAt ?? null,
+    credentials_issued_at: application.credentialsIssuedAt ?? null,
+    created_at: application.createdAt,
+    updated_at: application.updatedAt,
+  };
+}
+
+function rowToVendorApplication(row: VendorApplicationRow): VendorApplication {
+  return {
+    id: row.id,
+    companyName: row.company_name,
+    website: row.website,
+    city: row.city ?? undefined,
+    state: row.state ?? undefined,
+    region: row.region,
+    vendorType: row.vendor_type,
+    primaryContactName: row.primary_contact_name,
+    primaryContactEmail: row.primary_contact_email,
+    notes: row.notes,
+    status: row.status,
+    ndaSentAt: row.nda_sent_at ?? undefined,
+    ndaSignedAt: row.nda_signed_at ?? undefined,
+    approvalEmailSentAt: row.approval_email_sent_at ?? undefined,
+    credentialsIssuedAt: row.credentials_issued_at ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function approvedVendorToRow(vendor: ApprovedVendor): ApprovedVendorRow {
+  return {
+    id: vendor.id,
+    application_id: vendor.applicationId,
+    company_name: vendor.companyName,
+    website: vendor.website,
+    city: vendor.city ?? null,
+    state: vendor.state ?? null,
+    region: vendor.region,
+    vendor_type: vendor.vendorType,
+    primary_contact_name: vendor.primaryContactName,
+    primary_contact_email: vendor.primaryContactEmail,
+    status: vendor.status,
+    nda_status: vendor.ndaStatus,
+    nda_sent_at: vendor.ndaSentAt ?? null,
+    nda_signed_at: vendor.ndaSignedAt ?? null,
+    nda_document_name: vendor.ndaDocumentName ?? null,
+    nda_document_url: vendor.ndaDocumentUrl ?? null,
+    signed_nda_file_name: vendor.signedNdaFileName ?? null,
+    signed_nda_file_url: vendor.signedNdaFileUrl ?? null,
+    signed_nda_blob_path: vendor.signedNdaBlobPath ?? null,
+    signed_nda_uploaded_at: vendor.signedNdaUploadedAt ?? null,
+    credentials_issued: vendor.credentialsIssued,
+    credentials_issued_at: vendor.credentialsIssuedAt ?? null,
+    portal_access: vendor.portalAccess,
+    invite_token: vendor.inviteToken ?? null,
+    invite_sent_at: vendor.inviteSentAt ?? null,
+    invite_accepted_at: vendor.inviteAcceptedAt ?? null,
+    password_salt: vendor.passwordSalt ?? null,
+    password_hash: vendor.passwordHash ?? null,
+    password_configured_at: vendor.passwordConfiguredAt ?? null,
+    hubspot_partner_id: vendor.hubspotPartnerId,
+    created_at: vendor.createdAt,
+    updated_at: vendor.updatedAt,
+  };
+}
+
+function rowToApprovedVendor(row: ApprovedVendorRow): ApprovedVendor {
+  return {
+    id: row.id,
+    applicationId: row.application_id,
+    companyName: row.company_name,
+    website: row.website,
+    city: row.city ?? undefined,
+    state: row.state ?? undefined,
+    region: row.region,
+    vendorType: row.vendor_type,
+    primaryContactName: row.primary_contact_name,
+    primaryContactEmail: row.primary_contact_email,
+    status: row.status,
+    ndaStatus: row.nda_status,
+    ndaSentAt: row.nda_sent_at ?? undefined,
+    ndaSignedAt: row.nda_signed_at ?? undefined,
+    ndaDocumentName: row.nda_document_name ?? undefined,
+    ndaDocumentUrl: row.nda_document_url ?? undefined,
+    signedNdaFileName: row.signed_nda_file_name ?? undefined,
+    signedNdaFileUrl: row.signed_nda_file_url ?? undefined,
+    signedNdaBlobPath: row.signed_nda_blob_path ?? undefined,
+    signedNdaUploadedAt: row.signed_nda_uploaded_at ?? undefined,
+    credentialsIssued: row.credentials_issued,
+    credentialsIssuedAt: row.credentials_issued_at ?? undefined,
+    portalAccess: row.portal_access,
+    inviteToken: row.invite_token ?? undefined,
+    inviteSentAt: row.invite_sent_at ?? undefined,
+    inviteAcceptedAt: row.invite_accepted_at ?? undefined,
+    passwordSalt: row.password_salt ?? undefined,
+    passwordHash: row.password_hash ?? undefined,
+    passwordConfiguredAt: row.password_configured_at ?? undefined,
+    hubspotPartnerId: row.hubspot_partner_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function dealRegistrationToRow(deal: DealRegistration): DealRegistrationRow {
+  return {
+    id: deal.id,
+    vendor_id: deal.vendorId,
+    company_name: deal.companyName,
+    domain: deal.domain,
+    contact_name: deal.contactName,
+    contact_email: deal.contactEmail,
+    contact_phone: deal.contactPhone,
+    estimated_value: deal.estimatedValue,
+    monthly_rmr: deal.monthlyRmr,
+    product_interest: deal.productInterest,
+    notes: deal.notes,
+    status: deal.status,
+    hubspot_company_id: deal.hubspotCompanyId ?? null,
+    hubspot_contact_id: deal.hubspotContactId ?? null,
+    hubspot_deal_id: deal.hubspotDealId ?? null,
+    created_at: deal.createdAt,
+    updated_at: deal.updatedAt,
+  };
+}
+
+function rowToDealRegistration(row: DealRegistrationRow): DealRegistration {
+  return {
+    id: row.id,
+    vendorId: row.vendor_id,
+    companyName: row.company_name,
+    domain: row.domain,
+    contactName: row.contact_name,
+    contactEmail: row.contact_email,
+    contactPhone: row.contact_phone,
+    estimatedValue: Number(row.estimated_value),
+    monthlyRmr: Number(row.monthly_rmr),
+    productInterest: row.product_interest,
+    notes: row.notes,
+    status: row.status,
+    hubspotCompanyId: row.hubspot_company_id ?? undefined,
+    hubspotContactId: row.hubspot_contact_id ?? undefined,
+    hubspotDealId: row.hubspot_deal_id ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function dealSyncEventToRow(event: DealSyncEvent): DealSyncEventRow {
+  return {
+    id: event.id,
+    deal_id: event.dealId,
+    vendor_id: event.vendorId,
+    action: event.action,
+    status: event.status,
+    reference: event.reference,
+    created_at: event.createdAt,
+  };
+}
+
+function rowToDealSyncEvent(row: DealSyncEventRow): DealSyncEvent {
+  return {
+    id: row.id,
+    dealId: row.deal_id,
+    vendorId: row.vendor_id,
+    action: row.action,
+    status: row.status,
+    reference: row.reference,
+    createdAt: row.created_at,
+  };
+}
+
 function getBlobStoreToken() {
   return process.env.BLOB_READ_WRITE_TOKEN?.trim() || null;
+}
+
+async function getBlobClient() {
+  return import("@vercel/blob");
 }
 
 function getTrainingAssetRecordPath(assetId: string) {
@@ -379,6 +682,7 @@ function getTrainingAssetRecordPath(assetId: string) {
 }
 
 async function listDedicatedTrainingAssets(token: string) {
+  const { list: listBlob, get: getBlob } = await getBlobClient();
   const assets: TrainingAsset[] = [];
   let cursor: string | undefined;
 
@@ -412,6 +716,7 @@ async function listDedicatedTrainingAssets(token: string) {
 }
 
 async function writeDedicatedTrainingAsset(asset: TrainingAsset, token: string) {
+  const { put: putBlob } = await getBlobClient();
   await putBlob(getTrainingAssetRecordPath(asset.id), JSON.stringify(asset, null, 2), {
     access: "private",
     addRandomSuffix: false,
@@ -422,6 +727,7 @@ async function writeDedicatedTrainingAsset(asset: TrainingAsset, token: string) 
 }
 
 async function readBlobStore(token: string): Promise<PortalStore> {
+  const { get: getBlob } = await getBlobClient();
   try {
     const result = await getBlob(BLOB_STORE_PATHNAME, {
       access: "private",
@@ -440,7 +746,7 @@ async function readBlobStore(token: string): Promise<PortalStore> {
   }
 }
 
-async function readStore(): Promise<PortalStore> {
+async function readLegacyStore(): Promise<PortalStore> {
   const blobToken = getBlobStoreToken();
 
   if (blobToken) {
@@ -457,10 +763,11 @@ async function readStore(): Promise<PortalStore> {
   }
 }
 
-async function writeStore(store: PortalStore) {
+async function writeLegacyStore(store: PortalStore) {
   const blobToken = getBlobStoreToken();
 
   if (blobToken) {
+    const { put: putBlob } = await getBlobClient();
     await putBlob(BLOB_STORE_PATHNAME, JSON.stringify(store, null, 2), {
       access: "private",
       addRandomSuffix: false,
@@ -476,12 +783,167 @@ async function writeStore(store: PortalStore) {
   await writeFile(filePath, JSON.stringify(store, null, 2), "utf8");
 }
 
+async function seedSupabaseCoreStore() {
+  const client = await getSupabaseAdminClient();
+
+  if (!client) {
+    return false;
+  }
+
+  const coreSeed = getCoreSeedStore();
+
+  const [{ error: vendorApplicationsError }, { error: approvedVendorsError }, { error: dealsError }, { error: syncEventsError }] =
+    await Promise.all([
+      client.from("vendor_applications").upsert(
+        coreSeed.vendorApplications.map(vendorApplicationToRow),
+        { onConflict: "id" }
+      ),
+      client.from("approved_vendors").upsert(
+        coreSeed.approvedVendors.map(approvedVendorToRow),
+        { onConflict: "id" }
+      ),
+      client.from("deal_registrations").upsert(coreSeed.deals.map(dealRegistrationToRow), {
+        onConflict: "id",
+      }),
+      client.from("sync_events").upsert(coreSeed.syncEvents.map(dealSyncEventToRow), {
+        onConflict: "id",
+      }),
+    ]);
+
+  if (vendorApplicationsError || approvedVendorsError || dealsError || syncEventsError) {
+    console.error("Failed to seed Supabase portal store.", {
+      vendorApplicationsError,
+      approvedVendorsError,
+      dealsError,
+      syncEventsError,
+    });
+    return false;
+  }
+
+  return true;
+}
+
+async function readSupabaseCoreStore(): Promise<CorePortalStore | null> {
+  const client = await getSupabaseAdminClient();
+
+  if (!client) {
+    return null;
+  }
+
+  const [
+    { data: vendorApplicationRows, error: vendorApplicationsError },
+    { data: approvedVendorRows, error: approvedVendorsError },
+    { data: dealRows, error: dealsError },
+    { data: syncEventRows, error: syncEventsError },
+  ] = await Promise.all([
+    client.from("vendor_applications").select("*"),
+    client.from("approved_vendors").select("*"),
+    client.from("deal_registrations").select("*"),
+    client.from("sync_events").select("*"),
+  ]);
+
+  if (vendorApplicationsError || approvedVendorsError || dealsError || syncEventsError) {
+    console.error("Failed to read Supabase portal store.", {
+      vendorApplicationsError,
+      approvedVendorsError,
+      dealsError,
+      syncEventsError,
+    });
+    return null;
+  }
+
+  const coreStore: CorePortalStore = {
+    vendorApplications: ((vendorApplicationRows ?? []) as VendorApplicationRow[]).map(
+      rowToVendorApplication
+    ),
+    approvedVendors: ((approvedVendorRows ?? []) as ApprovedVendorRow[]).map(rowToApprovedVendor),
+    deals: ((dealRows ?? []) as DealRegistrationRow[]).map(rowToDealRegistration),
+    syncEvents: ((syncEventRows ?? []) as DealSyncEventRow[]).map(rowToDealSyncEvent),
+  };
+
+  if (
+    coreStore.vendorApplications.length === 0 &&
+    coreStore.approvedVendors.length === 0 &&
+    coreStore.deals.length === 0 &&
+    coreStore.syncEvents.length === 0
+  ) {
+    const seeded = await seedSupabaseCoreStore();
+
+    if (!seeded) {
+      return null;
+    }
+
+    return getCoreSeedStore();
+  }
+
+  return coreStore;
+}
+
+async function writeSupabaseCoreStore(store: PortalStore) {
+  const client = await getSupabaseAdminClient();
+
+  if (!client) {
+    return false;
+  }
+
+  const [{ error: vendorApplicationsError }, { error: approvedVendorsError }, { error: dealsError }, { error: syncEventsError }] =
+    await Promise.all([
+      client.from("vendor_applications").upsert(
+        store.vendorApplications.map(vendorApplicationToRow),
+        { onConflict: "id" }
+      ),
+      client.from("approved_vendors").upsert(store.approvedVendors.map(approvedVendorToRow), {
+        onConflict: "id",
+      }),
+      client.from("deal_registrations").upsert(store.deals.map(dealRegistrationToRow), {
+        onConflict: "id",
+      }),
+      client.from("sync_events").upsert(store.syncEvents.map(dealSyncEventToRow), {
+        onConflict: "id",
+      }),
+    ]);
+
+  if (vendorApplicationsError || approvedVendorsError || dealsError || syncEventsError) {
+    console.error("Failed to write Supabase portal store.", {
+      vendorApplicationsError,
+      approvedVendorsError,
+      dealsError,
+      syncEventsError,
+    });
+    return false;
+  }
+
+  return true;
+}
+
+async function readStore(): Promise<PortalStore> {
+  const legacyStore = await readLegacyStore();
+  const supabaseCoreStore = await readSupabaseCoreStore();
+
+  if (!supabaseCoreStore) {
+    return legacyStore;
+  }
+
+  return mergeStoreWithCore(legacyStore, supabaseCoreStore);
+}
+
+async function writeStore(store: PortalStore) {
+  const supabaseConfig = getSupabaseServerConfig();
+
+  if (supabaseConfig.enabled) {
+    await writeSupabaseCoreStore(store);
+  }
+
+  await writeLegacyStore(store);
+}
+
 async function storeSignedNdaFile(vendorId: string, fileName: string, contentType: string, bytes: Uint8Array) {
   const safeName = `${Date.now()}-${slugify(fileName.replace(/\.[^.]+$/, ""))}${path.extname(fileName).toLowerCase() || ".pdf"}`;
   const relativePath = `signed-ndas/${vendorId}/${safeName}`;
   const blobToken = getBlobStoreToken();
 
   if (blobToken) {
+    const { put: putBlob } = await getBlobClient();
     await putBlob(relativePath, Buffer.from(bytes), {
       access: "private",
       addRandomSuffix: false,
@@ -513,6 +975,7 @@ async function storeTrainingFile(assetType: "video" | "document", fileName: stri
   const blobToken = getBlobStoreToken();
 
   if (blobToken) {
+    const { put: putBlob } = await getBlobClient();
     await putBlob(relativePath, Buffer.from(bytes), {
       access: "private",
       addRandomSuffix: false,
@@ -543,6 +1006,24 @@ function makeId(prefix: string) {
 
 function nowIso() {
   return new Date().toISOString();
+}
+
+function getMonthKey(value: string) {
+  return value.slice(0, 7);
+}
+
+function formatStatementMonth(monthKey: string) {
+  const [year, month] = monthKey.split("-");
+  const date = new Date(Number(year), Number(month) - 1, 1);
+
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function getStatementTypeOrder(type: VendorRmrStatement["type"]) {
+  return type === "recognized" ? 0 : 1;
 }
 
 function titleCaseStatus(value: string) {
@@ -626,6 +1107,7 @@ export async function getTrainingAssetById(assetId: string) {
 
   if (blobToken) {
     try {
+      const { get: getBlob } = await getBlobClient();
       const record = await getBlob(getTrainingAssetRecordPath(assetId), {
         access: "private",
         token: blobToken,
@@ -821,7 +1303,7 @@ function buildInviteToken(companyName: string) {
 }
 
 function getNdaDocumentUrl() {
-  return process.env.GOACCESS_NDA_DOCUMENT_URL || DEFAULT_NDA_DOCUMENT_URL;
+  return DEFAULT_NDA_DOCUMENT_URL;
 }
 
 function buildNotification(
@@ -844,12 +1326,14 @@ async function recordWorkflowEmail(input: {
   reference?: string;
   text: string;
   html: string;
+  replyTo?: string;
 }) {
   const result = await sendVendorEmail({
     to: input.recipientEmail,
     subject: input.subject,
     text: input.text,
     html: input.html,
+    replyTo: input.replyTo,
   });
 
   return buildNotification({
@@ -994,14 +1478,6 @@ export async function updateVendorApplicationStatus(
   }
 
   if (vendor) {
-    if (nextStatus === "nda_signed" && !vendor.signedNdaFileUrl) {
-      throw new Error("Signed NDA upload is required before marking NDA as signed.");
-    }
-
-    if (nextStatus === "credentials_issued" && !vendor.signedNdaFileUrl) {
-      throw new Error("Signed NDA upload is required before issuing credentials.");
-    }
-
     if (nextStatus === "approved") {
       application.approvalEmailSentAt = nowIso();
       store.notifications.unshift(
@@ -1030,11 +1506,24 @@ export async function updateVendorApplicationStatus(
           applicationId: application.id,
           vendorId: vendor.id,
           recipientEmail: application.primaryContactEmail,
-          subject: "GoAccess vendor NDA Google Doc ready for signature",
+          subject: "GoAccess Partner NDA",
           category: "nda_sent",
           reference: vendor.ndaDocumentUrl,
-          text: `Hi ${application.primaryContactName},\n\nYour GoAccess vendor NDA is ready. Please review and sign the Google Doc here:\n${vendor.ndaDocumentUrl}\n\nAfter it is signed, we will issue your portal credentials.\n\nGoAccess`,
-          html: `<p>Hi ${application.primaryContactName},</p><p>Your GoAccess vendor NDA is ready. Please review and sign the Google Doc here:</p><p><a href="${vendor.ndaDocumentUrl}">${vendor.ndaDocumentUrl}</a></p><p>After it is signed, we will issue your portal credentials.</p><p>GoAccess</p>`,
+          replyTo: "support@goaccess.com",
+          text:
+            `Hi ${application.primaryContactName},\n\n` +
+            "Thank you for your interest in partnering with GoAccess.\n\n" +
+            "Please review the NDA at the link below, download it, and sign it:\n" +
+            `${vendor.ndaDocumentUrl}\n\n` +
+            "Once completed, please email the signed NDA back to support@goaccess.com.\n\n" +
+            "GoAccess",
+          html:
+            `<p>Hi ${application.primaryContactName},</p>` +
+            "<p>Thank you for your interest in partnering with GoAccess.</p>" +
+            "<p>Please review the NDA at the link below, download it, and sign it:</p>" +
+            `<p><a href="${vendor.ndaDocumentUrl}">${vendor.ndaDocumentUrl}</a></p>` +
+            "<p>Once completed, please email the signed NDA back to <a href=\"mailto:support@goaccess.com\">support@goaccess.com</a>.</p>" +
+            "<p>GoAccess</p>",
         })
       );
     }
@@ -1613,7 +2102,65 @@ export async function getForecastMonthlyRmrForVendor(vendorId: string) {
     .reduce((total, deal) => total + deal.monthlyRmr, 0);
 }
 
+export async function listVendorRmrStatements(vendorId: string): Promise<VendorRmrStatement[]> {
+  const deals = await listDeals(vendorId);
+  const currentMonthKey = getMonthKey(nowIso());
+  const statements = new Map<string, VendorRmrStatement>();
+
+  for (const deal of deals) {
+    const periodKey = getMonthKey(deal.updatedAt);
+    let type: VendorRmrStatement["type"] | null = null;
+    let status: VendorRmrStatement["status"] | null = null;
+
+    if (deal.status === "closed_won") {
+      type = "recognized";
+      status = periodKey === currentMonthKey ? "open" : "closed";
+    } else if (deal.status === "synced_to_hubspot") {
+      type = "forecast";
+      status = periodKey === currentMonthKey ? "open" : "closed";
+    }
+
+    if (!type || !status) {
+      continue;
+    }
+
+    const statementKey = `${periodKey}:${type}`;
+    const existing = statements.get(statementKey);
+
+    if (existing) {
+      existing.amount += deal.monthlyRmr;
+      existing.dealCount += 1;
+      existing.dealIds.push(deal.id);
+      continue;
+    }
+
+    statements.set(statementKey, {
+      periodKey,
+      periodLabel: formatStatementMonth(periodKey),
+      type,
+      status,
+      amount: deal.monthlyRmr,
+      dealCount: 1,
+      dealIds: [deal.id],
+    });
+  }
+
+  return [...statements.values()].sort((a, b) => {
+    if (a.periodKey === b.periodKey) {
+      return getStatementTypeOrder(a.type) - getStatementTypeOrder(b.type);
+    }
+
+    return b.periodKey.localeCompare(a.periodKey);
+  });
+}
+
 export async function getPortalStorePathForDebug() {
+  const supabaseConfig = getSupabaseServerConfig();
+
+  if (supabaseConfig.enabled && supabaseConfig.url) {
+    return `supabase:${supabaseConfig.url}`;
+  }
+
   if (getBlobStoreToken()) {
     return `blob:${BLOB_STORE_PATHNAME}`;
   }

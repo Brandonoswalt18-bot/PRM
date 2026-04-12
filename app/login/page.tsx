@@ -18,11 +18,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         ? "Enter both email and password."
         : error === "admin-not-configured"
           ? "Admin login is not configured yet. Add GOACCESS_ADMIN_PASSWORD in Vercel."
-        : error === "mock-disabled"
-          ? "The old demo login route is disabled."
-          : error === "not-found"
-            ? "We could not match that email to an active GoAccess account."
-            : "Use the email and password tied to your portal access.";
+          : error === "auth-not-configured"
+            ? "Portal auth is not configured yet. Add AUTH_SECRET in Vercel."
+          : error === "mock-disabled"
+            ? "The old demo login route is disabled."
+            : error === "not-found"
+            ? "We could not match that email to an active GoAccess portal account."
+            : "Use the same email that received your GoAccess portal invite.";
   const showError = Boolean(error);
 
   return (
@@ -30,7 +32,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <div className="login-card">
         <span className="eyebrow">GOACCESS</span>
         <h1>Portal sign in</h1>
-        <p>Use the email and password tied to your portal access. Vendors set their password from the invite link.</p>
+        <p>Use the email and password tied to your GoAccess portal access. Vendors create their password from the invite email after credentials are issued.</p>
 
         <form action="/auth/login" className="login-form" method="post">
           <label className="login-field">
@@ -73,7 +75,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             Back to public page
           </Link>
           <Link className="button button-ghost" href="/auth/logout">
-            Clear session
+            Sign out everywhere
           </Link>
         </div>
       </div>

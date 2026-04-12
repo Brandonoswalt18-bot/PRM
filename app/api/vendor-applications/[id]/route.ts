@@ -18,6 +18,25 @@ const allowedStatuses: VendorApplicationStatus[] = [
   "credentials_issued",
 ];
 
+function getApplicationStatusMessage(status: VendorApplicationStatus) {
+  switch (status) {
+    case "under_review":
+      return "Application moved into review.";
+    case "approved":
+      return "Application approved. Next step: send the NDA email.";
+    case "nda_sent":
+      return "NDA marked as sent. The vendor is now waiting on the signed copy.";
+    case "nda_signed":
+      return "Signed NDA confirmed. Next step: issue the portal invite.";
+    case "credentials_issued":
+      return "Portal invite issued. The vendor can now set a password and activate access.";
+    case "rejected":
+      return "Application marked as declined.";
+    default:
+      return "Application updated.";
+  }
+}
+
 export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
@@ -46,6 +65,7 @@ export async function PATCH(
         ok: true,
         application: result.application,
         inviteUrl: result.inviteUrl,
+        message: "Portal invite reissued. The previous password has been cleared.",
       });
     } catch (error) {
       return NextResponse.json(
@@ -78,7 +98,12 @@ export async function PATCH(
     const vendors = await listApprovedVendors();
     const vendor = vendors.find((item) => item.applicationId === application.id) ?? null;
 
-    return NextResponse.json({ ok: true, application, vendor });
+    return NextResponse.json({
+      ok: true,
+      application,
+      vendor,
+      message: getApplicationStatusMessage(body.status),
+    });
   } catch (error) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "Unable to update application." },

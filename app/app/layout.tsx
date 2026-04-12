@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
+import { redirect } from "next/navigation";
 import { WorkspaceLayout } from "@/components/product/workspace-layout";
-import { getWorkspaceSession } from "@/lib/auth";
+import { getWorkspaceRole, getWorkspaceSession } from "@/lib/auth";
 import type { WorkspaceNavItem } from "@/types/prm";
 
 export const dynamic = "force-dynamic";
@@ -22,21 +23,18 @@ export default async function VendorLayout({
 }: {
   children: ReactNode;
 }) {
-  const session = await getWorkspaceSession();
+  const [role, session] = await Promise.all([getWorkspaceRole(), getWorkspaceSession()]);
+
+  if (role !== "admin" || !session) {
+    redirect("/login?next=%2Fapp");
+  }
 
   return (
     <WorkspaceLayout
       brand="GoAccess"
       workspace="VENDOR ADMIN"
       navItems={vendorNavigation}
-      session={
-        session ?? {
-          fullName: "Unknown user",
-          email: "unknown",
-          role: "Vendor",
-          organization: "GoAccess",
-        }
-      }
+      session={session}
     >
       {children}
     </WorkspaceLayout>

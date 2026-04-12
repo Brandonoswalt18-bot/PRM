@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatNdaStatusLabel } from "@/lib/goaccess-copy";
 import { getVendorByInviteToken } from "@/lib/goaccess-store";
 
 type InvitePageProps = {
@@ -20,6 +21,8 @@ export default async function InvitePage({ params, searchParams }: InvitePagePro
       ? "Password must be at least 10 characters."
       : error === "password-mismatch"
         ? "Passwords do not match."
+        : error === "auth-not-configured"
+          ? "Portal auth is not configured yet. Ask GoAccess to add AUTH_SECRET in Vercel before activating this invite."
         : error === "activation-failed"
           ? "We could not activate this invite."
           : null;
@@ -47,7 +50,7 @@ export default async function InvitePage({ params, searchParams }: InvitePagePro
         <span className="eyebrow">VENDOR INVITE</span>
         <h1>{vendor.passwordHash ? "Your vendor account is ready." : "Create your vendor password."}</h1>
         <p>
-          {vendor.companyName} has been approved. Your NDA is {vendor.ndaStatus}, and your portal credentials are ready.
+          {vendor.companyName} has been approved. NDA status: {formatNdaStatusLabel(vendor.ndaStatus)}. Your portal invite is ready.
           {vendor.passwordHash
             ? " Sign in with your email and password to enter the portal."
             : " Set your password to activate the vendor portal."}

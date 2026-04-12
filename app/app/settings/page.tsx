@@ -150,6 +150,9 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
                   ? `still missing ${hubspotDealSyncConfig.missingRecommendedEnvVars.join(", ")}`
                   : "complete"}
               </li>
+              {hubspotDealSyncConfig.customDealProperties.issues.map((issue) => (
+                <li key={issue}>{issue}</li>
+              ))}
               <li>Only approved deals should be synced into HubSpot.</li>
             </ul>
             <div className="mini-stack">

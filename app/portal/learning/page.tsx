@@ -12,7 +12,7 @@ export default async function VendorLearningPage() {
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="Learning"
-        subtitle="Watch GoAccess training videos and open onboarding documents in one place."
+        subtitle="Open the training videos and documents your team needs to start selling and supporting GoAccess."
         primaryLabel="Open latest training"
         primaryHref="/portal/learning"
       />

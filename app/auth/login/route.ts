@@ -26,15 +26,33 @@ function getCookieSecureFlag() {
   return process.env.NODE_ENV === "production";
 }
 
-function buildLoginRedirect(request: Request, error: string, next?: string | null) {
-  const url = new URL("/login", request.url);
-  url.searchParams.set("error", error);
+function resolveRequestOrigin(request: Request) {
+  const origin = request.headers.get("origin");
 
-  if (next?.startsWith("/")) {
-    url.searchParams.set("next", next);
+  if (origin) {
+    return origin;
   }
 
-  return url;
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  const protocol =
+    request.headers.get("x-forwarded-proto") ??
+    (host?.startsWith("127.0.0.1") || host?.startsWith("localhost") ? "http" : "https");
+
+  if (host) {
+    return `${protocol}://${host}`;
+  }
+
+  return new URL(request.url).origin;
+}
+
+function buildLoginRedirect(request: Request, error: string, next?: string | null) {
+  const params = new URLSearchParams({ error });
+
+  if (next?.startsWith("/")) {
+    params.set("next", next);
+  }
+
+  return new URL(`/login?${params.toString()}`, resolveRequestOrigin(request));
 }
 
 export async function POST(request: Request) {
@@ -44,7 +62,7 @@ export async function POST(request: Request) {
   const next = String(formData.get("next") ?? "");
 
   if (!email || !password) {
-    return NextResponse.redirect(buildLoginRedirect(request, "missing-credentials", next));
+    return NextResponse.redirect(buildLoginRedirect(request, "missing-credentials", next), 303);
   }
 
   let role: "admin" | "vendor" | null = null;
@@ -71,13 +89,27 @@ export async function POST(request: Request) {
     return NextResponse.redirect(buildLoginRedirect(request, "invalid-credentials", next), 303);
   }
 
-  const sessionToken = await createSignedSession({
-    role,
-    email,
-    vendorId,
-  });
+  let sessionToken: string;
+
+  try {
+    sessionToken = await createSignedSession({
+      role,
+      email,
+      vendorId,
+    });
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message === "AUTH_SECRET must be configured for production auth."
+    ) {
+      return NextResponse.redirect(buildLoginRedirect(request, "auth-not-configured", next), 303);
+    }
+
+    throw error;
+  }
+
   const response = NextResponse.redirect(
-    new URL(resolveWorkspaceDestination(role, next), request.url),
+    new URL(resolveWorkspaceDestination(role, next), resolveRequestOrigin(request)),
     303
   );
 

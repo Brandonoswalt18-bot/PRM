@@ -15,16 +15,6 @@ export function MarketingPage() {
       </header>
 
       <main className="marketing-minimal">
-        <section className="entry-hero">
-          <div className="entry-copy">
-            <span className="eyebrow">GOACCESS VENDOR PORTAL</span>
-            <h1>Vendor login and application, simplified.</h1>
-            <p className="lede">
-              Apply, get reviewed, complete the NDA, receive credentials, and register deals.
-            </p>
-          </div>
-        </section>
-
         <section className="access-shell">
           <article className="access-panel" id="application" style={{ gridColumn: "1 / -1" }}>
             <div className="access-panel-copy">
@@ -37,7 +27,7 @@ export function MarketingPage() {
         </section>
 
         <section className="minimal-footnote">
-          <p>Application submission works. External email delivery still depends on Resend being able to send for a verified `goaccess.com` domain.</p>
+          <p>GoAccess reviews every application before sending NDA or portal access details.</p>
         </section>
       </main>
     </div>

@@ -50,9 +50,9 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
       href: "/app/programs?queue=pending",
     },
     {
-      label: "NDA / access holds",
+      label: "NDA / portal holds",
       value: String(onboardingApplications.length),
-      delta: "Approved vendors not fully activated",
+      delta: "Approved vendors still mid-onboarding",
       href: "/app/programs?queue=onboarding",
     },
     {
@@ -73,7 +73,7 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
         title="Vendor applications"
-        subtitle="Use the queue for fast triage. Open a partner only when you need the full onboarding record."
+        subtitle="Use the queue for quick triage, then open a partner when you need the full onboarding record."
         primaryLabel={primaryLabel}
         primaryHref={primaryHref}
       />

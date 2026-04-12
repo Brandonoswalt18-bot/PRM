@@ -205,18 +205,6 @@ span {
   padding-top: 8px;
 }
 
-.entry-hero {
-  width: min(820px, 100%);
-  margin: 0 auto;
-  padding: 4px 2px 0;
-}
-
-.entry-copy {
-  display: grid;
-  gap: 4px;
-  max-width: 36rem;
-}
-
 .lede,
 .feature-card p,
 .glass-card li,
@@ -720,7 +708,7 @@ li + li {
 
 .session-card {
   display: grid;
-  gap: 4px;
+  gap: 6px;
   padding: 14px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.82);
@@ -729,9 +717,22 @@ li + li {
   font-size: 0.86rem;
 }
 
+.session-label {
+  color: var(--signal);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .session-name {
   color: var(--ink);
   font-weight: 700;
+}
+
+.session-signout {
+  margin-top: 8px;
+  width: fit-content;
 }
 
 .sidebar-label {
@@ -1044,6 +1045,35 @@ li + li {
   margin-top: 14px;
 }
 
+.detail-banner {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.detail-banner > div {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid rgba(31, 100, 216, 0.1);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(245, 249, 255, 0.92));
+}
+
+.detail-banner-label {
+  color: var(--signal);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detail-banner p {
+  margin: 0;
+  color: var(--muted);
+}
+
 .detail-fact {
   display: grid;
   gap: 4px;
@@ -1232,6 +1262,10 @@ li + li {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
+.table-cols-6 {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
 .table-cols-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -1376,6 +1410,7 @@ li + li {
   .product-stats,
   .product-columns,
   .stack-meta-grid,
+  .detail-banner,
   .detail-fact-grid,
   .inline-form-grid,
   .nda-grid,

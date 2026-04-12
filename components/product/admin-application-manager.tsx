@@ -3,6 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
+import {
+  formatApplicationActionLabel,
+  formatApplicationStatusLabel,
+  formatNdaStatusLabel,
+  formatPortalAccessLabel,
+  formatVendorStatusLabel,
+} from "@/lib/goaccess-copy";
 import { buildApplicationTimeline } from "@/lib/goaccess-timeline";
 import type {
   ApprovedVendor,
@@ -66,45 +73,24 @@ function getLifecycleStageState(
 }
 
 function getStageActionLabel(status: VendorApplicationStatus) {
-  switch (status) {
-    case "under_review":
-      return "Mark under review";
-    case "approved":
-      return "Approve";
-    case "nda_sent":
-      return "Send NDA";
-    case "nda_signed":
-      return "Mark NDA signed";
-    case "credentials_issued":
-      return "Issue credentials";
-    default:
-      return "Submitted";
-  }
-}
-
-function requiresSignedNdaUpload(status: VendorApplicationStatus) {
-  return status === "nda_signed" || status === "credentials_issued";
-}
-
-function titleCaseStatus(status: string) {
-  return status.replaceAll("_", " ");
+  return formatApplicationActionLabel(status);
 }
 
 function getQueueReason(application: VendorApplication, vendor?: ApprovedVendor) {
   if (!vendor) {
-    return application.status === "under_review" ? "Awaiting GoAccess decision" : "New application received";
+    return application.status === "under_review" ? "Waiting on GoAccess review" : "New application received";
   }
 
   if (vendor.ndaStatus !== "signed") {
-    return vendor.signedNdaFileUrl ? "Signed NDA uploaded and awaiting review" : "NDA still needs to be completed";
+    return vendor.signedNdaFileUrl ? "Signed NDA uploaded and waiting on GoAccess confirmation" : "Waiting on NDA completion";
   }
 
   if (!vendor.credentialsIssued) {
-    return "Ready for credentials";
+    return "Ready for portal invite";
   }
 
   if (vendor.portalAccess !== "active") {
-    return "Credentials issued, waiting for vendor sign-in";
+    return "Portal invite sent and waiting on vendor activation";
   }
 
   return "Portal access is active";
@@ -116,22 +102,56 @@ function getApplicationActionNote(
   hasSignedNdaUpload: boolean
 ) {
   if (!vendor) {
-    return application.status === "under_review" ? "Review and approve or reject." : "Open and start review.";
+    return application.status === "under_review"
+      ? "Review the application, then approve or decline it."
+      : "Open the record and start review.";
   }
 
   if (vendor.ndaStatus !== "signed") {
-    return hasSignedNdaUpload ? "Signed NDA uploaded. Review before marking complete." : "Waiting on signed NDA upload.";
+      return hasSignedNdaUpload
+        ? "Signed NDA is attached. Confirm it to continue onboarding."
+        : vendor.ndaStatus === "sent"
+          ? "Wait for the vendor to email the signed NDA back, then confirm it here."
+          : "Send the NDA email to keep onboarding moving.";
   }
 
   if (!vendor.credentialsIssued) {
-    return "NDA is complete. Issue credentials next.";
+    return "NDA is confirmed. Issue the portal invite next.";
   }
 
   if (vendor.portalAccess !== "active") {
-    return "Credentials issued. Waiting for vendor activation.";
+    return "Portal invite is out. Waiting for the vendor to create a password.";
   }
 
   return "Vendor is active in the portal.";
+}
+
+function getApplicationStepSummary(application: VendorApplication, vendor?: ApprovedVendor) {
+  if (application.status === "rejected") {
+    return "Application was declined and removed from the active onboarding flow.";
+  }
+
+  if (!vendor) {
+    return application.status === "under_review"
+      ? "GoAccess is actively reviewing this application."
+      : "This application is waiting for first review.";
+  }
+
+  if (vendor.ndaStatus !== "signed") {
+    return vendor.ndaStatus === "sent"
+      ? "NDA email has been sent. Wait for the signed copy before moving forward."
+      : "Approval is complete. The next step is sending the NDA email.";
+  }
+
+  if (!vendor.credentialsIssued) {
+    return "The signed NDA is confirmed. The next step is issuing the portal invite.";
+  }
+
+  if (vendor.portalAccess !== "active") {
+    return "Portal invite has been sent. The vendor still needs to activate access.";
+  }
+
+  return "The vendor is fully onboarded and already active in the portal.";
 }
 
 function buildProgramsHref(activeQueue: "all" | "pending" | "onboarding", applicationId?: string) {
@@ -211,7 +231,7 @@ export function AdminApplicationManager({
       startTransition(() => {
         router.refresh();
       });
-      setMessage(`Application updated to ${status.replaceAll("_", " ")}.`);
+      setMessage(payload.message ?? `Application updated to ${formatApplicationStatusLabel(status)}.`);
     } catch {
       setMessage("Network error while updating application.");
     } finally {
@@ -241,9 +261,10 @@ export function AdminApplicationManager({
         router.refresh();
       });
       setMessage(
-        payload.inviteUrl
-          ? `Invite reissued. Fresh activation link: ${payload.inviteUrl}`
-          : "Invite reissued."
+        payload.message ??
+          (payload.inviteUrl
+            ? `Portal invite reissued. Fresh activation link: ${payload.inviteUrl}`
+            : "Portal invite reissued.")
       );
     } catch {
       setMessage("Network error while reissuing invite.");
@@ -305,6 +326,13 @@ export function AdminApplicationManager({
             const isSelected = selectedApplicationId === application.id;
             const createdLabel = new Date(resolvedApplication.createdAt).toLocaleDateString();
             const actionNote = getApplicationActionNote(resolvedApplication, vendor, hasSignedNdaUpload);
+            const currentStepLabel = formatApplicationStatusLabel(resolvedApplication.status);
+            const nextStepLabel =
+              allowedNextSteps.length > 0
+                ? formatApplicationActionLabel(allowedNextSteps[0])
+                : vendor?.portalAccess === "active"
+                  ? "Portal access is live"
+                  : "No further action";
 
             return (
               <div className={`stack-card application-queue-card${isSelected ? " application-queue-card-selected" : ""}`} key={application.id}>
@@ -323,7 +351,7 @@ export function AdminApplicationManager({
                   </div>
                   <div className="stage-actions-topline">
                     <span className={`status-pill ${isRejected ? "status-pill-danger" : "status-pill-neutral"}`}>
-                      {isRejected ? "rejected" : titleCaseStatus(resolvedApplication.status)}
+                      {isRejected ? "Declined" : currentStepLabel}
                     </span>
                     <Link className="button button-secondary" href={buildProgramsHref(activeQueue, isSelected ? undefined : application.id)}>
                       {isSelected ? "Hide details" : "Open"}
@@ -338,6 +366,18 @@ export function AdminApplicationManager({
                 <p className="stack-note">{actionNote}</p>
                 {isSelected ? (
                   <>
+                    <div className="detail-banner">
+                      <div>
+                        <span className="detail-banner-label">Current stage</span>
+                        <strong>{currentStepLabel}</strong>
+                        <p>{getApplicationStepSummary(resolvedApplication, vendor)}</p>
+                      </div>
+                      <div>
+                        <span className="detail-banner-label">Next action</span>
+                        <strong>{nextStepLabel}</strong>
+                        <p>{getQueueReason(resolvedApplication, vendor)}</p>
+                      </div>
+                    </div>
                     <div className="stage-pill-row" aria-label="Application lifecycle">
                       {lifecycleStages.map((stage) => (
                         <button
@@ -348,8 +388,7 @@ export function AdminApplicationManager({
                           disabled={
                             busyId === application.id ||
                             stage.status === "submitted" ||
-                            !allowedNextSteps.includes(stage.status) ||
-                            (requiresSignedNdaUpload(stage.status) && !hasSignedNdaUpload)
+                            !allowedNextSteps.includes(stage.status)
                           }
                           key={`${application.id}-${stage.status}`}
                           type="button"
@@ -369,7 +408,7 @@ export function AdminApplicationManager({
                     </div>
                     <div className="detail-fact-grid">
                       <div className="detail-fact">
-                        <span>Created</span>
+                        <span>Submitted</span>
                         <strong>{createdLabel}</strong>
                       </div>
                       <div className="detail-fact">
@@ -377,16 +416,20 @@ export function AdminApplicationManager({
                         <strong>{resolvedApplication.primaryContactName}</strong>
                       </div>
                       <div className="detail-fact">
-                        <span>NDA</span>
-                        <strong>{vendor ? titleCaseStatus(vendor.ndaStatus) : "Not started"}</strong>
+                        <span>Vendor stage</span>
+                        <strong>{vendor ? formatVendorStatusLabel(vendor.status) : "Not created"}</strong>
                       </div>
                       <div className="detail-fact">
-                        <span>Credentials</span>
-                        <strong>{vendor?.credentialsIssued ? "Issued" : "Pending"}</strong>
+                        <span>NDA</span>
+                        <strong>{vendor ? formatNdaStatusLabel(vendor.ndaStatus) : "Not started"}</strong>
+                      </div>
+                      <div className="detail-fact">
+                        <span>Portal invite</span>
+                        <strong>{vendor?.credentialsIssued ? "Sent" : "Pending"}</strong>
                       </div>
                       <div className="detail-fact">
                         <span>Portal access</span>
-                        <strong>{vendor ? titleCaseStatus(vendor.portalAccess) : "Not ready"}</strong>
+                        <strong>{vendor ? formatPortalAccessLabel(vendor.portalAccess) : "Not ready"}</strong>
                       </div>
                     </div>
                     <div className="detail-link-row">
@@ -418,7 +461,7 @@ export function AdminApplicationManager({
                     </div>
                     {latestNotification ? (
                       <p className="stack-note">
-                        Latest email: {latestNotification.subject}
+                        Latest email activity: {latestNotification.subject}
                       </p>
                     ) : null}
                     <div className="timeline-stack compact-timeline">

@@ -7,6 +7,11 @@ import {
 import { VendorProfileForm } from "@/components/product/vendor-profile-form";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
+import {
+  formatNdaStatusLabel,
+  formatVendorStatusLabel,
+  getVendorNextStep,
+} from "@/lib/goaccess-copy";
 import { getCurrentMonthlyRmrForVendor, getForecastMonthlyRmrForVendor, getVendorById, listDeals, listSupportRequests } from "@/lib/goaccess-store";
 import type { InfoListSection, MetricCard, ProfileField } from "@/types/prm";
 
@@ -46,9 +51,9 @@ function buildSections(vendor: Awaited<ReturnType<typeof getVendorById>>, openDe
     {
       title: "Profile status",
       items: [
-        `Status: ${vendor?.status ?? "pending"}`,
-        `NDA: ${vendor?.ndaStatus ?? "not started"}`,
-        `Credentials: ${vendor?.credentialsIssued ? "issued" : "not issued"}`,
+        `Account stage: ${vendor ? formatVendorStatusLabel(vendor.status) : "Pending"}`,
+        `NDA: ${vendor ? formatNdaStatusLabel(vendor.ndaStatus) : "Not started"}`,
+        `Portal invite: ${vendor?.credentialsIssued ? "Sent" : "Not sent"}`,
       ],
     },
     {
@@ -64,7 +69,7 @@ function buildSections(vendor: Awaited<ReturnType<typeof getVendorById>>, openDe
       items: [
         "Update contact details as needed",
         "Request support for review delays",
-        "Verify portal access on first login",
+        getVendorNextStep(vendor),
       ],
     },
   ];
@@ -100,8 +105,9 @@ export default async function PartnerProfilePage() {
         { label: "Vendor type", value: vendor.vendorType },
         ...(vendor.city ? [{ label: "City", value: vendor.city }] : []),
         ...(vendor.state ? [{ label: "State", value: vendor.state }] : []),
-        { label: "NDA status", value: vendor.ndaStatus },
-        { label: "Credentials", value: vendor.credentialsIssued ? "Active" : "Pending" },
+        { label: "Account stage", value: formatVendorStatusLabel(vendor.status) },
+        { label: "NDA status", value: formatNdaStatusLabel(vendor.ndaStatus) },
+        { label: "Portal invite", value: vendor.credentialsIssued ? "Sent" : "Pending" },
       ]
     : buildProfile("");
   const sections = vendor ? buildSections(vendor, openDeals, closedWon) : [];
@@ -111,7 +117,7 @@ export default async function PartnerProfilePage() {
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="Profile"
-        subtitle="Keep your approved vendor record current so onboarding, support, and deal review all have the right business details."
+        subtitle="Keep your business details current so onboarding, support, and deal review stay aligned."
         primaryLabel="Register a deal"
         primaryHref="/portal/links"
       />

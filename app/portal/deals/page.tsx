@@ -4,16 +4,13 @@ import {
 } from "@/components/product/product-page-sections";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
+import { formatDealStatusLabel } from "@/lib/goaccess-copy";
 import { buildDealTimeline } from "@/lib/goaccess-timeline";
 import {
   formatCurrency,
   listDeals,
   listSyncEvents,
 } from "@/lib/goaccess-store";
-
-function titleCaseStatus(value: string) {
-  return value.replaceAll("_", " ");
-}
 
 export default async function PartnerDealsPage() {
   const session = await getWorkspaceSession();
@@ -53,7 +50,7 @@ export default async function PartnerDealsPage() {
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="My deals"
-        subtitle="Track registrations, HubSpot write-back, review holds, and the deals already contributing recurring revenue."
+        subtitle="Track each deal from submission through GoAccess review, HubSpot, and recurring revenue."
         primaryLabel="Register new deal"
         primaryHref="/portal/links"
       />
@@ -79,12 +76,21 @@ export default async function PartnerDealsPage() {
                 <span>{deal.companyName}</span>
                 <span>{deal.domain}</span>
                 <span>{new Date(deal.createdAt).toLocaleDateString()}</span>
-                <span>{titleCaseStatus(deal.status)}</span>
+                <span>{formatDealStatusLabel(deal.status)}</span>
                 <span>
                   <a href={`/portal/deals/${deal.id}`}>Open</a>
                 </span>
               </div>
             ))}
+            {deals.length === 0 ? (
+              <div className="table-row table-cols-5">
+                <span>No deal registrations yet</span>
+                <span>-</span>
+                <span>-</span>
+                <span>Waiting on your first submission</span>
+                <span>-</span>
+              </div>
+            ) : null}
           </div>
         </article>
         <section className="dashboard-grid">
@@ -92,7 +98,7 @@ export default async function PartnerDealsPage() {
             <TimelineSection
               key={deal.id}
               title={deal.companyName}
-              description={`${deal.domain} · ${titleCaseStatus(deal.status)}${deal.hubspotDealId ? ` · HubSpot #${deal.hubspotDealId}` : ""}`}
+              description={`${deal.domain} · ${formatDealStatusLabel(deal.status)}${deal.hubspotDealId ? ` · HubSpot #${deal.hubspotDealId}` : ""}`}
               entries={buildDealTimeline(deal, syncEvents)}
             />
           ))}

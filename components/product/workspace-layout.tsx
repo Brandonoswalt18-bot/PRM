@@ -58,10 +58,14 @@ export function WorkspaceLayout({
           ))}
         </nav>
         <div className="session-card">
+          <span className="session-label">Signed in as</span>
           <span className="session-name">{session.fullName}</span>
           <span>{session.role}</span>
           <span>{session.organization}</span>
           <span>{session.email}</span>
+          <Link className="button button-ghost session-signout" href="/auth/logout">
+            Sign out
+          </Link>
         </div>
       </aside>
 
