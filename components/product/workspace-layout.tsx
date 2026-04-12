@@ -52,6 +52,7 @@ export function WorkspaceLayout({
               key={item.href}
               className={`app-nav-item ${isActivePath(pathname, item.href) ? "is-active" : ""}`.trim()}
               href={item.href}
+              prefetch={false}
             >
               {item.label}
             </Link>
