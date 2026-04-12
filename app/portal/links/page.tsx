@@ -50,8 +50,8 @@ export default async function LinksPage() {
       title: "Submission rules",
       description: "Every vendor deal is reviewed before it is created in HubSpot.",
       items: [
-        "Use the customer’s real domain and contact email",
-        "Include product context and any implementation notes",
+        "Use the customer’s real contact email and add the domain when you have it",
+        "Include product context and implementation notes when they will help review",
         "Closed won accounts roll into monthly recurring revenue totals",
         "Open support if a submission looks stalled or incorrect",
       ],
@@ -96,7 +96,7 @@ export default async function LinksPage() {
             </div>
             <div className="data-table">
               <div className="table-head table-cols-5">
-                <span>Account</span>
+                <span>Community</span>
                 <span>Domain</span>
                 <span>Submitted</span>
                 <span>Status</span>
@@ -105,7 +105,7 @@ export default async function LinksPage() {
               {deals.slice(0, 8).map((deal) => (
                 <div className="table-row table-cols-5" key={deal.id}>
                   <span>{deal.companyName}</span>
-                  <span>{deal.domain}</span>
+                  <span>{deal.domain || "Not provided"}</span>
                   <span>{new Date(deal.createdAt).toLocaleDateString()}</span>
                   <span>{titleCaseStatus(deal.status)}</span>
                   <span>

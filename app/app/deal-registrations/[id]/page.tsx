@@ -20,6 +20,10 @@ function titleCase(value: string) {
   return value.replaceAll("_", " ");
 }
 
+function formatOptionalCurrency(value: number) {
+  return value > 0 ? formatCurrency(value) : "Not provided";
+}
+
 export default async function AdminDealDetailPage({
   params,
 }: {
@@ -66,12 +70,12 @@ export default async function AdminDealDetailPage({
     },
     {
       label: "Estimated value",
-      value: formatCurrency(deal.estimatedValue),
+      value: formatOptionalCurrency(deal.estimatedValue),
       delta: "Submitted vendor opportunity value",
     },
     {
       label: "Monthly RMR",
-      value: formatCurrency(deal.monthlyRmr),
+      value: formatOptionalCurrency(deal.monthlyRmr),
       delta: deal.status === "closed_won" ? "Active recurring revenue" : "Forecasted recurring revenue",
     },
     {
@@ -87,12 +91,12 @@ export default async function AdminDealDetailPage({
     { label: "Vendor", value: vendor?.companyName ?? "Unknown vendor" },
     { label: "Vendor contact", value: vendor?.primaryContactName ?? "Unknown contact" },
     { label: "Vendor email", value: vendor?.primaryContactEmail ?? "Unknown email" },
-    { label: "Account", value: deal.companyName },
-    { label: "Domain", value: deal.domain },
+    { label: "Community", value: deal.companyName },
+    { label: "Domain", value: deal.domain || "Not provided" },
     { label: "Buyer contact", value: deal.contactName },
     { label: "Buyer email", value: deal.contactEmail },
     { label: "Buyer phone", value: deal.contactPhone || "Not provided" },
-    { label: "Product interest", value: deal.productInterest },
+    { label: "Product interest", value: deal.productInterest || "Not provided" },
     { label: "Notes", value: deal.notes || "No notes provided" },
   ];
 

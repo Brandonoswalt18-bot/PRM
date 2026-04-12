@@ -20,6 +20,21 @@ function isLikelyDomain(value: string) {
   );
 }
 
+function parseOptionalNumber(value: number | string | undefined) {
+  if (value === undefined || value === null) {
+    return 0;
+  }
+
+  const normalized = value.toString().trim();
+
+  if (!normalized) {
+    return 0;
+  }
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
+}
+
 export async function GET() {
   const auth = await requireVendorRouteAccess();
 
@@ -56,12 +71,12 @@ export async function POST(request: Request) {
   const contactPhone = body.contactPhone?.toString().trim() ?? "";
   const productInterest = body.productInterest?.toString().trim() ?? "";
   const notes = body.notes?.toString().trim() ?? "";
-  const estimatedValue = Number(body.estimatedValue ?? 0);
-  const monthlyRmr = Number(body.monthlyRmr ?? 0);
+  const estimatedValue = parseOptionalNumber(body.estimatedValue);
+  const monthlyRmr = parseOptionalNumber(body.monthlyRmr);
 
-  if (!companyName || !domain || !contactName || !contactEmail || !productInterest) {
+  if (!companyName || !contactName || !contactEmail) {
     return NextResponse.json(
-      { message: "Company, domain, contact details, and product interest are required." },
+      { message: "Community, contact name, and contact email are required." },
       { status: 400 }
     );
   }
@@ -70,16 +85,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Enter a valid contact email." }, { status: 400 });
   }
 
-  if (!isLikelyDomain(domain)) {
+  if (domain && !isLikelyDomain(domain)) {
     return NextResponse.json(
       { message: "Enter a valid company domain like example.com." },
       { status: 400 }
     );
   }
 
-  if (!estimatedValue || estimatedValue < 0 || !monthlyRmr || monthlyRmr < 0) {
+  if (Number.isNaN(estimatedValue) || estimatedValue < 0 || Number.isNaN(monthlyRmr) || monthlyRmr < 0) {
     return NextResponse.json(
-      { message: "Estimated value and monthly RMR must be positive numbers." },
+      { message: "Estimated value and monthly RMR must be valid numbers when provided." },
       { status: 400 }
     );
   }

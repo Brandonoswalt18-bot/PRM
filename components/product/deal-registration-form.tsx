@@ -73,17 +73,17 @@ export function DealRegistrationForm() {
 
   return (
     <article className="workspace-card wide-card">
-      <div className="card-header-row">
-        <div>
-          <h3>Deal registration form</h3>
-          <p>Submit a complete opportunity record so GoAccess can review it before HubSpot sync.</p>
-        </div>
+        <div className="card-header-row">
+          <div>
+            <h3>Deal registration form</h3>
+            <p>Submit a complete opportunity record so GoAccess can review it before HubSpot sync.</p>
+          </div>
       </div>
       <form className="cta-form" onSubmit={handleSubmit}>
         <div className="inline-form-grid">
           <input
             type="text"
-            placeholder="Company name"
+            placeholder="Community"
             value={form.companyName}
             onChange={(event) => update("companyName", event.target.value)}
             required
@@ -93,7 +93,6 @@ export function DealRegistrationForm() {
             placeholder="Company domain"
             value={form.domain}
             onChange={(event) => update("domain", event.target.value)}
-            required
           />
         </div>
         <div className="inline-form-grid">
@@ -124,27 +123,24 @@ export function DealRegistrationForm() {
             placeholder="Product interest"
             value={form.productInterest}
             onChange={(event) => update("productInterest", event.target.value)}
-            required
           />
         </div>
         <div className="inline-form-grid">
           <input
             type="number"
-            min="1"
+            min="0"
             step="1"
             placeholder="Estimated value"
             value={form.estimatedValue}
             onChange={(event) => update("estimatedValue", event.target.value)}
-            required
           />
           <input
             type="number"
-            min="1"
+            min="0"
             step="1"
             placeholder="Monthly RMR"
             value={form.monthlyRmr}
             onChange={(event) => update("monthlyRmr", event.target.value)}
-            required
           />
         </div>
         <textarea

@@ -116,6 +116,20 @@ function getDealQueueReason(deal: DealRegistration) {
   return "No longer active";
 }
 
+function formatOptionalDealNumber(value: number) {
+  return value > 0 ? `$${value.toLocaleString()}` : "Not provided";
+}
+
+function summarizeDealHeader(deal: DealRegistration) {
+  const parts = [
+    deal.domain || "Domain not provided",
+    deal.contactName,
+    formatOptionalDealNumber(deal.estimatedValue),
+  ];
+
+  return parts.join(" · ");
+}
+
 function buildDealsHref(activeQueue: "all" | "review" | "hubspot" | "closed", dealId?: string) {
   const params = new URLSearchParams();
 
@@ -235,9 +249,7 @@ export function AdminDealManager({
                         {deal.companyName}
                       </Link>
                     </h3>
-                    <p>
-                      {deal.domain} · {deal.contactName} · ${deal.estimatedValue.toLocaleString()}
-                    </p>
+                    <p>{summarizeDealHeader(deal)}</p>
                   </div>
                   <div className="stage-actions-topline">
                     <span className={`status-pill ${isRejected ? "status-pill-danger" : "status-pill-neutral"}`}>
@@ -250,7 +262,7 @@ export function AdminDealManager({
                 </div>
                 <div className="stack-meta-grid">
                   <span>{deal.contactEmail}</span>
-                  <span>{deal.productInterest}</span>
+                  <span>{deal.productInterest || "Product interest not provided"}</span>
                   <span>{getDealQueueReason(deal)}</span>
                 </div>
                 {latestSyncEvent && latestSyncEvent.status !== "synced" ? (
@@ -306,11 +318,11 @@ export function AdminDealManager({
                       </div>
                       <div className="detail-fact">
                         <span>Value</span>
-                        <strong>${deal.estimatedValue.toLocaleString()}</strong>
+                        <strong>{formatOptionalDealNumber(deal.estimatedValue)}</strong>
                       </div>
                       <div className="detail-fact">
                         <span>Monthly RMR</span>
-                        <strong>${deal.monthlyRmr.toLocaleString()}</strong>
+                        <strong>{formatOptionalDealNumber(deal.monthlyRmr)}</strong>
                       </div>
                       <div className="detail-fact">
                         <span>HubSpot</span>

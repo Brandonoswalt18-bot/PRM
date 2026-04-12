@@ -65,7 +65,7 @@ export default async function PartnerDealsPage() {
           </div>
           <div className="data-table">
             <div className="table-head table-cols-5">
-              <span>Account</span>
+              <span>Community</span>
               <span>Domain</span>
               <span>Submitted</span>
               <span>Status</span>
@@ -74,7 +74,7 @@ export default async function PartnerDealsPage() {
             {deals.map((deal) => (
               <div className="table-row table-cols-5" key={deal.id}>
                 <span>{deal.companyName}</span>
-                <span>{deal.domain}</span>
+                <span>{deal.domain || "Not provided"}</span>
                 <span>{new Date(deal.createdAt).toLocaleDateString()}</span>
                 <span>{formatDealStatusLabel(deal.status)}</span>
                 <span>
@@ -98,7 +98,7 @@ export default async function PartnerDealsPage() {
             <TimelineSection
               key={deal.id}
               title={deal.companyName}
-              description={`${deal.domain} · ${formatDealStatusLabel(deal.status)}${deal.hubspotDealId ? ` · HubSpot #${deal.hubspotDealId}` : ""}`}
+              description={`${deal.domain || "Domain not provided"} · ${formatDealStatusLabel(deal.status)}${deal.hubspotDealId ? ` · HubSpot #${deal.hubspotDealId}` : ""}`}
               entries={buildDealTimeline(deal, syncEvents)}
             />
           ))}

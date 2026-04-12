@@ -14,6 +14,10 @@ function titleCase(value: string) {
   return value.replaceAll("_", " ");
 }
 
+function formatOptionalCurrency(value: number) {
+  return value > 0 ? formatCurrency(value) : "Not provided";
+}
+
 export default async function PartnerDealDetailPage({
   params,
 }: {
@@ -34,12 +38,12 @@ export default async function PartnerDealDetailPage({
     },
     {
       label: "Estimated value",
-      value: formatCurrency(deal.estimatedValue),
+      value: formatOptionalCurrency(deal.estimatedValue),
       delta: "Submitted account opportunity value",
     },
     {
       label: "Monthly RMR",
-      value: formatCurrency(deal.monthlyRmr),
+      value: formatOptionalCurrency(deal.monthlyRmr),
       delta: deal.status === "closed_won" ? "Active recurring revenue" : "Projected if won",
     },
     {
@@ -50,12 +54,12 @@ export default async function PartnerDealDetailPage({
   ];
 
   const profileRows = [
-    { label: "Business", value: deal.companyName },
-    { label: "Domain", value: deal.domain },
+    { label: "Community", value: deal.companyName },
+    { label: "Domain", value: deal.domain || "Not provided" },
     { label: "Contact", value: deal.contactName },
     { label: "Contact email", value: deal.contactEmail },
     { label: "Contact phone", value: deal.contactPhone || "Not provided" },
-    { label: "Product interest", value: deal.productInterest },
+    { label: "Product interest", value: deal.productInterest || "Not provided" },
     { label: "Notes", value: deal.notes || "No notes provided" },
   ];
 
