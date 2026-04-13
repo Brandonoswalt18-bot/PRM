@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminRouteAccess } from "@/lib/auth-guards";
 import {
-  getHubSpotDealSyncConfig,
   inspectDealRegistrationForHubSpot,
-  isHubSpotDealSyncEnabled,
   syncDealRegistrationToHubSpot,
 } from "@/lib/hubspot";
 import {
@@ -29,7 +27,7 @@ function getDealStatusMessage(status: DealStatus) {
     case "under_review":
       return "Deal moved into review.";
     case "approved":
-      return "Deal approved. Next step: sync it to HubSpot.";
+      return "Deal approved, but HubSpot sync still needs attention.";
     case "synced_to_hubspot":
       return "Deal approved and written to HubSpot.";
     case "closed_won":
@@ -41,6 +39,50 @@ function getDealStatusMessage(status: DealStatus) {
     default:
       return "Deal updated.";
   }
+}
+
+async function attemptDealHubSpotSync(
+  deal: NonNullable<Awaited<ReturnType<typeof getDealById>>>,
+  vendor: NonNullable<Awaited<ReturnType<typeof getVendorById>>>
+) {
+  const inspection = await inspectDealRegistrationForHubSpot({ vendor, deal });
+
+  if (!inspection.ready) {
+    const reference = inspection.heldReason ?? inspection.decisionSummary;
+
+    await recordDealSyncEvent({
+      dealId: deal.id,
+      vendorId: deal.vendorId,
+      action:
+        inspection.syncDecision === "blocked_configuration"
+          ? "Deal approved but HubSpot sync is blocked by configuration"
+          : "Deal approved but HubSpot sync is blocked for review",
+      status: "held",
+      reference,
+    });
+
+    return {
+      ok: false as const,
+      inspection,
+      reference,
+    };
+  }
+
+  const hubspot = await syncDealRegistrationToHubSpot({ vendor, deal });
+  const updatedDeal = await updateDealStatus(deal.id, "synced_to_hubspot", {
+    hubspotCompanyId: hubspot.companyId,
+    hubspotContactId: hubspot.contactId,
+    hubspotDealId: hubspot.dealId,
+    syncAction: "Deal approved and written to HubSpot",
+    syncStatus: "synced",
+    syncReference: `HS Deal #${hubspot.dealId}`,
+  });
+
+  return {
+    ok: true as const,
+    inspection,
+    deal: updatedDeal,
+  };
 }
 
 export async function GET(
@@ -127,16 +169,33 @@ export async function PATCH(
     }
 
     if (body.status === "approved") {
+      const vendor = await getVendorById(existingDeal.vendorId);
+
+      if (!vendor) {
+        return NextResponse.json({ message: "Approved vendor not found for this deal." }, { status: 404 });
+      }
+
       const approvedDeal = await updateDealStatus(id, "approved", {
-        syncAction: "Deal approved and ready for HubSpot sync",
+        syncAction: "Deal approved. Starting HubSpot sync check",
         syncStatus: "held",
-        syncReference: "Awaiting HubSpot sync",
+        syncReference: "Running HubSpot readiness check",
       });
+      const syncResult = await attemptDealHubSpotSync(approvedDeal, vendor);
+
+      if (syncResult.ok) {
+        return NextResponse.json({
+          ok: true,
+          deal: syncResult.deal,
+          hubspot: syncResult.inspection,
+          message: "Deal approved and written to HubSpot.",
+        });
+      }
 
       return NextResponse.json({
         ok: true,
         deal: approvedDeal,
-        message: "Deal approved. Sync it to HubSpot when ready.",
+        hubspot: syncResult.inspection,
+        message: `Deal approved, but HubSpot sync is blocked: ${syncResult.reference}`,
       });
     }
 
@@ -147,57 +206,23 @@ export async function PATCH(
         return NextResponse.json({ message: "Approved vendor not found for this deal." }, { status: 404 });
       }
 
-      if (!isHubSpotDealSyncEnabled()) {
-        const config = getHubSpotDealSyncConfig();
-        return NextResponse.json(
-          {
-            message: `HubSpot deal sync is not configured. Missing: ${config.missingEnvVars.join(", ")}.`,
-          },
-          { status: 503 }
-        );
-      }
-
       try {
-        const inspection = await inspectDealRegistrationForHubSpot({ vendor, deal: existingDeal });
+        const syncResult = await attemptDealHubSpotSync(existingDeal, vendor);
 
-        if (!inspection.ready) {
-          const reference =
-            inspection.heldReason ??
-            inspection.decisionSummary;
-
-          await recordDealSyncEvent({
-            dealId: existingDeal.id,
-            vendorId: existingDeal.vendorId,
-            action:
-              inspection.syncDecision === "blocked_configuration"
-                ? "Deal sync held for HubSpot configuration review"
-                : "Deal sync held for HubSpot duplicate review",
-            status: "held",
-            reference,
-          });
-
+        if (!syncResult.ok) {
           return NextResponse.json(
             {
-              message: reference,
-              hubspot: inspection,
+              message: syncResult.reference,
+              hubspot: syncResult.inspection,
             },
             { status: 409 }
           );
         }
 
-        const hubspot = await syncDealRegistrationToHubSpot({ vendor, deal: existingDeal });
-        const updatedDeal = await updateDealStatus(id, "synced_to_hubspot", {
-          hubspotCompanyId: hubspot.companyId,
-          hubspotContactId: hubspot.contactId,
-          hubspotDealId: hubspot.dealId,
-          syncAction: "Deal approved and written to HubSpot",
-          syncStatus: "synced",
-          syncReference: `HS Deal #${hubspot.dealId}`,
-        });
-
         return NextResponse.json({
           ok: true,
-          deal: updatedDeal,
+          deal: syncResult.deal,
+          hubspot: syncResult.inspection,
           message: "Deal approved and written to HubSpot.",
         });
       } catch (error) {

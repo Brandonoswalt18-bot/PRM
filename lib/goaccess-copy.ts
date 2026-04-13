@@ -98,7 +98,7 @@ export function formatDealStatusLabel(status: DealStatus) {
     case "under_review":
       return "In review";
     case "approved":
-      return "Approved for HubSpot";
+      return "Approved - sync blocked";
     case "synced_to_hubspot":
       return "In HubSpot";
     case "closed_won":

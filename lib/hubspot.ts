@@ -76,6 +76,7 @@ const LEAD_ROUTING_REQUIRED_ENV_VARS = [
   "HUBSPOT_PORTAL_ID",
   "HUBSPOT_DEMO_FORM_GUID",
 ] as const;
+const NOTE_TO_DEAL_ASSOCIATION_TYPE_ID = 214;
 
 export function getHubSpotDealSyncConfig() {
   const missingEnvVars = DEAL_SYNC_REQUIRED_ENV_VARS.filter((key) => !process.env[key]?.trim());
@@ -656,7 +657,54 @@ function buildDealProperties(payload: HubSpotDealSyncPayload) {
     properties[vendorNameProperty] = payload.vendor.companyName;
   }
 
+  if (payload.deal.city?.trim()) {
+    properties.city = payload.deal.city.trim();
+  }
+
+  if (payload.deal.state?.trim()) {
+    properties.state = payload.deal.state.trim();
+  }
+
   return properties;
+}
+
+async function logDealSyncActivity(dealId: string, payload: HubSpotDealSyncPayload) {
+  const syncTimestamp = new Date().toISOString();
+  const location = [payload.deal.city, payload.deal.state].filter(Boolean).join(", ");
+
+  await hubSpotRequest<HubSpotObjectResponse>("/crm/v3/objects/notes", {
+    method: "POST",
+    body: JSON.stringify({
+      associations: [
+        {
+          to: {
+            id: dealId,
+          },
+          types: [
+            {
+              associationCategory: "HUBSPOT_DEFINED",
+              associationTypeId: NOTE_TO_DEAL_ASSOCIATION_TYPE_ID,
+            },
+          ],
+        },
+      ],
+      properties: {
+        hs_timestamp: syncTimestamp,
+        hs_note_body: [
+          "GoAccess portal sync completed.",
+          `Synced at: ${syncTimestamp}`,
+          `Community: ${payload.deal.companyName}`,
+          location ? `Location: ${location}` : "",
+          `Vendor: ${payload.vendor.companyName}`,
+          `Portal submission: ${payload.deal.id}`,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      },
+    }),
+  });
+
+  return syncTimestamp;
 }
 
 async function createOrUpdateDeal(payload: HubSpotDealSyncPayload) {
@@ -702,6 +750,7 @@ export async function syncDealRegistrationToHubSpot(
     associateRecords("deal", dealId, "company", companyId),
     associateRecords("deal", dealId, "contact", contactId),
   ]);
+  await logDealSyncActivity(dealId, payload);
 
   return {
     companyId,

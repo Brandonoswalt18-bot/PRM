@@ -99,7 +99,7 @@ function getDealQueueReason(deal: DealRegistration) {
   }
 
   if (deal.status === "approved") {
-    return "Approved and waiting on HubSpot sync";
+    return "Approved, but HubSpot sync needs attention";
   }
 
   if (deal.status === "synced_to_hubspot") {
@@ -188,6 +188,18 @@ export function AdminDealManager({
     }
   }
 
+  function getStageButtonLabel(deal: DealRegistration, stage: (typeof dealStages)[number]) {
+    if (stage.actionStatus === "approved" && deal.status === "under_review") {
+      return "Approve & sync";
+    }
+
+    if (stage.actionStatus === "approved" && deal.status === "approved") {
+      return "Retry HubSpot sync";
+    }
+
+    return stage.label;
+  }
+
   return (
     <article className="workspace-card wide-card">
       <div className="card-header-row">
@@ -215,7 +227,7 @@ export function AdminDealManager({
           className={`queue-filter-pill${activeQueue === "hubspot" ? " queue-filter-pill-active" : ""}`}
           href="/app/deal-registrations?queue=hubspot"
         >
-          HubSpot ready
+          HubSpot status
           <span>{queueCounts.hubspot}</span>
         </Link>
         <Link
@@ -294,7 +306,7 @@ export function AdminDealManager({
                               type="button"
                               onClick={() => actionStatus && updateStatus(deal.id, actionStatus)}
                             >
-                              {stage.label}
+                              {getStageButtonLabel(deal, stage)}
                             </button>
                           );
                         })()
