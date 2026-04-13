@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
+import { AdminDealAgreementManager } from "@/components/product/admin-deal-agreement-manager";
 import { formatDealLocation } from "@/lib/deal-registration";
 import { formatDealStatusLabel } from "@/lib/goaccess-copy";
 import { buildDealTimeline } from "@/lib/goaccess-timeline";
@@ -377,6 +378,11 @@ export function AdminDealManager({
                         Full deal detail
                       </Link>
                     </div>
+                    {deal.status === "closed_won" ? (
+                      <div className="embedded-detail-section">
+                        <AdminDealAgreementManager deal={deal} />
+                      </div>
+                    ) : null}
                     <div className="timeline-stack compact-timeline">
                       {timeline.map((entry) => (
                         <div className="timeline-card" key={`${deal.id}-${entry.timestamp}-${entry.title}`}>

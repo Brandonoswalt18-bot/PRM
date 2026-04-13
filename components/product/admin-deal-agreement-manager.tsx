@@ -29,7 +29,7 @@ function formatPayoutSummary(deal: DealRegistration) {
 
 export function AdminDealAgreementManager({ deal }: { deal: DealRegistration }) {
   const router = useRouter();
-  const isClosedDeal = deal.status === "closed_won" || deal.status === "closed_lost";
+  const isClosedDeal = deal.status === "closed_won";
   const [file, setFile] = useState<File | null>(null);
   const [expectedMonthlyRmr, setExpectedMonthlyRmr] = useState(String(deal.expectedMonthlyRmr || ""));
   const [vendorPayoutType, setVendorPayoutType] = useState<VendorPayoutType>(
@@ -235,8 +235,8 @@ export function AdminDealAgreementManager({ deal }: { deal: DealRegistration }) 
           >
             {message ||
               (isClosedDeal
-                ? "Closed won or closed lost deals can carry their own uploaded dealer agreement."
-                : "Mark the deal closed before uploading its dealer agreement and payout terms.")}
+                ? "Closed won deals can carry their own uploaded dealer agreement."
+                : "Mark the deal closed won before uploading its dealer agreement and payout terms.")}
           </p>
         </div>
 
