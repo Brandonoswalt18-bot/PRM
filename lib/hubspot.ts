@@ -286,6 +286,29 @@ async function searchCompanyByDomain(domain: string) {
   return result.results?.[0]?.id ?? null;
 }
 
+async function searchCompanyByName(name: string) {
+  const normalizedName = name.trim();
+
+  if (!normalizedName) {
+    return null;
+  }
+
+  const result = await hubSpotRequest<HubSpotSearchResponse>("/crm/v3/objects/companies/search", {
+    method: "POST",
+    body: JSON.stringify({
+      limit: 1,
+      properties: ["name", "domain", "city", "state"],
+      filterGroups: [
+        {
+          filters: [{ propertyName: "name", operator: "EQ", value: normalizedName }],
+        },
+      ],
+    }),
+  });
+
+  return result.results?.[0]?.id ?? null;
+}
+
 async function searchDealsByProperty(propertyName: string, value: string) {
   const result = await hubSpotRequest<HubSpotSearchResponse>("/crm/v3/objects/deals/search", {
     method: "POST",
@@ -323,11 +346,25 @@ async function createOrUpdateCompany(deal: DealRegistration) {
     name: deal.companyName,
   };
 
+  if (deal.communityAddress?.trim()) {
+    properties.address = deal.communityAddress.trim();
+  }
+
+  if (deal.city?.trim()) {
+    properties.city = deal.city.trim();
+  }
+
+  if (deal.state?.trim()) {
+    properties.state = deal.state.trim();
+  }
+
   if (isLikelyDomain(normalizedDomain)) {
     properties.domain = normalizedDomain;
   }
 
-  const companyId = properties.domain ? await searchCompanyByDomain(properties.domain) : null;
+  const companyId = properties.domain
+    ? await searchCompanyByDomain(properties.domain)
+    : await searchCompanyByName(deal.companyName);
 
   if (companyId) {
     await hubSpotRequest<HubSpotObjectResponse>(`/crm/v3/objects/companies/${companyId}`, {
@@ -459,7 +496,7 @@ export async function inspectDealRegistrationForHubSpot(
   const normalizedDomain = payload.deal.domain.trim().toLowerCase();
   const existingCompanyId = isLikelyDomain(normalizedDomain)
     ? await searchCompanyByDomain(normalizedDomain)
-    : null;
+    : await searchCompanyByName(payload.deal.companyName);
   const existingContactId = await getContactByEmail(payload.deal.contactEmail);
   const existingSubmissionDealIds = await searchDealsByProperty(
     customDealProperties.submissionId as string,
@@ -509,6 +546,12 @@ export async function inspectDealRegistrationForHubSpot(
   if (existingContactId && !existingCompanyId) {
     warnings.push(
       `Contact ${payload.deal.contactEmail} already exists in HubSpot without a matched company domain.`
+    );
+  }
+
+  if (!isLikelyDomain(normalizedDomain)) {
+    warnings.push(
+      "No company domain was submitted, so company matching falls back to an exact HubSpot company-name search."
     );
   }
 
@@ -570,10 +613,15 @@ function buildDealProperties(payload: HubSpotDealSyncPayload) {
     amount: String(payload.deal.estimatedValue),
     description: [
       "GoAccess vendor submission",
+      `Community: ${payload.deal.companyName}`,
+      [payload.deal.communityAddress, payload.deal.city, payload.deal.state]
+        .filter(Boolean)
+        .join(", "),
+      `Community contact: ${payload.deal.contactName} (${payload.deal.contactEmail})`,
       `Vendor: ${payload.vendor.companyName}`,
       `Vendor contact: ${payload.vendor.primaryContactName} (${payload.vendor.primaryContactEmail})`,
-      `Product interest: ${payload.deal.productInterest}`,
-      `Monthly RMR: $${payload.deal.monthlyRmr}`,
+      payload.deal.productInterest ? `Product interest: ${payload.deal.productInterest}` : "",
+      payload.deal.monthlyRmr > 0 ? `Monthly RMR: $${payload.deal.monthlyRmr}` : "",
       payload.deal.notes ? `Notes: ${payload.deal.notes}` : "",
     ]
       .filter(Boolean)
