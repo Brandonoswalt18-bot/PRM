@@ -13,11 +13,15 @@ import type {
   CreateDealInput,
   CreateSupportRequestInput,
   CreateVendorApplicationInput,
+  DealAgreementStatus,
+  DealAgreementUploadInput,
+  DealAgreementUploadResult,
   DealRegistration,
   DealStatus,
   DealStatusUpdateOptions,
   DealSyncEvent,
   PortalStore,
+  VendorPayoutType,
   SupportRequest,
   TimelineEntry,
   VendorNotification,
@@ -37,6 +41,7 @@ const STORE_FILENAME = "goaccess-vendor-portal.json";
 const BLOB_STORE_PATHNAME = `portal-store/${STORE_FILENAME}`;
 const TRAINING_ASSET_METADATA_PREFIX = "training-assets/records/";
 const SIGNED_NDA_MAX_BYTES = 10 * 1024 * 1024;
+const DEAL_AGREEMENT_MAX_BYTES = 15 * 1024 * 1024;
 const DEFAULT_NDA_DOCUMENT_NAME = "GoAccess Partner NDA";
 const DEFAULT_NDA_DOCUMENT_URL =
   "https://docs.google.com/document/d/1akFHM1h4UM6mN9qe0WvJMbZs_gIT9J3C/edit";
@@ -117,6 +122,21 @@ type DealRegistrationRow = {
   product_interest: string;
   notes: string;
   status: DealStatus;
+  agreement_status: DealAgreementStatus;
+  agreement_uploaded_at: string | null;
+  agreement_sent_at: string | null;
+  agreement_signed_at: string | null;
+  agreement_file_name: string | null;
+  agreement_file_url: string | null;
+  agreement_blob_path: string | null;
+  signed_agreement_file_name: string | null;
+  signed_agreement_file_url: string | null;
+  signed_agreement_blob_path: string | null;
+  signed_agreement_uploaded_at: string | null;
+  expected_monthly_rmr: number;
+  vendor_payout_type: VendorPayoutType | null;
+  vendor_payout_rate: number;
+  expected_vendor_monthly_revenue: number;
   hubspot_company_id: string | null;
   hubspot_contact_id: string | null;
   hubspot_deal_id: string | null;
@@ -244,6 +264,11 @@ const seedStore: PortalStore = {
       contactPhone: "555-0101",
       estimatedValue: 24000,
       monthlyRmr: 1200,
+      agreementStatus: "not_started",
+      expectedMonthlyRmr: 1200,
+      vendorPayoutType: "percentage_rmr",
+      vendorPayoutRate: 0.12,
+      expectedVendorMonthlyRevenue: 144,
       productInterest: "Enterprise access control",
       notes: "Regional rollout starting in Q2.",
       status: "synced_to_hubspot",
@@ -263,6 +288,11 @@ const seedStore: PortalStore = {
       contactPhone: "555-0102",
       estimatedValue: 18000,
       monthlyRmr: 980,
+      agreementStatus: "not_started",
+      expectedMonthlyRmr: 980,
+      vendorPayoutType: "percentage_rmr",
+      vendorPayoutRate: 0.1,
+      expectedVendorMonthlyRevenue: 98,
       productInterest: "Expansion and monitoring",
       notes: "Existing customer expansion closed quickly.",
       status: "closed_won",
@@ -282,6 +312,11 @@ const seedStore: PortalStore = {
       contactPhone: "555-0103",
       estimatedValue: 12000,
       monthlyRmr: 540,
+      agreementStatus: "not_started",
+      expectedMonthlyRmr: 540,
+      vendorPayoutType: "percentage_rmr",
+      vendorPayoutRate: 0.1,
+      expectedVendorMonthlyRevenue: 54,
       productInterest: "Access upgrade",
       notes: "Awaiting duplicate review.",
       status: "under_review",
@@ -298,6 +333,11 @@ const seedStore: PortalStore = {
       contactPhone: "555-0104",
       estimatedValue: 14500,
       monthlyRmr: 740,
+      agreementStatus: "not_started",
+      expectedMonthlyRmr: 740,
+      vendorPayoutType: "percentage_rmr",
+      vendorPayoutRate: 0.1,
+      expectedVendorMonthlyRevenue: 74,
       productInterest: "Monitoring and support",
       notes: "Account active and contributing RMR.",
       status: "closed_won",
@@ -622,6 +662,21 @@ function dealRegistrationToRow(deal: DealRegistration): DealRegistrationRow {
     product_interest: deal.productInterest,
     notes: deal.notes,
     status: deal.status,
+    agreement_status: deal.agreementStatus,
+    agreement_uploaded_at: deal.agreementUploadedAt ?? null,
+    agreement_sent_at: deal.agreementSentAt ?? null,
+    agreement_signed_at: deal.agreementSignedAt ?? null,
+    agreement_file_name: deal.agreementFileName ?? null,
+    agreement_file_url: deal.agreementFileUrl ?? null,
+    agreement_blob_path: deal.agreementBlobPath ?? null,
+    signed_agreement_file_name: deal.signedAgreementFileName ?? null,
+    signed_agreement_file_url: deal.signedAgreementFileUrl ?? null,
+    signed_agreement_blob_path: deal.signedAgreementBlobPath ?? null,
+    signed_agreement_uploaded_at: deal.signedAgreementUploadedAt ?? null,
+    expected_monthly_rmr: deal.expectedMonthlyRmr,
+    vendor_payout_type: deal.vendorPayoutType ?? null,
+    vendor_payout_rate: deal.vendorPayoutRate,
+    expected_vendor_monthly_revenue: deal.expectedVendorMonthlyRevenue,
     hubspot_company_id: deal.hubspotCompanyId ?? null,
     hubspot_contact_id: deal.hubspotContactId ?? null,
     hubspot_deal_id: deal.hubspotDealId ?? null,
@@ -649,6 +704,21 @@ function rowToDealRegistration(row: DealRegistrationRow): DealRegistration {
     productInterest: row.product_interest,
     notes: parsedNotes.legacyNotes,
     status: row.status,
+    agreementStatus: row.agreement_status ?? "not_started",
+    agreementUploadedAt: row.agreement_uploaded_at ?? undefined,
+    agreementSentAt: row.agreement_sent_at ?? undefined,
+    agreementSignedAt: row.agreement_signed_at ?? undefined,
+    agreementFileName: row.agreement_file_name ?? undefined,
+    agreementFileUrl: row.agreement_file_url ?? undefined,
+    agreementBlobPath: row.agreement_blob_path ?? undefined,
+    signedAgreementFileName: row.signed_agreement_file_name ?? undefined,
+    signedAgreementFileUrl: row.signed_agreement_file_url ?? undefined,
+    signedAgreementBlobPath: row.signed_agreement_blob_path ?? undefined,
+    signedAgreementUploadedAt: row.signed_agreement_uploaded_at ?? undefined,
+    expectedMonthlyRmr: Number(row.expected_monthly_rmr ?? row.monthly_rmr ?? 0),
+    vendorPayoutType: row.vendor_payout_type ?? undefined,
+    vendorPayoutRate: Number(row.vendor_payout_rate ?? 0),
+    expectedVendorMonthlyRevenue: Number(row.expected_vendor_monthly_revenue ?? 0),
     hubspotCompanyId: row.hubspot_company_id ?? undefined,
     hubspotContactId: row.hubspot_contact_id ?? undefined,
     hubspotDealId: row.hubspot_deal_id ?? undefined,
@@ -947,6 +1017,57 @@ async function writeStore(store: PortalStore) {
   }
 
   await writeLegacyStore(store);
+}
+
+function computeExpectedVendorMonthlyRevenue(
+  expectedMonthlyRmr: number,
+  payoutType?: VendorPayoutType,
+  payoutRate = 0
+) {
+  if (!payoutType || payoutRate <= 0) {
+    return 0;
+  }
+
+  return payoutType === "percentage_rmr"
+    ? Number((expectedMonthlyRmr * payoutRate).toFixed(2))
+    : Number(payoutRate.toFixed(2));
+}
+
+async function storePrivateDealDocument(
+  folder: "dealer-agreements" | "signed-dealer-agreements",
+  dealId: string,
+  fileName: string,
+  contentType: string,
+  bytes: Uint8Array
+) {
+  const extension = path.extname(fileName).toLowerCase() || ".pdf";
+  const safeName = `${Date.now()}-${slugify(fileName.replace(/\.[^.]+$/, ""))}${extension}`;
+  const relativePath = `${folder}/${dealId}/${safeName}`;
+  const blobToken = getBlobStoreToken();
+
+  if (blobToken) {
+    const { put: putBlob } = await getBlobClient();
+    await putBlob(relativePath, Buffer.from(bytes), {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType,
+      token: blobToken,
+    });
+
+    return {
+      blobPath: relativePath,
+      directUrl: null as string | null,
+    };
+  }
+
+  const filePath = path.join(process.cwd(), "public", "uploads", relativePath);
+  await mkdir(path.dirname(filePath), { recursive: true });
+  await writeFile(filePath, bytes);
+  return {
+    blobPath: null as string | null,
+    directUrl: `/uploads/${relativePath}`,
+  };
 }
 
 async function storeSignedNdaFile(vendorId: string, fileName: string, contentType: string, bytes: Uint8Array) {
@@ -1748,6 +1869,10 @@ export async function submitDealForVendor(vendorId: string, input: CreateDealInp
     productInterest: input.productInterest,
     notes: input.notes,
     status: "submitted",
+    agreementStatus: "not_started",
+    expectedMonthlyRmr: 0,
+    vendorPayoutRate: 0,
+    expectedVendorMonthlyRevenue: 0,
     createdAt: timestamp,
     updatedAt: timestamp,
   };
@@ -1982,6 +2107,161 @@ export async function uploadSignedNdaForVendor(
 
   return {
     vendorId,
+    fileName: normalizedName,
+    fileUrl,
+    uploadedAt,
+  };
+}
+
+export async function uploadDealerAgreementForDeal(
+  dealId: string,
+  file: DealAgreementUploadInput,
+  config: {
+    expectedMonthlyRmr: number;
+    vendorPayoutType?: VendorPayoutType;
+    vendorPayoutRate: number;
+  }
+): Promise<DealAgreementUploadResult> {
+  const normalizedName = file.fileName.trim();
+  const fileExtension = path.extname(normalizedName).toLowerCase();
+  const allowedExtensions = new Set([".pdf", ".doc", ".docx"]);
+
+  if (!normalizedName || !allowedExtensions.has(fileExtension)) {
+    throw new Error("Upload the dealer agreement as a PDF, DOC, or DOCX file.");
+  }
+
+  if (file.size === 0 || file.size > DEAL_AGREEMENT_MAX_BYTES) {
+    throw new Error("Dealer agreement files must be smaller than 15 MB.");
+  }
+
+  if (config.expectedMonthlyRmr < 0) {
+    throw new Error("Expected monthly RMR must be zero or greater.");
+  }
+
+  if (config.vendorPayoutRate < 0) {
+    throw new Error("Vendor payout rate must be zero or greater.");
+  }
+
+  const store = await readStore();
+  const deal = store.deals.find((item) => item.id === dealId);
+
+  if (!deal) {
+    throw new Error("Deal not found.");
+  }
+
+  if (!["closed_won", "closed_lost"].includes(deal.status)) {
+    throw new Error("Dealer agreements can only be uploaded after the deal is closed.");
+  }
+
+  const uploadedAt = nowIso();
+  const storedFile = await storePrivateDealDocument(
+    "dealer-agreements",
+    dealId,
+    normalizedName,
+    file.contentType || "application/octet-stream",
+    file.bytes
+  );
+  const fileUrl = storedFile.directUrl ?? `/api/deals/${encodeURIComponent(dealId)}/agreement/file?kind=dealer`;
+  const payoutType = config.vendorPayoutType;
+  const expectedVendorMonthlyRevenue = computeExpectedVendorMonthlyRevenue(
+    config.expectedMonthlyRmr,
+    payoutType,
+    config.vendorPayoutRate
+  );
+
+  deal.agreementStatus = deal.agreementSentAt ? "sent" : "uploaded";
+  deal.agreementUploadedAt = uploadedAt;
+  deal.agreementFileName = normalizedName;
+  deal.agreementFileUrl = fileUrl;
+  deal.agreementBlobPath = storedFile.blobPath ?? undefined;
+  deal.expectedMonthlyRmr = config.expectedMonthlyRmr;
+  deal.vendorPayoutType = payoutType;
+  deal.vendorPayoutRate = config.vendorPayoutRate;
+  deal.expectedVendorMonthlyRevenue = expectedVendorMonthlyRevenue;
+  deal.updatedAt = uploadedAt;
+
+  await writeStore(store);
+
+  return {
+    dealId,
+    fileName: normalizedName,
+    fileUrl,
+    uploadedAt,
+  };
+}
+
+export async function markDealerAgreementSent(dealId: string) {
+  const store = await readStore();
+  const deal = store.deals.find((item) => item.id === dealId);
+
+  if (!deal) {
+    throw new Error("Deal not found.");
+  }
+
+  if (!deal.agreementFileUrl) {
+    throw new Error("Upload the dealer agreement before sending it to the vendor.");
+  }
+
+  const sentAt = nowIso();
+  deal.agreementStatus = deal.signedAgreementFileUrl ? "signed" : "sent";
+  deal.agreementSentAt = sentAt;
+  deal.updatedAt = sentAt;
+
+  await writeStore(store);
+  return deal;
+}
+
+export async function uploadSignedDealerAgreementForDeal(
+  dealId: string,
+  vendorId: string,
+  file: DealAgreementUploadInput
+): Promise<DealAgreementUploadResult> {
+  const normalizedName = file.fileName.trim();
+  const fileExtension = path.extname(normalizedName).toLowerCase();
+  const allowedExtensions = new Set([".pdf", ".doc", ".docx"]);
+
+  if (!normalizedName || !allowedExtensions.has(fileExtension)) {
+    throw new Error("Upload the signed dealer agreement as a PDF, DOC, or DOCX file.");
+  }
+
+  if (file.size === 0 || file.size > DEAL_AGREEMENT_MAX_BYTES) {
+    throw new Error("Signed dealer agreement files must be smaller than 15 MB.");
+  }
+
+  const store = await readStore();
+  const deal = store.deals.find((item) => item.id === dealId);
+
+  if (!deal || deal.vendorId !== vendorId) {
+    throw new Error("Deal not found.");
+  }
+
+  if (!deal.agreementFileUrl || (deal.agreementStatus !== "sent" && deal.agreementStatus !== "signed")) {
+    throw new Error("The dealer agreement is not ready for signed upload yet.");
+  }
+
+  const uploadedAt = nowIso();
+  const storedFile = await storePrivateDealDocument(
+    "signed-dealer-agreements",
+    dealId,
+    normalizedName,
+    file.contentType || "application/octet-stream",
+    file.bytes
+  );
+  const fileUrl =
+    storedFile.directUrl ?? `/api/deals/${encodeURIComponent(dealId)}/agreement/file?kind=signed`;
+
+  deal.signedAgreementFileName = normalizedName;
+  deal.signedAgreementFileUrl = fileUrl;
+  deal.signedAgreementBlobPath = storedFile.blobPath ?? undefined;
+  deal.signedAgreementUploadedAt = uploadedAt;
+  deal.agreementSignedAt = uploadedAt;
+  deal.agreementStatus = "signed";
+  deal.updatedAt = uploadedAt;
+
+  await writeStore(store);
+
+  return {
+    dealId,
     fileName: normalizedName,
     fileUrl,
     uploadedAt,

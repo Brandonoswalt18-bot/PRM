@@ -5,9 +5,11 @@ import {
   TableSection,
   TimelineSection,
 } from "@/components/product/product-page-sections";
+import { AdminDealAgreementManager } from "@/components/product/admin-deal-agreement-manager";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { formatDealLocation } from "@/lib/deal-registration";
 import { buildDealTimeline } from "@/lib/goaccess-timeline";
+import { formatDealAgreementStatusLabel } from "@/lib/goaccess-copy";
 import { inspectDealRegistrationForHubSpot } from "@/lib/hubspot";
 import {
   formatCurrency,
@@ -78,6 +80,23 @@ export default async function AdminDealDetailPage({
       label: "Monthly RMR",
       value: formatOptionalCurrency(deal.monthlyRmr),
       delta: deal.status === "closed_won" ? "Active recurring revenue" : "Forecasted recurring revenue",
+    },
+    {
+      label: "Dealer agreement",
+      value: formatDealAgreementStatusLabel(deal.agreementStatus),
+      delta: deal.agreementFileName
+        ? deal.signedAgreementFileName
+          ? "Signed copy is stored on this deal"
+          : "Uploaded and waiting on vendor signature"
+        : "No agreement uploaded yet",
+    },
+    {
+      label: "Expected vendor earnings",
+      value: formatOptionalCurrency(deal.expectedVendorMonthlyRevenue),
+      delta:
+        deal.expectedMonthlyRmr > 0
+          ? `${formatCurrency(deal.expectedMonthlyRmr)} expected monthly RMR`
+          : "Set when the dealer agreement is uploaded",
     },
     {
       label: "Open support issues",
@@ -183,6 +202,9 @@ export default async function AdminDealDetailPage({
               ))}
             </ul>
           </article>
+        </section>
+        <section className="dashboard-grid">
+          <AdminDealAgreementManager deal={deal} />
         </section>
         <section className="dashboard-grid">
           <TimelineSection

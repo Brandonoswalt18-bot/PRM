@@ -1154,6 +1154,22 @@ li + li {
   font-size: 0.8rem;
 }
 
+.agreement-grid,
+.agreement-form-grid,
+.agreement-link-stack,
+.agreement-action-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.agreement-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.agreement-form-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .stack-note {
   margin-top: 12px;
   overflow-wrap: anywhere;
@@ -1775,6 +1791,8 @@ li + li {
   .product-stats,
   .product-columns,
   .stack-meta-grid,
+  .agreement-grid,
+  .agreement-form-grid,
   .detail-banner,
   .detail-fact-grid,
   .inline-form-grid,

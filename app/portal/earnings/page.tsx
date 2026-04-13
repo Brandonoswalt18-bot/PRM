@@ -36,9 +36,11 @@ export default async function EarningsPage() {
       delta: "Accounts currently contributing recurring revenue",
     },
     {
-      label: "Forecast accounts",
-      value: String(deals.filter((deal) => deal.status === "synced_to_hubspot").length),
-      delta: "Accounts likely to convert into recurring revenue",
+      label: "Expected vendor earnings",
+      value: formatCurrency(
+        deals.reduce((total, deal) => total + (deal.expectedVendorMonthlyRevenue || 0), 0)
+      ),
+      delta: `${deals.filter((deal) => deal.expectedVendorMonthlyRevenue > 0).length} deals with agreement payout terms`,
     },
   ];
 
@@ -48,7 +50,8 @@ export default async function EarningsPage() {
       id: deal.id,
       account: deal.companyName,
       stage: deal.status === "closed_won" ? "Active" : "Forecast",
-      rmr: formatCurrency(deal.monthlyRmr),
+      rmr: formatCurrency(deal.expectedMonthlyRmr || deal.monthlyRmr),
+      earnings: formatCurrency(deal.expectedVendorMonthlyRevenue || 0),
       hubspot: deal.hubspotDealId ? `#${deal.hubspotDealId}` : "Pending",
     }));
 
@@ -75,17 +78,19 @@ export default async function EarningsPage() {
               </a>
             </div>
             <div className="data-table">
-              <div className="table-head table-cols-4">
+              <div className="table-head table-cols-5">
                 <span>Account</span>
                 <span>Stage</span>
-                <span>Monthly RMR</span>
+                <span>Expected monthly RMR</span>
+                <span>Expected earnings</span>
                 <span>HubSpot</span>
               </div>
               {ledgerRows.map((row) => (
-                <div className="table-row table-cols-4" key={row.id}>
+                <div className="table-row table-cols-5" key={row.id}>
                   <span>{row.account}</span>
                   <span>{row.stage}</span>
                   <span>{row.rmr}</span>
+                  <span>{row.earnings}</span>
                   <span>{row.hubspot}</span>
                 </div>
               ))}

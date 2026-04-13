@@ -148,6 +148,37 @@ export function buildDealTimeline(
     });
   }
 
+  if (deal.agreementUploadedAt) {
+    entries.push({
+      title: "Dealer agreement uploaded",
+      detail: deal.agreementFileName
+        ? `${deal.agreementFileName} was attached to this closed deal.`
+        : "A dealer agreement file was attached to this closed deal.",
+      timestamp: deal.agreementUploadedAt,
+      tone: "neutral",
+    });
+  }
+
+  if (deal.agreementSentAt) {
+    entries.push({
+      title: "Dealer agreement shared with vendor",
+      detail: "The vendor can now review the agreement and return a signed copy in the portal.",
+      timestamp: deal.agreementSentAt,
+      tone: "warning",
+    });
+  }
+
+  if (deal.agreementSignedAt) {
+    entries.push({
+      title: "Signed dealer agreement stored",
+      detail: deal.signedAgreementFileName
+        ? `${deal.signedAgreementFileName} is now attached to this deal.`
+        : "The signed dealer agreement is now attached to this deal.",
+      timestamp: deal.agreementSignedAt,
+      tone: "success",
+    });
+  }
+
   if (deal.status === "closed_won" || deal.status === "closed_lost") {
     entries.push({
       title: `Deal marked ${titleCaseStatus(deal.status)}`,

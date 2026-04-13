@@ -5,9 +5,11 @@ import {
   TableSection,
   TimelineSection,
 } from "@/components/product/product-page-sections";
+import { VendorDealAgreementManager } from "@/components/product/vendor-deal-agreement-manager";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
 import { formatDealLocation } from "@/lib/deal-registration";
+import { formatDealAgreementStatusLabel } from "@/lib/goaccess-copy";
 import { buildDealTimeline } from "@/lib/goaccess-timeline";
 import { formatCurrency, getDealById, listSyncEvents } from "@/lib/goaccess-store";
 
@@ -46,6 +48,23 @@ export default async function PartnerDealDetailPage({
       label: "Monthly RMR",
       value: formatOptionalCurrency(deal.monthlyRmr),
       delta: deal.status === "closed_won" ? "Active recurring revenue" : "Projected if won",
+    },
+    {
+      label: "Dealer agreement",
+      value: formatDealAgreementStatusLabel(deal.agreementStatus),
+      delta: deal.signedAgreementFileName
+        ? "Signed copy is stored in the portal"
+        : deal.agreementFileName
+          ? "Agreement is available for review"
+          : "Waiting on GoAccess to upload it",
+    },
+    {
+      label: "Expected earnings",
+      value: formatOptionalCurrency(deal.expectedVendorMonthlyRevenue),
+      delta:
+        deal.expectedMonthlyRmr > 0
+          ? `${formatCurrency(deal.expectedMonthlyRmr)} expected monthly RMR`
+          : "Will appear once GoAccess sets agreement terms",
     },
     {
       label: "Submitted",
@@ -100,6 +119,9 @@ export default async function PartnerDealDetailPage({
             rows={profileRows}
             renderRow={ProfileRow}
           />
+        </section>
+        <section className="dashboard-grid">
+          <VendorDealAgreementManager deal={deal} />
         </section>
         <section className="dashboard-grid">
           <TimelineSection

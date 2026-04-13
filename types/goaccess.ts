@@ -18,6 +18,9 @@ export type DealStatus =
   | "closed_lost"
   | "rejected";
 
+export type DealAgreementStatus = "not_started" | "uploaded" | "sent" | "signed";
+export type VendorPayoutType = "percentage_rmr" | "flat_monthly";
+
 export type SyncEventStatus = "queued" | "synced" | "held" | "failed";
 
 export type SupportRequestStatus = "open" | "in_progress" | "resolved";
@@ -113,6 +116,21 @@ export type DealRegistration = {
   productInterest: string;
   notes: string;
   status: DealStatus;
+  agreementStatus: DealAgreementStatus;
+  agreementUploadedAt?: string;
+  agreementSentAt?: string;
+  agreementSignedAt?: string;
+  agreementFileName?: string;
+  agreementFileUrl?: string;
+  agreementBlobPath?: string;
+  signedAgreementFileName?: string;
+  signedAgreementFileUrl?: string;
+  signedAgreementBlobPath?: string;
+  signedAgreementUploadedAt?: string;
+  expectedMonthlyRmr: number;
+  vendorPayoutType?: VendorPayoutType;
+  vendorPayoutRate: number;
+  expectedVendorMonthlyRevenue: number;
   hubspotCompanyId?: string;
   hubspotContactId?: string;
   hubspotDealId?: string;
@@ -222,6 +240,7 @@ export type DealStatusUpdateOptions = {
   hubspotCompanyId?: string;
   hubspotContactId?: string;
   hubspotDealId?: string;
+  agreementStatus?: DealAgreementStatus;
   syncAction?: string;
   syncStatus?: SyncEventStatus;
   syncReference?: string;
@@ -244,6 +263,20 @@ export type SignedNdaUploadResult = {
 };
 
 export type SignedNdaUploadInput = {
+  fileName: string;
+  contentType: string;
+  size: number;
+  bytes: Uint8Array;
+};
+
+export type DealAgreementUploadResult = {
+  dealId: string;
+  fileName: string;
+  fileUrl: string;
+  uploadedAt: string;
+};
+
+export type DealAgreementUploadInput = {
   fileName: string;
   contentType: string;
   size: number;

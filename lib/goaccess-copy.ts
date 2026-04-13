@@ -1,5 +1,6 @@
 import type {
   ApprovedVendor,
+  DealAgreementStatus,
   DealStatus,
   VendorApplicationStatus,
   VendorStatus,
@@ -107,6 +108,21 @@ export function formatDealStatusLabel(status: DealStatus) {
       return "Closed lost";
     case "rejected":
       return "Declined";
+    default:
+      return humanizeSnakeCase(status);
+  }
+}
+
+export function formatDealAgreementStatusLabel(status: DealAgreementStatus) {
+  switch (status) {
+    case "not_started":
+      return "Not uploaded";
+    case "uploaded":
+      return "Uploaded internally";
+    case "sent":
+      return "Awaiting signed copy";
+    case "signed":
+      return "Signed and stored";
     default:
       return humanizeSnakeCase(status);
   }
