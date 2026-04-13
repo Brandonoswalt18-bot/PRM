@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { WorkspaceNavItem, WorkspaceSession } from "@/types/prm";
 
 type WorkspaceLayoutProps = {
@@ -37,15 +37,65 @@ export function WorkspaceLayout({
   children,
 }: WorkspaceLayoutProps) {
   const pathname = usePathname();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileNavOpen) {
+      document.body.style.overflow = "";
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileNavOpen]);
 
   return (
     <div className="app-frame">
-      <aside className="app-sidebar">
-        <Link className="brand" href="/">
-          <span className="brand-mark">G</span>
-          <span className="brand-text">{brand}</span>
-        </Link>
-        <div className="sidebar-label">{workspace}</div>
+      <button
+        aria-controls="workspace-navigation"
+        aria-expanded={mobileNavOpen}
+        aria-label={mobileNavOpen ? "Close navigation" : "Open navigation"}
+        className={`mobile-nav-toggle${mobileNavOpen ? " is-open" : ""}`}
+        type="button"
+        onClick={() => setMobileNavOpen((current) => !current)}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+
+      <button
+        aria-hidden={!mobileNavOpen}
+        className={`mobile-nav-backdrop${mobileNavOpen ? " is-open" : ""}`}
+        tabIndex={mobileNavOpen ? 0 : -1}
+        type="button"
+        onClick={() => setMobileNavOpen(false)}
+      />
+
+      <aside className={`app-sidebar${mobileNavOpen ? " is-mobile-open" : ""}`}>
+        <div className="app-sidebar-top">
+          <Link className="brand" href="/">
+            <span className="brand-mark">G</span>
+            <span className="brand-text">{brand}</span>
+          </Link>
+          <button
+            aria-label="Close navigation"
+            className="mobile-nav-close"
+            type="button"
+            onClick={() => setMobileNavOpen(false)}
+          >
+            Close
+          </button>
+        </div>
+        <div className="sidebar-label" id="workspace-navigation">{workspace}</div>
         <nav className="app-nav">
           {navItems.map((item) => (
             <Link
@@ -53,6 +103,7 @@ export function WorkspaceLayout({
               className={`app-nav-item ${isActivePath(pathname, item.href) ? "is-active" : ""}`.trim()}
               href={item.href}
               prefetch={false}
+              onClick={() => setMobileNavOpen(false)}
             >
               {item.label}
             </Link>
@@ -66,7 +117,12 @@ export function WorkspaceLayout({
             <span>{session.organization}</span>
             <span className="session-email">{session.email}</span>
           </div>
-          <Link className="button button-ghost session-signout" href="/auth/logout" prefetch={false}>
+          <Link
+            className="button button-ghost session-signout"
+            href="/auth/logout"
+            prefetch={false}
+            onClick={() => setMobileNavOpen(false)}
+          >
             Sign out
           </Link>
         </div>
