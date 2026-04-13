@@ -709,22 +709,19 @@ li + li {
 
 .app-sidebar-top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
 }
 
 .mobile-nav-toggle,
+.mobile-workspace-bar,
 .mobile-nav-backdrop,
 .mobile-nav-close {
   display: none;
 }
 
 .mobile-nav-toggle {
-  position: fixed;
-  top: 14px;
-  left: 14px;
-  z-index: 60;
   width: 46px;
   height: 46px;
   padding: 0;
@@ -768,13 +765,60 @@ li + li {
 }
 
 .mobile-nav-close {
-  min-height: 40px;
-  padding: 8px 12px;
+  position: relative;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   border: 1px solid rgba(31, 100, 216, 0.12);
-  border-radius: 999px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.9);
+}
+
+.mobile-nav-close span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 16px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--ink);
+}
+
+.mobile-nav-close span:first-child {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.mobile-nav-close span:last-child {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.mobile-workspace-bar {
+  align-items: center;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  padding: 10px 2px 2px;
+}
+
+.mobile-workspace-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mobile-workspace-label {
   color: var(--signal);
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mobile-workspace-title {
+  min-width: 0;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .session-card {
@@ -1637,6 +1681,10 @@ li + li {
     justify-content: center;
   }
 
+  .mobile-workspace-bar {
+    display: grid;
+  }
+
   .mobile-nav-backdrop.is-open {
     display: block;
     opacity: 1;
@@ -1665,6 +1713,7 @@ li + li {
   .session-card {
     gap: 10px;
     padding: 14px;
+    margin-top: auto;
   }
 
   .topbar {
@@ -1731,7 +1780,7 @@ li + li {
 
   .app-topbar {
     padding: 20px;
-    padding-left: 74px;
+    gap: 16px;
   }
 
   .app-topbar-actions {
@@ -1815,6 +1864,10 @@ li + li {
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .eyebrow {
+    margin-bottom: 10px;
+  }
 }
 
 @media (max-width: 560px) {
@@ -1824,6 +1877,7 @@ li + li {
 
   .app-main {
     gap: 18px;
+    padding-top: 14px;
     padding-bottom: 32px;
   }
 
@@ -1838,6 +1892,14 @@ li + li {
 
   .app-subtitle {
     font-size: 0.88rem;
+  }
+
+  .mobile-workspace-bar {
+    padding-top: 4px;
+  }
+
+  .mobile-workspace-title {
+    font-size: 0.96rem;
   }
 
   .workspace-card,

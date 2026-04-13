@@ -38,6 +38,7 @@ export function WorkspaceLayout({
 }: WorkspaceLayoutProps) {
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const activeItem = navItems.find((item) => isActivePath(pathname, item.href)) ?? navItems[0];
 
   useEffect(() => {
     setMobileNavOpen(false);
@@ -60,19 +61,6 @@ export function WorkspaceLayout({
   return (
     <div className="app-frame">
       <button
-        aria-controls="workspace-navigation"
-        aria-expanded={mobileNavOpen}
-        aria-label={mobileNavOpen ? "Close navigation" : "Open navigation"}
-        className={`mobile-nav-toggle${mobileNavOpen ? " is-open" : ""}`}
-        type="button"
-        onClick={() => setMobileNavOpen((current) => !current)}
-      >
-        <span />
-        <span />
-        <span />
-      </button>
-
-      <button
         aria-hidden={!mobileNavOpen}
         className={`mobile-nav-backdrop${mobileNavOpen ? " is-open" : ""}`}
         tabIndex={mobileNavOpen ? 0 : -1}
@@ -82,20 +70,23 @@ export function WorkspaceLayout({
 
       <aside className={`app-sidebar${mobileNavOpen ? " is-mobile-open" : ""}`}>
         <div className="app-sidebar-top">
-          <Link className="brand" href="/">
-            <span className="brand-mark">G</span>
-            <span className="brand-text">{brand}</span>
-          </Link>
+          <div>
+            <Link className="brand" href="/">
+              <span className="brand-mark">G</span>
+              <span className="brand-text">{brand}</span>
+            </Link>
+            <div className="sidebar-label" id="workspace-navigation">{workspace}</div>
+          </div>
           <button
             aria-label="Close navigation"
             className="mobile-nav-close"
             type="button"
             onClick={() => setMobileNavOpen(false)}
           >
-            Close
+            <span />
+            <span />
           </button>
         </div>
-        <div className="sidebar-label" id="workspace-navigation">{workspace}</div>
         <nav className="app-nav">
           {navItems.map((item) => (
             <Link
@@ -128,7 +119,27 @@ export function WorkspaceLayout({
         </div>
       </aside>
 
-      <div className="app-main">{children}</div>
+      <div className="app-main">
+        <div className="mobile-workspace-bar">
+          <button
+            aria-controls="workspace-navigation"
+            aria-expanded={mobileNavOpen}
+            aria-label={mobileNavOpen ? "Close navigation" : "Open navigation"}
+            className={`mobile-nav-toggle${mobileNavOpen ? " is-open" : ""}`}
+            type="button"
+            onClick={() => setMobileNavOpen((current) => !current)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+          <div className="mobile-workspace-copy">
+            <span className="mobile-workspace-label">{workspace}</span>
+            <strong className="mobile-workspace-title">{activeItem?.label ?? brand}</strong>
+          </div>
+        </div>
+        {children}
+      </div>
     </div>
   );
 }
