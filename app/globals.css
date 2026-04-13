@@ -722,6 +722,9 @@ li + li {
 }
 
 .mobile-nav-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 46px;
   height: 46px;
   padding: 0;
@@ -729,28 +732,19 @@ li + li {
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 10px 24px rgba(16, 33, 77, 0.1);
+  color: var(--ink);
 }
 
-.mobile-nav-toggle span {
-  display: block;
+.mobile-nav-icon {
   width: 20px;
-  height: 2px;
-  margin: 3px auto;
-  border-radius: 999px;
-  background: var(--ink);
-  transition: transform 160ms ease, opacity 160ms ease;
+  height: 20px;
+  display: block;
 }
 
-.mobile-nav-toggle.is-open span:nth-child(1) {
-  transform: translateY(6px) rotate(45deg);
-}
-
-.mobile-nav-toggle.is-open span:nth-child(2) {
-  opacity: 0;
-}
-
-.mobile-nav-toggle.is-open span:nth-child(3) {
-  transform: translateY(-6px) rotate(-45deg);
+.mobile-nav-toggle:hover,
+.mobile-nav-toggle:focus-visible {
+  border-color: rgba(31, 100, 216, 0.18);
+  background: rgba(247, 250, 255, 0.98);
 }
 
 .mobile-nav-backdrop {

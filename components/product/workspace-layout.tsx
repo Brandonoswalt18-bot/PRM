@@ -138,9 +138,19 @@ export function WorkspaceLayout({
             type="button"
             onClick={() => setMobileNavOpen((current) => !current)}
           >
-            <span />
-            <span />
-            <span />
+            <svg
+              aria-hidden="true"
+              className="mobile-nav-icon"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M4 7H20M4 12H20M4 17H20"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeWidth="2"
+              />
+            </svg>
           </button>
           <div className="mobile-workspace-copy">
             <span className="mobile-workspace-label">{workspace}</span>
