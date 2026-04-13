@@ -59,8 +59,9 @@ export default async function DealRegistrationsPage({ searchParams }: DealRegist
           }}
         />
         <article className="workspace-card">
+          <span className="section-kicker">Snapshot</span>
           <h3>Queue summary</h3>
-          <ul>
+          <ul className="soft-list">
             <li>{reviewDeals.filter((deal) => deal.status === "submitted").length} new submissions still need first review.</li>
             <li>{reviewDeals.filter((deal) => deal.status === "under_review").length} deals are sitting in active review.</li>
             <li>{hubspotDeals.filter((deal) => deal.status === "approved").length} approved deals still need HubSpot follow-up.</li>
@@ -69,8 +70,9 @@ export default async function DealRegistrationsPage({ searchParams }: DealRegist
           </ul>
         </article>
         <article className="workspace-card">
+          <span className="section-kicker">Guardrails</span>
           <h3>Rules</h3>
-          <ul>
+          <ul className="soft-list">
             <li>Approving a deal attempts HubSpot sync immediately.</li>
             <li>Closed won should follow sync, not bypass it.</li>
             <li>Support issues should stay visible if they block deal progress.</li>

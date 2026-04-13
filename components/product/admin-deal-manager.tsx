@@ -204,8 +204,9 @@ export function AdminDealManager({
     <article className="workspace-card wide-card">
       <div className="card-header-row">
         <div>
+          <span className="stack-section-label">Deal review</span>
           <h3>Live deal review queue</h3>
-          <p>Keep the queue focused. Open one deal only when you need its full timeline and controls.</p>
+          <p>Keep the queue focused. Open one deal when you need the full timeline, HubSpot status, and next action.</p>
         </div>
       </div>
       <div className="queue-filter-row" aria-label="Deal queue filters">
@@ -239,7 +240,13 @@ export function AdminDealManager({
         </Link>
       </div>
       {message ? <p className="table-note">{message}</p> : null}
-      {deals.length === 0 ? <p className="table-note">No deals in this queue.</p> : null}
+      {deals.length === 0 ? (
+        <div className="empty-state-card">
+          <span className="section-kicker">Queue clear</span>
+          <h3>No deals in this queue.</h3>
+          <p>New portal registrations will land here with their HubSpot state and next review step attached.</p>
+        </div>
+      ) : null}
       <div className="stack-list">
         {deals.map((deal) => (
           (() => {
@@ -274,9 +281,18 @@ export function AdminDealManager({
                   </div>
                 </div>
                 <div className="stack-meta-grid">
-                  <span>{deal.contactEmail}</span>
-                  <span>{formatDealLocation(deal)}</span>
-                  <span>{getDealQueueReason(deal)}</span>
+                  <span>
+                    <strong>Community contact</strong>
+                    {deal.contactEmail}
+                  </span>
+                  <span>
+                    <strong>Location</strong>
+                    {formatDealLocation(deal)}
+                  </span>
+                  <span>
+                    <strong>Queue reason</strong>
+                    {getDealQueueReason(deal)}
+                  </span>
                 </div>
                 {latestSyncEvent && latestSyncEvent.status !== "synced" ? (
                   <p className={`stack-note ${latestSyncEvent.status === "failed" ? "table-note-danger" : ""}`.trim()}>
@@ -286,6 +302,24 @@ export function AdminDealManager({
                 ) : null}
                 {isSelected ? (
                   <>
+                    <div className="detail-banner">
+                      <div>
+                        <span className="detail-banner-label">Current state</span>
+                        <strong>{formatDealStatusLabel(deal.status)}</strong>
+                        <p>{getDealQueueReason(deal)}</p>
+                      </div>
+                      <div>
+                        <span className="detail-banner-label">HubSpot status</span>
+                        <strong>{deal.hubspotDealId ? `Linked as #${deal.hubspotDealId}` : "Not yet linked"}</strong>
+                        <p>
+                          {latestSyncEvent
+                            ? latestSyncEvent.status === "synced"
+                              ? "The latest HubSpot sync succeeded."
+                              : latestSyncEvent.reference
+                            : "No HubSpot sync event has been recorded yet."}
+                        </p>
+                      </div>
+                    </div>
                     <div className="stage-pill-row" aria-label="Deal lifecycle">
                       {dealStages.map((stage) => (
                         (() => {

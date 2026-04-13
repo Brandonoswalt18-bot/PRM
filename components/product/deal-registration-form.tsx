@@ -70,58 +70,79 @@ export function DealRegistrationForm() {
       <div className="card-header-row">
         <div>
           <h3>Deal registration form</h3>
-          <p>Submit the community and contact details GoAccess needs to review this opportunity.</p>
+          <p>Share the community and contact details GoAccess needs to review and route this opportunity cleanly.</p>
         </div>
       </div>
       <form className="cta-form" onSubmit={handleSubmit}>
-        <div className="inline-form-grid">
-          <input
-            type="text"
-            placeholder="Community name"
-            value={form.companyName}
-            onChange={(event) => update("companyName", event.target.value)}
-            required
-          />
-          <input
-            type="text"
-            placeholder="Community address"
-            value={form.communityAddress}
-            onChange={(event) => update("communityAddress", event.target.value)}
-            required
-          />
+        <div className="field-grid">
+          <div className="inline-form-grid">
+            <label className="field-group">
+              <span className="field-label">Community name</span>
+              <input
+                type="text"
+                placeholder="Maple Crest HOA"
+                value={form.companyName}
+                onChange={(event) => update("companyName", event.target.value)}
+                required
+              />
+            </label>
+            <label className="field-group">
+              <span className="field-label">Community address</span>
+              <input
+                type="text"
+                placeholder="4127 Redwood Terrace"
+                value={form.communityAddress}
+                onChange={(event) => update("communityAddress", event.target.value)}
+                required
+              />
+            </label>
+          </div>
+          <div className="inline-form-grid">
+            <label className="field-group">
+              <span className="field-label">City</span>
+              <input
+                type="text"
+                placeholder="San Diego"
+                value={form.city}
+                onChange={(event) => update("city", event.target.value)}
+                required
+              />
+            </label>
+            <label className="field-group">
+              <span className="field-label">State</span>
+              <input
+                type="text"
+                placeholder="CA"
+                value={form.state}
+                onChange={(event) => update("state", event.target.value)}
+                required
+              />
+            </label>
+          </div>
+          <div className="inline-form-grid">
+            <label className="field-group">
+              <span className="field-label">Contact name</span>
+              <input
+                type="text"
+                placeholder="Jamie Sloan"
+                value={form.contactName}
+                onChange={(event) => update("contactName", event.target.value)}
+                required
+              />
+            </label>
+            <label className="field-group">
+              <span className="field-label">Contact email</span>
+              <input
+                type="email"
+                placeholder="jamie.sloan@community.com"
+                value={form.contactEmail}
+                onChange={(event) => update("contactEmail", event.target.value)}
+                required
+              />
+            </label>
+          </div>
         </div>
-        <div className="inline-form-grid">
-          <input
-            type="text"
-            placeholder="City"
-            value={form.city}
-            onChange={(event) => update("city", event.target.value)}
-            required
-          />
-          <input
-            type="text"
-            placeholder="State"
-            value={form.state}
-            onChange={(event) => update("state", event.target.value)}
-            required
-          />
-        </div>
-        <div className="inline-form-grid">
-          <input
-            type="text"
-            placeholder="Contact name"
-            value={form.contactName}
-            onChange={(event) => update("contactName", event.target.value)}
-            required
-          />
-          <input
-            type="email"
-            placeholder="Contact email"
-            value={form.contactEmail}
-            onChange={(event) => update("contactEmail", event.target.value)}
-            required
-          />
-        </div>
+        <p className="field-hint">Use the real community and contact details so GoAccess can review and route the deal without follow-up.</p>
         <button className="button button-primary" type="submit" disabled={status === "submitting"}>
           {status === "submitting" ? "Submitting..." : "Submit deal for review"}
         </button>
@@ -132,7 +153,7 @@ export function DealRegistrationForm() {
           aria-live="polite"
         >
           {message ||
-            "Submitted deals stay in the portal review queue first, then move to HubSpot after GoAccess approval."}
+            "Submitted deals stay in the portal review queue first, then move into HubSpot automatically after GoAccess approval."}
         </p>
       </form>
     </article>

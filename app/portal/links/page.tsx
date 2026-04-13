@@ -74,7 +74,7 @@ export default async function LinksPage() {
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="Register a deal"
-        subtitle="Submit a structured GoAccess opportunity for review and CRM creation."
+        subtitle="Submit a clean community registration for GoAccess review and CRM creation."
         primaryLabel="Start registration"
         primaryHref="/portal/links"
       />
@@ -88,6 +88,7 @@ export default async function LinksPage() {
           <article className="workspace-card wide-card">
             <div className="card-header-row">
               <div>
+                <span className="section-kicker">Recent activity</span>
                 <h3>Recent registrations</h3>
                 <p>The latest opportunities you have already sent to GoAccess.</p>
               </div>

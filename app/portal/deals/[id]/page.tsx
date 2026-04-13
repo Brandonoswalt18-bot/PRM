@@ -84,7 +84,7 @@ export default async function PartnerDealDetailPage({
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title={deal.companyName}
-        subtitle={`Review the registration for ${formatDealLocation(deal)} and its full status history.`}
+        subtitle={`Review the registration for ${formatDealLocation(deal)} and the full trail of review, HubSpot sync, and outcome updates.`}
         primaryLabel="Back to deal history"
         primaryHref="/portal/deals"
       />

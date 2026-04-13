@@ -61,9 +61,11 @@ export function WorkspaceLayout({
         <div className="session-card">
           <span className="session-label">Signed in as</span>
           <span className="session-name">{session.fullName}</span>
-          <span>{session.role}</span>
-          <span>{session.organization}</span>
-          <span>{session.email}</span>
+          <div className="session-meta">
+            <span className="session-role">{session.role}</span>
+            <span>{session.organization}</span>
+            <span className="session-email">{session.email}</span>
+          </div>
           <Link className="button button-ghost session-signout" href="/auth/logout" prefetch={false}>
             Sign out
           </Link>

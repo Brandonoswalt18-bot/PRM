@@ -73,7 +73,7 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
         title="Vendor applications"
-        subtitle="Use the queue for quick triage, then open a partner when you need the full onboarding record."
+        subtitle="Use the queue for quick triage, then open a partner when you need the full onboarding record, NDA trail, and access state."
         primaryLabel={primaryLabel}
         primaryHref={primaryHref}
       />

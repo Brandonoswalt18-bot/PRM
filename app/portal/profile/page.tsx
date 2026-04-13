@@ -117,7 +117,7 @@ export default async function PartnerProfilePage() {
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="Profile"
-        subtitle="Keep your business details current so onboarding, support, and deal review stay aligned."
+        subtitle="Keep your business details current so onboarding, support, and deal review stay aligned across every team touchpoint."
         primaryLabel="Register a deal"
         primaryHref="/portal/links"
       />

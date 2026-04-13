@@ -20,17 +20,17 @@ export function MetricGrid({ metrics }: { metrics: MetricCard[] }) {
       {metrics.map((metric) => (
         metric.href ? (
           <Link className="metric-card-link" href={metric.href} key={metric.label} prefetch={false}>
-            <article className="feature-card">
+            <article className="feature-card metric-card">
               <span className="metric-label">{metric.label}</span>
               <strong className="metric-value">{metric.value}</strong>
-              <p>{metric.delta}</p>
+              <p className="metric-delta">{metric.delta}</p>
             </article>
           </Link>
         ) : (
-          <article className="feature-card" key={metric.label}>
+          <article className="feature-card metric-card" key={metric.label}>
             <span className="metric-label">{metric.label}</span>
             <strong className="metric-value">{metric.value}</strong>
-            <p>{metric.delta}</p>
+            <p className="metric-delta">{metric.delta}</p>
           </article>
         )
       ))}
@@ -42,10 +42,11 @@ export function SideSections({ sections }: { sections: InfoListSection[] }) {
   return (
     <>
       {sections.map((section) => (
-        <article className="workspace-card" key={section.title}>
+        <article className="workspace-card side-section-card" key={section.title}>
+          <span className="section-kicker">At a glance</span>
           <h3>{section.title}</h3>
           {section.description ? <p>{section.description}</p> : null}
-          <ul>
+          <ul className="soft-list">
             {section.items.map((item) => (
               <li key={item}>{item}</li>
             ))}
@@ -79,6 +80,7 @@ export function TableSection<T>({
     <article className="workspace-card wide-card">
       <div className="card-header-row">
         <div>
+          <span className="section-kicker">Reference</span>
           <h3>{title}</h3>
           <p>{description}</p>
         </div>
@@ -199,6 +201,7 @@ export function TimelineSection({
     <article className="workspace-card wide-card">
       <div className="card-header-row">
         <div>
+          <span className="section-kicker">Timeline</span>
           <h3>{title}</h3>
           <p>{description}</p>
         </div>

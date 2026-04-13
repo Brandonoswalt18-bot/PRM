@@ -277,8 +277,9 @@ export function AdminApplicationManager({
     <article className="workspace-card wide-card">
       <div className="card-header-row">
         <div>
+          <span className="stack-section-label">Applications</span>
           <h3>Live application queue</h3>
-          <p>Open a partner only when you need the full NDA, credential, and email trail.</p>
+          <p>Scan the queue fast, then open one partner when you need the full NDA, credential, and email trail.</p>
         </div>
       </div>
       <div className="queue-filter-row" aria-label="Application queue filters">
@@ -305,7 +306,13 @@ export function AdminApplicationManager({
         </Link>
       </div>
       {message ? <p className="table-note">{message}</p> : null}
-      {applications.length === 0 ? <p className="table-note">No applications in this queue.</p> : null}
+      {applications.length === 0 ? (
+        <div className="empty-state-card">
+          <span className="section-kicker">Queue clear</span>
+          <h3>No applications in this queue.</h3>
+          <p>When new partner applications arrive, they will appear here with the next step called out automatically.</p>
+        </div>
+      ) : null}
       <div className="stack-list">
         {applications.map((application) => (
           (() => {
@@ -359,9 +366,18 @@ export function AdminApplicationManager({
                   </div>
                 </div>
                 <div className="stack-meta-grid">
-                  <span>{resolvedApplication.primaryContactEmail}</span>
-                  <span>{resolvedApplication.website || "Website not provided"}</span>
-                  <span>{getQueueReason(resolvedApplication, vendor)}</span>
+                  <span>
+                    <strong>Primary contact</strong>
+                    {resolvedApplication.primaryContactEmail}
+                  </span>
+                  <span>
+                    <strong>Website</strong>
+                    {resolvedApplication.website || "Not provided"}
+                  </span>
+                  <span>
+                    <strong>Queue reason</strong>
+                    {getQueueReason(resolvedApplication, vendor)}
+                  </span>
                 </div>
                 <p className="stack-note">{actionNote}</p>
                 {isSelected ? (

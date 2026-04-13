@@ -78,6 +78,7 @@ export default async function PartnerPortalPage() {
           <article className="workspace-card wide-card">
             <div className="card-header-row">
               <div>
+                <span className="section-kicker">Overview</span>
                 <h3>What needs attention</h3>
                 <p>Finish onboarding, register a deal, or check what is still in review.</p>
               </div>
@@ -137,8 +138,9 @@ export default async function PartnerPortalPage() {
           </article>
 
           <article className="workspace-card">
+            <span className="section-kicker">Next actions</span>
             <h3>Quick actions</h3>
-            <ul>
+            <ul className="quick-link-list">
               <li><a href="/portal/links">Register a new deal</a></li>
               <li><a href="/portal/deals">Review deal statuses</a></li>
               <li><a href="/portal/earnings">Check monthly RMR</a></li>
@@ -147,17 +149,22 @@ export default async function PartnerPortalPage() {
           </article>
 
           <article className="workspace-card">
+            <span className="section-kicker">Support</span>
             <h3>Support status</h3>
             {supportRequests.length > 0 ? (
-              <ul>
+              <ul className="support-status-list">
                 {supportRequests.slice(0, 4).map((request) => (
                   <li key={request.id}>
-                    {request.subject}: {request.status === "in_progress" ? "In progress" : request.status === "resolved" ? "Resolved" : "Open"}
+                    <strong>{request.subject}</strong>
+                    {request.status === "in_progress" ? "In progress" : request.status === "resolved" ? "Resolved" : "Open"}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p>No open support items.</p>
+              <div className="empty-state-card">
+                <span className="section-kicker">All clear</span>
+                <p>No open support items right now.</p>
+              </div>
             )}
           </article>
         </section>
@@ -192,8 +199,9 @@ export default async function PartnerPortalPage() {
           </article>
 
           <article className="workspace-card">
+            <span className="section-kicker">How it works</span>
             <h3>How this portal works</h3>
-            <ul>
+            <ul className="soft-list">
               <li>You complete onboarding once, then manage deals, training, and support from this portal.</li>
               <li>GoAccess reviews each deal before it is written into HubSpot.</li>
               <li>Monthly RMR appears here after deals become active recurring revenue.</li>

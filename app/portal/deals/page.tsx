@@ -60,6 +60,7 @@ export default async function PartnerDealsPage() {
         <article className="workspace-card wide-card">
           <div className="card-header-row">
             <div>
+              <span className="section-kicker">History</span>
               <h3>Deal history</h3>
               <p>Every deal you submitted through the GoAccess vendor portal.</p>
             </div>
@@ -88,7 +89,7 @@ export default async function PartnerDealsPage() {
                 <span>No deal registrations yet</span>
                 <span>-</span>
                 <span>-</span>
-                <span>Waiting on your first submission</span>
+                <span>Start with your first community submission</span>
                 <span>-</span>
               </div>
             ) : null}
