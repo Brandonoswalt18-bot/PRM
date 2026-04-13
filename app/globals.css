@@ -80,6 +80,17 @@ textarea {
   box-shadow: 0 10px 26px rgba(37, 78, 140, 0.12);
 }
 
+.topbar-minimal {
+  position: static;
+  margin-top: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
 .brand {
   display: inline-flex;
   align-items: center;

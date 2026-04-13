@@ -4,7 +4,7 @@ import { DemoRequestForm } from "@/components/marketing/demo-request-form";
 export function MarketingPage() {
   return (
     <div className="site-shell">
-      <header className="topbar topbar-light">
+      <header className="topbar topbar-minimal">
         <Link className="brand brand-light" href="/">
           <span className="brand-mark brand-mark-light">G</span>
           <span className="brand-text">GoAccess Vendor Portal</span>
