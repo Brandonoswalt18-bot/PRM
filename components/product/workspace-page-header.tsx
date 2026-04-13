@@ -9,26 +9,20 @@ type WorkspacePageHeaderProps = {
 };
 
 export function WorkspacePageHeader({
-  workspace,
   title,
-  subtitle,
   primaryLabel,
   primaryHref,
 }: WorkspacePageHeaderProps) {
   return (
     <header className="app-topbar">
-      <div>
-        <div className="eyebrow">{workspace}</div>
+      <div className="app-topbar-main">
+        <Link className="brand app-topbar-brand" href="/">
+          <span className="brand-mark">G</span>
+          <span className="brand-text">GoAccess</span>
+        </Link>
         <h1 className="app-title">{title}</h1>
-        <p className="app-subtitle">{subtitle}</p>
       </div>
       <div className="app-topbar-actions">
-        <Link className="button button-secondary" href="/">
-          Public page
-        </Link>
-        <Link className="button button-ghost" href="/auth/logout" prefetch={false}>
-          Sign out
-        </Link>
         <Link className="button button-primary" href={primaryHref ?? "#"} prefetch={false}>
           {primaryLabel}
         </Link>
