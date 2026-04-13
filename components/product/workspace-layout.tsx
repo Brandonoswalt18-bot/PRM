@@ -100,6 +100,15 @@ export function WorkspaceLayout({
             </Link>
           ))}
         </nav>
+        <div className="app-drawer-links">
+          <Link
+            className="app-drawer-link"
+            href="/"
+            onClick={() => setMobileNavOpen(false)}
+          >
+            Public page
+          </Link>
+        </div>
         <div className="session-card">
           <span className="session-label">Signed in as</span>
           <span className="session-name">{session.fullName}</span>

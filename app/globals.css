@@ -728,14 +728,14 @@ li + li {
   border: 1px solid rgba(31, 100, 216, 0.12);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 12px 28px rgba(16, 33, 77, 0.12);
+  box-shadow: 0 10px 24px rgba(16, 33, 77, 0.1);
 }
 
 .mobile-nav-toggle span {
   display: block;
-  width: 18px;
+  width: 20px;
   height: 2px;
-  margin: 4px auto;
+  margin: 3px auto;
   border-radius: 999px;
   background: var(--ink);
   transition: transform 160ms ease, opacity 160ms ease;
@@ -796,7 +796,7 @@ li + li {
   align-items: center;
   grid-template-columns: auto 1fr;
   gap: 14px;
-  padding: 10px 2px 2px;
+  padding: 8px 2px 0;
 }
 
 .mobile-workspace-copy {
@@ -875,6 +875,19 @@ li + li {
 .app-nav {
   display: grid;
   gap: 8px;
+}
+
+.app-drawer-links {
+  display: none;
+}
+
+.app-drawer-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  color: var(--muted);
+  font-weight: 700;
+  text-decoration: none;
 }
 
 .app-nav-item {
@@ -1699,7 +1712,7 @@ li + li {
     z-index: 55;
     width: min(320px, calc(100vw - 28px));
     gap: 16px;
-    padding: 18px 16px 22px;
+    padding: 18px 16px 20px;
     border-radius: 0 24px 24px 0;
     transform: translateX(calc(-100% - 16px));
     transition: transform 180ms ease;
@@ -1714,6 +1727,17 @@ li + li {
     gap: 10px;
     padding: 14px;
     margin-top: auto;
+  }
+
+  .app-drawer-links {
+    display: grid;
+    gap: 8px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(31, 100, 216, 0.1);
+  }
+
+  .app-drawer-link {
+    padding: 10px 2px;
   }
 
   .topbar {
@@ -1784,11 +1808,7 @@ li + li {
   }
 
   .app-topbar-actions {
-    width: 100%;
-  }
-
-  .app-topbar-actions > * {
-    flex: 1 1 100%;
+    display: none;
   }
 
   .stack-card {
@@ -1900,6 +1920,12 @@ li + li {
 
   .mobile-workspace-title {
     font-size: 0.96rem;
+  }
+
+  .mobile-nav-toggle {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
   }
 
   .workspace-card,
