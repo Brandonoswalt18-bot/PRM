@@ -612,6 +612,7 @@ function buildDealProperties(payload: HubSpotDealSyncPayload) {
     dealname: `${payload.vendor.companyName} - ${payload.deal.companyName}`,
     dealstage: stageId,
     amount: String(payload.deal.estimatedValue),
+    business: "Channel Partner",
     description: [
       "GoAccess vendor submission",
       `Community: ${payload.deal.companyName}`,
