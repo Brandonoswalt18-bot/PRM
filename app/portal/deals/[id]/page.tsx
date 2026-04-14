@@ -9,7 +9,7 @@ import { VendorDealAgreementManager } from "@/components/product/vendor-deal-agr
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
 import { formatDealLocation } from "@/lib/deal-registration";
-import { formatDealAgreementStatusLabel } from "@/lib/goaccess-copy";
+import { formatDealAgreementStatusLabel, formatVendorDealStatusLabel } from "@/lib/goaccess-copy";
 import { buildDealTimeline } from "@/lib/goaccess-timeline";
 import { formatCurrency, getDealById, listSyncEvents } from "@/lib/goaccess-store";
 
@@ -36,7 +36,7 @@ export default async function PartnerDealDetailPage({
   const metrics = [
     {
       label: "Deal status",
-      value: titleCase(deal.status),
+      value: formatVendorDealStatusLabel(deal.status),
       delta: deal.hubspotDealId ? `HubSpot #${deal.hubspotDealId}` : "Not yet linked to HubSpot",
     },
     {

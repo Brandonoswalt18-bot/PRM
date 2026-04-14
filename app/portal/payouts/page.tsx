@@ -4,7 +4,7 @@ import {
 import Link from "next/link";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
-import { formatDealStatusLabel } from "@/lib/goaccess-copy";
+import { formatVendorDealStatusLabel } from "@/lib/goaccess-copy";
 import {
   formatCurrency,
   getCurrentMonthlyRmrForVendor,
@@ -176,7 +176,7 @@ export default async function PartnerPayoutsPage({
                 {selectedStatementDeals.map((deal) => (
                   <div className="table-row table-cols-5" key={deal.id}>
                     <span>{deal.companyName}</span>
-                    <span>{formatDealStatusLabel(deal.status)}</span>
+                    <span>{formatVendorDealStatusLabel(deal.status)}</span>
                     <span>{new Date(deal.updatedAt).toLocaleDateString()}</span>
                     <span>{formatCurrency(deal.monthlyRmr)}</span>
                     <span>

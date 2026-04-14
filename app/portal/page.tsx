@@ -2,10 +2,10 @@ import { WorkspacePageHeader } from "@/components/product/workspace-page-header"
 import { MetricGrid } from "@/components/product/product-page-sections";
 import { getWorkspaceSession } from "@/lib/auth";
 import {
-  formatDealStatusLabel,
   formatNdaStatusLabel,
   formatPortalAccessLabel,
   formatVendorStatusLabel,
+  formatVendorDealStatusLabel,
   getVendorNextStep,
 } from "@/lib/goaccess-copy";
 import {
@@ -117,7 +117,7 @@ export default async function PartnerPortalPage() {
                 <div className="stack-meta-grid">
                   <span>{deals.filter((deal) => deal.status === "submitted").length} submitted</span>
                   <span>{deals.filter((deal) => deal.status === "under_review").length} in review</span>
-                  <span>{deals.filter((deal) => deal.status === "synced_to_hubspot").length} in HubSpot</span>
+                  <span>{deals.filter((deal) => deal.status === "synced_to_hubspot").length} approved</span>
                 </div>
               </div>
               <div className="stack-card">
@@ -191,7 +191,7 @@ export default async function PartnerPortalPage() {
                 <div className="table-row table-cols-4" key={deal.id}>
                   <span>{deal.companyName}</span>
                   <span>{formatShortDate(deal.createdAt)}</span>
-                  <span>{formatDealStatusLabel(deal.status)}</span>
+                  <span>{formatVendorDealStatusLabel(deal.status)}</span>
                   <span>{formatCurrency(deal.monthlyRmr)}</span>
                 </div>
               ))}

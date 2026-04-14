@@ -4,7 +4,7 @@ import {
 } from "@/components/product/product-page-sections";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
-import { formatDealStatusLabel } from "@/lib/goaccess-copy";
+import { formatVendorDealStatusLabel } from "@/lib/goaccess-copy";
 import { buildDealTimeline } from "@/lib/goaccess-timeline";
 import {
   formatCurrency,
@@ -28,9 +28,9 @@ export default async function PartnerDealsPage() {
       delta: `${deals.filter((deal) => deal.status === "submitted" || deal.status === "under_review").length} still under review`,
     },
     {
-      label: "In HubSpot",
+      label: "Approved",
       value: String(deals.filter((deal) => deal.status === "synced_to_hubspot").length),
-      delta: `${deals.filter((deal) => deal.hubspotDealId).length} deals linked to HubSpot`,
+      delta: `${deals.filter((deal) => deal.hubspotDealId).length} deals approved by GoAccess`,
     },
     {
       label: "Closed won",
@@ -42,7 +42,7 @@ export default async function PartnerDealsPage() {
       value: String(
         deals.filter((deal) => deal.status === "under_review" || deal.status === "rejected").length
       ),
-      delta: `${deals.filter((deal) => deal.status === "approved").length} approved and waiting on HubSpot sync`,
+      delta: `${deals.filter((deal) => deal.status === "approved").length} approved and pending internal follow-through`,
     },
   ];
 
@@ -78,7 +78,7 @@ export default async function PartnerDealsPage() {
                 <span>{deal.companyName}</span>
                 <span>{formatDealLocation(deal)}</span>
                 <span>{new Date(deal.createdAt).toLocaleDateString()}</span>
-                <span>{formatDealStatusLabel(deal.status)}</span>
+                <span>{formatVendorDealStatusLabel(deal.status)}</span>
                 <span>
                   <a href={`/portal/deals/${deal.id}`}>Open</a>
                 </span>
@@ -100,7 +100,7 @@ export default async function PartnerDealsPage() {
             <TimelineSection
               key={deal.id}
               title={deal.companyName}
-              description={`${formatDealLocation(deal)} · ${formatDealStatusLabel(deal.status)}${deal.hubspotDealId ? ` · HubSpot #${deal.hubspotDealId}` : ""}`}
+              description={`${formatDealLocation(deal)} · ${formatVendorDealStatusLabel(deal.status)}${deal.hubspotDealId ? ` · GoAccess approved` : ""}`}
               entries={buildDealTimeline(deal, syncEvents)}
             />
           ))}

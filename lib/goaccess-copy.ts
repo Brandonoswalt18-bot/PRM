@@ -113,6 +113,26 @@ export function formatDealStatusLabel(status: DealStatus) {
   }
 }
 
+export function formatVendorDealStatusLabel(status: DealStatus) {
+  switch (status) {
+    case "submitted":
+      return "Submitted";
+    case "under_review":
+      return "In review";
+    case "approved":
+    case "synced_to_hubspot":
+      return "Approved";
+    case "closed_won":
+      return "Closed won";
+    case "closed_lost":
+      return "Closed lost";
+    case "rejected":
+      return "Declined";
+    default:
+      return humanizeSnakeCase(status);
+  }
+}
+
 export function formatDealAgreementStatusLabel(status: DealAgreementStatus) {
   switch (status) {
     case "not_started":
