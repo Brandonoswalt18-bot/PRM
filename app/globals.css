@@ -808,6 +808,111 @@ li + li {
   padding: 8px 2px 0;
 }
 
+.workspace-search-shell {
+  position: relative;
+  z-index: 12;
+}
+
+.workspace-search-bar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  min-height: 52px;
+  border: 1px solid rgba(31, 100, 216, 0.12);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 12px 26px rgba(20, 44, 96, 0.08);
+}
+
+.workspace-search-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+}
+
+.workspace-search-input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  outline: none;
+  font-size: 0.92rem;
+}
+
+.workspace-search-input::placeholder {
+  color: var(--muted);
+}
+
+.workspace-search-results {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(31, 100, 216, 0.12);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 22px 48px rgba(20, 44, 96, 0.14);
+}
+
+.workspace-search-group {
+  display: grid;
+  gap: 8px;
+}
+
+.workspace-search-group-label {
+  color: var(--signal);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workspace-search-group-items {
+  display: grid;
+  gap: 8px;
+}
+
+.workspace-search-result,
+.workspace-search-empty {
+  display: grid;
+  gap: 3px;
+  padding: 12px 14px;
+  border: 1px solid rgba(31, 100, 216, 0.08);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(247, 250, 255, 0.9));
+}
+
+.workspace-search-result {
+  text-decoration: none;
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.workspace-search-result:hover,
+.workspace-search-result:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(31, 100, 216, 0.18);
+  box-shadow: 0 12px 24px rgba(20, 44, 96, 0.08);
+}
+
+.workspace-search-result strong,
+.workspace-search-empty strong {
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.workspace-search-result span,
+.workspace-search-empty span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
 .mobile-workspace-copy {
   display: grid;
   gap: 2px;
@@ -1685,6 +1790,135 @@ li + li {
   line-height: 1.5;
 }
 
+.control-action-grid,
+.earnings-panel,
+.recent-deal-list,
+.compact-activity-list {
+  display: grid;
+  gap: 12px;
+}
+
+.control-action-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.control-action-card,
+.recent-deal-card,
+.compact-activity-card {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border: 1px solid rgba(31, 100, 216, 0.1);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(31, 100, 216, 0.08), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(245, 249, 255, 0.93));
+  box-shadow: 0 12px 26px rgba(20, 44, 96, 0.06);
+  text-decoration: none;
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.control-action-card:hover,
+.control-action-card:focus-visible,
+.recent-deal-card:hover,
+.recent-deal-card:focus-visible,
+.compact-activity-card:hover,
+.compact-activity-card:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(31, 100, 216, 0.18);
+  box-shadow: 0 18px 32px rgba(20, 44, 96, 0.09);
+}
+
+.control-action-card strong,
+.recent-deal-card strong,
+.compact-activity-card strong {
+  color: var(--ink);
+  font-size: 0.96rem;
+}
+
+.control-action-card span,
+.recent-deal-card span,
+.compact-activity-card span,
+.compact-activity-card small {
+  color: var(--muted);
+}
+
+.control-action-card span:last-child,
+.compact-activity-card span {
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.earnings-panel {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.earnings-figure {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(31, 100, 216, 0.1);
+  background: rgba(250, 252, 255, 0.88);
+}
+
+.earnings-figure-accent {
+  background:
+    radial-gradient(circle at top right, rgba(31, 100, 216, 0.12), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 255, 0.94));
+}
+
+.earnings-figure span {
+  color: var(--signal);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.earnings-figure strong {
+  font-size: 1.6rem;
+  letter-spacing: -0.03em;
+}
+
+.earnings-figure p {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.earnings-meta-grid {
+  margin-top: 16px;
+}
+
+.recent-deal-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.recent-deal-card > div {
+  min-width: 0;
+}
+
+.recent-deal-card span {
+  font-size: 0.82rem;
+}
+
+.recent-deal-meta {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  text-align: right;
+}
+
+.compact-activity-card {
+  gap: 4px;
+}
+
+.compact-activity-card small {
+  font-size: 0.76rem;
+}
+
 .quick-action-card {
   display: grid;
   gap: 4px;
@@ -1841,6 +2075,11 @@ li + li {
     display: grid;
   }
 
+  .workspace-search-results {
+    left: 0;
+    right: 0;
+  }
+
   .mobile-nav-backdrop.is-open {
     display: block;
     opacity: 1;
@@ -1916,6 +2155,8 @@ li + li {
   .pricing-grid,
   .product-stats,
   .product-columns,
+  .control-action-grid,
+  .earnings-panel,
   .stack-meta-grid,
   .agreement-grid,
   .agreement-form-grid,
@@ -2001,6 +2242,15 @@ li + li {
     padding: 14px;
   }
 
+  .recent-deal-card {
+    grid-template-columns: 1fr;
+  }
+
+  .recent-deal-meta {
+    justify-items: start;
+    text-align: left;
+  }
+
   .table-head span,
   .table-row span {
     overflow-wrap: anywhere;
@@ -2054,6 +2304,17 @@ li + li {
     gap: 18px;
     padding-top: 14px;
     padding-bottom: 32px;
+  }
+
+  .workspace-search-bar {
+    min-height: 48px;
+    padding: 0 12px;
+    border-radius: 16px;
+  }
+
+  .workspace-search-results {
+    padding: 14px;
+    border-radius: 18px;
   }
 
   .app-topbar {

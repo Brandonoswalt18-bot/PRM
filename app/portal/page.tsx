@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { MetricGrid } from "@/components/product/product-page-sections";
 import { getWorkspaceSession } from "@/lib/auth";
 import {
+  formatDealAgreementStatusLabel,
   formatNdaStatusLabel,
   formatPortalAccessLabel,
   formatVendorStatusLabel,
@@ -62,6 +64,83 @@ export default async function PartnerPortalPage() {
     },
   ];
 
+  const agreementsNeedingSignature = deals.filter((deal) => deal.agreementStatus === "sent");
+  const dealsInReview = deals.filter((deal) => deal.status === "submitted" || deal.status === "under_review");
+  const blockedDeals = deals.filter(
+    (deal) => deal.status === "approved" || (deal.status === "closed_won" && deal.agreementStatus === "uploaded"),
+  );
+  const openSupportRequests = supportRequests.filter((request) => request.status !== "resolved");
+  const recentDeals = [...deals].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)).slice(0, 4);
+  const expectedVendorRevenue = deals.reduce((sum, deal) => sum + deal.expectedVendorMonthlyRevenue, 0);
+
+  const actionItems = [
+    agreementsNeedingSignature.length > 0
+      ? {
+          href: "/portal/deals",
+          eyebrow: "Needs your signature",
+          title: `${agreementsNeedingSignature.length} agreement${agreementsNeedingSignature.length === 1 ? "" : "s"} waiting on you`,
+          detail: "Open the deal, download the dealer agreement, and upload the signed copy to keep payout setup moving.",
+        }
+      : null,
+    dealsInReview.length > 0
+      ? {
+          href: "/portal/deals",
+          eyebrow: "In motion",
+          title: `${dealsInReview.length} deal${dealsInReview.length === 1 ? "" : "s"} still in review`,
+          detail: "Track what GoAccess is reviewing and see which accounts are closest to approval.",
+        }
+      : null,
+    blockedDeals.length > 0
+      ? {
+          href: "/portal/deals",
+          eyebrow: "Blocked",
+          title: `${blockedDeals.length} deal${blockedDeals.length === 1 ? "" : "s"} need attention`,
+          detail: "One or more deals are stalled in an approval or agreement step and need a closer look.",
+        }
+      : null,
+    openSupportRequests.length > 0
+      ? {
+          href: "/portal/support",
+          eyebrow: "Support",
+          title: `${openSupportRequests.length} support request${openSupportRequests.length === 1 ? "" : "s"} open`,
+          detail: "Jump back into your latest conversation if you still need an answer or next step.",
+        }
+      : null,
+    {
+      href: "/portal/links",
+      eyebrow: "Next submission",
+      title: "Register your next deal",
+      detail: "Keep your pipeline moving with a new community submission whenever one is ready.",
+    },
+  ].filter(Boolean) as Array<{
+    href: string;
+    eyebrow: string;
+    title: string;
+    detail: string;
+  }>;
+
+  const recentActivity = [
+    ...agreementsNeedingSignature.slice(0, 2).map((deal) => ({
+      id: `agreement-${deal.id}`,
+      href: `/portal/deals/${deal.id}`,
+      title: `${deal.companyName} agreement is awaiting signature`,
+      detail: formatDealAgreementStatusLabel(deal.agreementStatus),
+      timestamp: deal.agreementSentAt ?? deal.updatedAt,
+    })),
+    ...recentDeals.slice(0, 3).map((deal) => ({
+      id: `deal-${deal.id}`,
+      href: `/portal/deals/${deal.id}`,
+      title: `${deal.companyName} is ${formatVendorDealStatusLabel(deal.status).toLowerCase()}`,
+      detail:
+        deal.status === "closed_won"
+          ? `${formatCurrency(deal.expectedVendorMonthlyRevenue)} expected monthly earnings`
+          : `${formatCurrency(deal.monthlyRmr)} monthly RMR submitted`,
+      timestamp: deal.updatedAt,
+    })),
+  ]
+    .sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp))
+    .slice(0, 4);
+
   return (
     <>
       <WorkspacePageHeader
@@ -78,106 +157,45 @@ export default async function PartnerPortalPage() {
           <article className="workspace-card wide-card">
             <div className="card-header-row">
               <div>
-                <span className="section-kicker">Overview</span>
-                <h3>What needs attention</h3>
-                <p>Finish onboarding, register a deal, or check what is still in review.</p>
+                <span className="section-kicker">Control panel</span>
+                <h3>Your actions</h3>
+                <p>Start with the items that need movement right now, then jump straight into the right record.</p>
               </div>
-              <a href="/portal/profile" className="button button-secondary">
-                Open profile
-              </a>
+              <Link href="/portal/deals" className="button button-secondary" prefetch={false}>
+                Open deal queue
+              </Link>
             </div>
-            <div className="stack-list">
-              <div className="stack-card">
-                <div className="stack-card-header">
-                  <div>
-                    <h3>What happens next</h3>
-                    <p>{vendor?.companyName ?? "Your company"} in the GoAccess onboarding flow.</p>
-                  </div>
-                  <span className="status-pill">
-                    {vendor ? formatVendorStatusLabel(vendor.status) : "Pending review"}
-                  </span>
-                </div>
-                <p className="stack-note">{getVendorNextStep(vendor)}</p>
-                <div className="stack-meta-grid">
-                  <span>NDA: {vendor ? formatNdaStatusLabel(vendor.ndaStatus) : "Waiting on review"}</span>
-                  <span>Portal invite: {vendor?.credentialsIssued ? "Sent" : "Pending"}</span>
-                  <span>Portal access: {vendor ? formatPortalAccessLabel(vendor.portalAccess) : "Not ready"}</span>
-                </div>
-              </div>
-              <div className="stack-card">
-                <div className="stack-card-header">
-                  <div>
-                    <h3>Deal queue</h3>
-                    <p>Watch what GoAccess is reviewing and what already made it into HubSpot.</p>
-                  </div>
-                  <span className="status-pill">
-                    {deals.filter((deal) => deal.status === "submitted" || deal.status === "under_review").length} open
-                  </span>
-                </div>
-                <div className="stack-meta-grid">
-                  <span>{deals.filter((deal) => deal.status === "submitted").length} submitted</span>
-                  <span>{deals.filter((deal) => deal.status === "under_review").length} in review</span>
-                  <span>{deals.filter((deal) => deal.status === "synced_to_hubspot").length} approved</span>
-                </div>
-              </div>
-              <div className="stack-card">
-                <div className="stack-card-header">
-                  <div>
-                    <h3>Monthly RMR</h3>
-                    <p>Closed won deals become active recurring revenue.</p>
-                  </div>
-                  <span className="status-pill">{formatCurrency(currentRmr)}</span>
-                </div>
-                <div className="stack-meta-grid">
-                  <span>{formatCurrency(forecastRmr)} forecast</span>
-                  <span>{deals.filter((deal) => deal.status === "closed_won").length} active accounts</span>
-                  <span>{deals.filter((deal) => deal.status === "synced_to_hubspot").length} forecast accounts</span>
-                </div>
-              </div>
+            <div className="control-action-grid">
+              {actionItems.map((item) => (
+                <Link className="control-action-card" href={item.href} key={`${item.href}-${item.title}`} prefetch={false}>
+                  <span className="section-kicker">{item.eyebrow}</span>
+                  <strong>{item.title}</strong>
+                  <span>{item.detail}</span>
+                </Link>
+              ))}
             </div>
           </article>
 
           <article className="workspace-card">
-            <span className="section-kicker">Next actions</span>
-            <h3>Quick actions</h3>
-            <div className="quick-action-grid">
-              <a className="quick-action-card" href="/portal/links">
-                <strong>Register a new deal</strong>
-                <span>Submit a new community and keep the queue moving.</span>
-              </a>
-              <a className="quick-action-card" href="/portal/deals">
-                <strong>Review deal statuses</strong>
-                <span>Check what is still in review and what GoAccess already approved.</span>
-              </a>
-              <a className="quick-action-card" href="/portal/earnings">
-                <strong>Check monthly RMR</strong>
-                <span>See current recurring revenue and expected earnings.</span>
-              </a>
-              <a className="quick-action-card" href="/portal/support">
-                <strong>Open support</strong>
-                <span>Ask a question without leaving the portal workflow.</span>
-              </a>
-            </div>
-          </article>
-
-          <article className="workspace-card">
-            <span className="section-kicker">Support</span>
-            <h3>Support status</h3>
-            {supportRequests.length > 0 ? (
-              <ul className="support-status-list">
-                {supportRequests.slice(0, 4).map((request) => (
-                  <li key={request.id}>
-                    <strong>{request.subject}</strong>
-                    <span>{request.status === "in_progress" ? "In progress" : request.status === "resolved" ? "Resolved" : "Open"}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="empty-state-card">
-                <span className="section-kicker">All clear</span>
-                <p>No open support items right now.</p>
+            <span className="section-kicker">Revenue</span>
+            <h3>Your earnings</h3>
+            <div className="earnings-panel">
+              <div className="earnings-figure">
+                <span>Monthly RMR</span>
+                <strong>{formatCurrency(currentRmr)}</strong>
+                <p>{deals.filter((deal) => deal.status === "closed_won").length} active recurring accounts</p>
               </div>
-            )}
+              <div className="earnings-figure earnings-figure-accent">
+                <span>Expected earnings</span>
+                <strong>{formatCurrency(expectedVendorRevenue)}</strong>
+                <p>{formatCurrency(forecastRmr)} forecast monthly RMR across approved and active deals</p>
+              </div>
+            </div>
+            <div className="stack-meta-grid earnings-meta-grid">
+              <span>NDA: {vendor ? formatNdaStatusLabel(vendor.ndaStatus) : "Waiting on review"}</span>
+              <span>Portal access: {vendor ? formatPortalAccessLabel(vendor.portalAccess) : "Not ready"}</span>
+              <span>{vendor ? formatVendorStatusLabel(vendor.status) : "Pending review"}</span>
+            </div>
           </article>
         </section>
 
@@ -185,39 +203,52 @@ export default async function PartnerPortalPage() {
           <article className="workspace-card wide-card">
             <div className="card-header-row">
               <div>
-                <h3>Recent deal registrations</h3>
-                <p>What you submitted, when it was sent, and where it stands.</p>
+                <span className="section-kicker">Pipeline</span>
+                <h3>Your deals</h3>
+                <p>Keep an eye on the handful of records most likely to need a follow-up next.</p>
               </div>
               <a href="/portal/deals" className="button button-secondary">
                 Open all deals
               </a>
             </div>
-            <div className="data-table">
-              <div className="table-head table-cols-4">
-                <span>Account</span>
-                <span>Submitted</span>
-                <span>Status</span>
-                <span>Monthly RMR</span>
-              </div>
-              {deals.slice(0, 6).map((deal) => (
-                <div className="table-row table-cols-4" key={deal.id}>
-                  <span>{deal.companyName}</span>
-                  <span>{formatShortDate(deal.createdAt)}</span>
-                  <span>{formatVendorDealStatusLabel(deal.status)}</span>
-                  <span>{formatCurrency(deal.monthlyRmr)}</span>
-                </div>
+            <div className="recent-deal-list">
+              {recentDeals.map((deal) => (
+                <Link className="recent-deal-card" href={`/portal/deals/${deal.id}`} key={deal.id} prefetch={false}>
+                  <div>
+                    <strong>{deal.companyName}</strong>
+                    <span>
+                      {deal.city && deal.state ? `${deal.city}, ${deal.state}` : deal.contactName}
+                    </span>
+                  </div>
+                  <div className="recent-deal-meta">
+                    <span className="status-pill status-pill-neutral">{formatVendorDealStatusLabel(deal.status)}</span>
+                    <span>{formatCurrency(deal.expectedVendorMonthlyRevenue || deal.monthlyRmr)}</span>
+                    <span>Updated {formatShortDate(deal.updatedAt)}</span>
+                  </div>
+                </Link>
               ))}
             </div>
           </article>
 
           <article className="workspace-card">
-            <span className="section-kicker">How it works</span>
-            <h3>How this portal works</h3>
-            <ul className="summary-list">
-              <li>You complete onboarding once, then manage deals, training, and support from this portal.</li>
-              <li>GoAccess reviews each deal before it is written into HubSpot.</li>
-              <li>Monthly RMR appears here after deals become active recurring revenue.</li>
-            </ul>
+            <span className="section-kicker">Recent activity</span>
+            <h3>Latest movement</h3>
+            {recentActivity.length > 0 ? (
+              <div className="compact-activity-list">
+                {recentActivity.map((item) => (
+                  <Link className="compact-activity-card" href={item.href} key={item.id} prefetch={false}>
+                    <strong>{item.title}</strong>
+                    <span>{item.detail}</span>
+                    <small>{formatShortDate(item.timestamp)}</small>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state-card">
+                <span className="section-kicker">All clear</span>
+                <p>{getVendorNextStep(vendor)}</p>
+              </div>
+            )}
           </article>
         </section>
       </div>
