@@ -1,6 +1,6 @@
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { AdminDealManager } from "@/components/product/admin-deal-manager";
-import { listApprovedVendors, listDeals, listSupportRequests, listSyncEvents } from "@/lib/goaccess-store";
+import { listApprovedVendors, listDeals, listSupportRequests, listSyncEvents, listVendorApplications } from "@/lib/goaccess-store";
 
 type DealRegistrationsPageProps = {
   searchParams?: Promise<{
@@ -11,73 +11,39 @@ type DealRegistrationsPageProps = {
 
 export default async function DealRegistrationsPage({ searchParams }: DealRegistrationsPageProps) {
   const params = (await searchParams) ?? {};
-  const [deals, syncEvents, vendors, supportRequests] = await Promise.all([
+  const [deals, syncEvents, vendors, supportRequests, applications] = await Promise.all([
     listDeals(),
     listSyncEvents(),
     listApprovedVendors(),
     listSupportRequests(),
+    listVendorApplications(),
   ]);
 
   const activeQueue =
     params.queue === "review" || params.queue === "hubspot" || params.queue === "closed"
       ? params.queue
       : "all";
-  const reviewDeals = deals.filter((deal) => ["submitted", "under_review", "approved"].includes(deal.status));
-  const hubspotDeals = deals.filter((deal) => deal.status === "approved" || deal.status === "synced_to_hubspot");
-  const closedDeals = deals.filter((deal) => deal.status === "closed_won" || deal.status === "closed_lost");
-  const filteredDeals =
-    activeQueue === "review"
-      ? reviewDeals
-      : activeQueue === "hubspot"
-        ? hubspotDeals
-        : activeQueue === "closed"
-          ? closedDeals
-          : deals;
-  const selectedDealId = filteredDeals.some((deal) => deal.id === params.deal) ? params.deal : undefined;
+  const selectedDealId = deals.some((deal) => deal.id === params.deal) ? params.deal : undefined;
 
   return (
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
         title="Deal registrations"
-        subtitle="Review the queue, open one deal when needed, and confirm every approved deal either syncs to HubSpot or clearly shows why it is blocked."
+        subtitle="Run the daily deal operation from one place: see the numbers, filter to what needs action, search the queue, and finish the next step fast."
         primaryLabel="Show full queue"
         primaryHref="/app/deal-registrations"
       />
       <div className="app-content">
         <AdminDealManager
-          deals={filteredDeals}
+          applications={applications}
+          deals={deals}
           syncEvents={syncEvents}
           vendors={vendors}
           activeQueue={activeQueue}
           selectedDealId={selectedDealId}
-          queueCounts={{
-            all: deals.length,
-            review: reviewDeals.length,
-            hubspot: hubspotDeals.length,
-            closed: closedDeals.length,
-          }}
+          openSupportCount={supportRequests.filter((request) => request.status !== "resolved").length}
         />
-        <article className="workspace-card">
-          <span className="section-kicker">Snapshot</span>
-          <h3>Queue summary</h3>
-          <ul className="soft-list">
-            <li>{reviewDeals.filter((deal) => deal.status === "submitted").length} new submissions still need first review.</li>
-            <li>{reviewDeals.filter((deal) => deal.status === "under_review").length} deals are sitting in active review.</li>
-            <li>{hubspotDeals.filter((deal) => deal.status === "approved").length} approved deals still need HubSpot follow-up.</li>
-            <li>{hubspotDeals.filter((deal) => deal.status === "synced_to_hubspot").length} approved deals are already in HubSpot.</li>
-            <li>{supportRequests.filter((request) => request.status !== "resolved").length} open vendor support requests may affect deal progress.</li>
-          </ul>
-        </article>
-        <article className="workspace-card">
-          <span className="section-kicker">Guardrails</span>
-          <h3>Rules</h3>
-          <ul className="soft-list">
-            <li>Approving a deal attempts HubSpot sync immediately.</li>
-            <li>Closed won should follow sync, not bypass it.</li>
-            <li>Support issues should stay visible if they block deal progress.</li>
-          </ul>
-        </article>
       </div>
     </>
   );

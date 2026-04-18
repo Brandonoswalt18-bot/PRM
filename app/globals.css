@@ -1794,7 +1794,8 @@ li + li {
 .earnings-panel,
 .recent-deal-list,
 .compact-activity-list,
-.performance-grid {
+.performance-grid,
+.action-filter-grid {
   display: grid;
   gap: 12px;
 }
@@ -1987,6 +1988,58 @@ li + li {
   color: var(--muted);
   font-size: 0.8rem;
   line-height: 1.55;
+}
+
+.queue-search-shell {
+  margin: 18px 0 14px;
+}
+
+.action-filter-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
+.action-filter-card {
+  display: grid;
+  gap: 4px;
+  padding: 18px;
+  border: 1px solid rgba(31, 100, 216, 0.1);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(31, 100, 216, 0.08), transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(245, 249, 255, 0.93));
+  box-shadow: 0 10px 24px rgba(20, 44, 96, 0.05);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+.action-filter-card:hover,
+.action-filter-card:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(31, 100, 216, 0.18);
+  box-shadow: 0 16px 30px rgba(20, 44, 96, 0.08);
+}
+
+.action-filter-card strong {
+  color: var(--ink);
+  font-size: 1.28rem;
+  letter-spacing: -0.03em;
+}
+
+.action-filter-card span:last-child {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.action-filter-card-active {
+  border-color: rgba(31, 100, 216, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(31, 100, 216, 0.14), transparent 38%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(240, 246, 255, 0.95));
+  box-shadow: 0 18px 34px rgba(20, 44, 96, 0.1);
 }
 
 .quick-action-card {
@@ -2228,6 +2281,7 @@ li + li {
   .control-action-grid,
   .earnings-panel,
   .performance-grid,
+  .action-filter-grid,
   .stack-meta-grid,
   .agreement-grid,
   .agreement-form-grid,
@@ -2329,6 +2383,10 @@ li + li {
 
   .performance-toggle-pill {
     flex: 1 1 0;
+  }
+
+  .action-filter-card {
+    padding: 16px;
   }
 
   .table-head span,
