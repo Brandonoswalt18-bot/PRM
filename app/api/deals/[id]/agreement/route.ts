@@ -80,21 +80,43 @@ export async function POST(
         vendorPayoutRate,
       }
     );
+    const sendResult = await markDealerAgreementSent(id, { notifyVendor: true });
     const updatedDeal = await getDealById(id);
 
     await recordDealSyncEvent({
       dealId: id,
       vendorId: deal.vendorId,
-      action: "Dealer agreement uploaded",
-      status: "queued",
+      action: "Dealer agreement uploaded and shared with vendor",
+      status: sendResult.notification?.status === "failed" ? "failed" : "synced",
       reference: result.fileName,
     });
+
+    if (sendResult.notification) {
+      await recordDealSyncEvent({
+        dealId: id,
+        vendorId: deal.vendorId,
+        action:
+          sendResult.notification.status === "failed"
+            ? "Dealer agreement email could not be delivered"
+            : "Dealer agreement email sent to vendor",
+        status:
+          sendResult.notification.status === "failed"
+            ? "failed"
+            : sendResult.notification.status === "sent"
+              ? "synced"
+              : "queued",
+        reference: sendResult.notification.reference ?? "Vendor notified",
+      });
+    }
 
     return NextResponse.json({
       ok: true,
       deal: updatedDeal,
       result,
-      message: "Dealer agreement uploaded and linked to this closed deal.",
+      message:
+        sendResult.notification?.status === "failed"
+          ? "Dealer agreement uploaded and shared in the portal, but vendor email delivery failed."
+          : "Dealer agreement uploaded and sent to the vendor.",
     });
   } catch (error) {
     return NextResponse.json(
@@ -134,20 +156,41 @@ export async function PATCH(
   }
 
   try {
-    const updatedDeal = await markDealerAgreementSent(id);
+    const sendResult = await markDealerAgreementSent(id, { notifyVendor: true });
 
     await recordDealSyncEvent({
       dealId: id,
       vendorId: deal.vendorId,
       action: "Dealer agreement shared with vendor",
-      status: "queued",
-      reference: updatedDeal.agreementFileName ?? "Agreement sent",
+      status: sendResult.notification?.status === "failed" ? "failed" : "queued",
+      reference: sendResult.deal.agreementFileName ?? "Agreement sent",
     });
+
+    if (sendResult.notification) {
+      await recordDealSyncEvent({
+        dealId: id,
+        vendorId: deal.vendorId,
+        action:
+          sendResult.notification.status === "failed"
+            ? "Dealer agreement email could not be delivered"
+            : "Dealer agreement email sent to vendor",
+        status:
+          sendResult.notification.status === "failed"
+            ? "failed"
+            : sendResult.notification.status === "sent"
+              ? "synced"
+              : "queued",
+        reference: sendResult.notification.reference ?? "Vendor notified",
+      });
+    }
 
     return NextResponse.json({
       ok: true,
-      deal: updatedDeal,
-      message: "Dealer agreement marked as sent to the vendor.",
+      deal: sendResult.deal,
+      message:
+        sendResult.notification?.status === "failed"
+          ? "Dealer agreement is available in the portal, but vendor email delivery failed."
+          : "Dealer agreement shared with the vendor.",
     });
   } catch (error) {
     return NextResponse.json(

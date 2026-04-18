@@ -159,7 +159,8 @@ export type VendorNotification = {
     | "application_internal_alert"
     | "application_approved"
     | "nda_sent"
-    | "credentials_issued";
+    | "credentials_issued"
+    | "dealer_agreement_sent";
   status: "sent" | "failed" | "logged";
   reference?: string;
   createdAt: string;

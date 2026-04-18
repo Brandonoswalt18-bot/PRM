@@ -3,6 +3,7 @@ import path from "node:path";
 import {
   buildInviteUrl,
   getApplicationNotificationRecipients,
+  getPortalBaseUrl,
   sendVendorEmail,
 } from "@/lib/email";
 import { parseDealNotes } from "@/lib/deal-registration";
@@ -2174,6 +2175,11 @@ export async function uploadDealerAgreementForDeal(
   deal.agreementFileName = normalizedName;
   deal.agreementFileUrl = fileUrl;
   deal.agreementBlobPath = storedFile.blobPath ?? undefined;
+  deal.signedAgreementFileName = undefined;
+  deal.signedAgreementFileUrl = undefined;
+  deal.signedAgreementBlobPath = undefined;
+  deal.signedAgreementUploadedAt = undefined;
+  deal.agreementSignedAt = undefined;
   deal.expectedMonthlyRmr = config.expectedMonthlyRmr;
   deal.vendorPayoutType = payoutType;
   deal.vendorPayoutRate = config.vendorPayoutRate;
@@ -2190,7 +2196,10 @@ export async function uploadDealerAgreementForDeal(
   };
 }
 
-export async function markDealerAgreementSent(dealId: string) {
+export async function markDealerAgreementSent(
+  dealId: string,
+  options?: { notifyVendor?: boolean }
+) {
   const store = await readStore();
   const deal = store.deals.find((item) => item.id === dealId);
 
@@ -2202,13 +2211,48 @@ export async function markDealerAgreementSent(dealId: string) {
     throw new Error("Upload the dealer agreement before sending it to the vendor.");
   }
 
+  const vendor = store.approvedVendors.find((item) => item.id === deal.vendorId);
+
+  if (!vendor) {
+    throw new Error("Approved vendor record not found for this deal.");
+  }
+
   const sentAt = nowIso();
   deal.agreementStatus = deal.signedAgreementFileUrl ? "signed" : "sent";
   deal.agreementSentAt = sentAt;
   deal.updatedAt = sentAt;
 
+  let notification: VendorNotification | null = null;
+
+  if (options?.notifyVendor) {
+    const portalDealUrl = `${getPortalBaseUrl()}/portal/deals/${encodeURIComponent(deal.id)}`;
+    notification = await recordWorkflowEmail({
+      vendorId: vendor.id,
+      recipientEmail: vendor.primaryContactEmail,
+      subject: "Your GoAccess dealer agreement is ready",
+      category: "dealer_agreement_sent",
+      reference: portalDealUrl,
+      text:
+        `Hi ${vendor.primaryContactName},\n\n` +
+        `GoAccess uploaded the dealer agreement for ${deal.companyName} and it is ready in your vendor portal.\n\n` +
+        `Open the deal here:\n${portalDealUrl}\n\n` +
+        "Please review the agreement, download it, and upload the signed copy in the portal.\n\n" +
+        "GoAccess",
+      html:
+        `<p>Hi ${vendor.primaryContactName},</p>` +
+        `<p>GoAccess uploaded the dealer agreement for <strong>${deal.companyName}</strong> and it is ready in your vendor portal.</p>` +
+        `<p><a href="${portalDealUrl}">Open this deal in the vendor portal</a></p>` +
+        "<p>Please review the agreement, download it, and upload the signed copy in the portal.</p>" +
+        "<p>GoAccess</p>",
+    });
+    store.notifications.unshift(notification);
+  }
+
   await writeStore(store);
-  return deal;
+  return {
+    deal,
+    notification,
+  };
 }
 
 export async function uploadSignedDealerAgreementForDeal(

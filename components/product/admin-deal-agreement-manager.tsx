@@ -27,6 +27,21 @@ function formatPayoutSummary(deal: DealRegistration) {
     : `${formatCurrency(deal.vendorPayoutRate)} flat monthly payout`;
 }
 
+async function readApiMessage(response: Response) {
+  const text = await response.text();
+
+  if (!text) {
+    return "";
+  }
+
+  try {
+    const payload = JSON.parse(text) as { message?: string };
+    return payload.message ?? "";
+  } catch {
+    return text;
+  }
+}
+
 export function AdminDealAgreementManager({ deal }: { deal: DealRegistration }) {
   const router = useRouter();
   const isClosedDeal = deal.status === "closed_won";
@@ -40,8 +55,6 @@ export function AdminDealAgreementManager({ deal }: { deal: DealRegistration }) 
   );
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
-  const [sendStatus, setSendStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
-  const [sendMessage, setSendMessage] = useState("");
 
   async function handleUpload(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -65,50 +78,21 @@ export function AdminDealAgreementManager({ deal }: { deal: DealRegistration }) 
         method: "POST",
         body: formData,
       });
-      const payload = (await response.json()) as { message?: string };
+      const responseMessage = await readApiMessage(response);
 
       if (!response.ok) {
         setStatus("error");
-        setMessage(payload.message ?? "Unable to upload the dealer agreement.");
+        setMessage(responseMessage || "Unable to upload the dealer agreement.");
         return;
       }
 
       setStatus("success");
-      setMessage(payload.message ?? "Dealer agreement uploaded.");
+      setMessage(responseMessage || "Dealer agreement uploaded and sent to the vendor.");
       setFile(null);
       startTransition(() => router.refresh());
     } catch {
       setStatus("error");
       setMessage("Network error while uploading the dealer agreement.");
-    }
-  }
-
-  async function handleMarkSent() {
-    setSendStatus("sending");
-    setSendMessage("");
-
-    try {
-      const response = await fetch(`/api/deals/${deal.id}/agreement`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ action: "mark_sent" }),
-      });
-      const payload = (await response.json()) as { message?: string };
-
-      if (!response.ok) {
-        setSendStatus("error");
-        setSendMessage(payload.message ?? "Unable to mark the dealer agreement as sent.");
-        return;
-      }
-
-      setSendStatus("success");
-      setSendMessage(payload.message ?? "Dealer agreement marked as sent.");
-      startTransition(() => router.refresh());
-    } catch {
-      setSendStatus("error");
-      setSendMessage("Network error while updating the dealer agreement status.");
     }
   }
 
@@ -171,8 +155,8 @@ export function AdminDealAgreementManager({ deal }: { deal: DealRegistration }) 
 
       <div className="agreement-grid">
         <div className="stack-card">
-          <h3>1. Upload agreement and economics</h3>
-          <p className="stack-note">Upload the deal-specific file and set the expected monthly payout terms.</p>
+          <h3>Upload agreement and economics</h3>
+          <p className="stack-note">Upload the deal-specific file, set the expected monthly payout terms, and GoAccess will immediately share it with the vendor.</p>
           <form className="login-form" onSubmit={handleUpload}>
             <label className="login-field">
               <span className="access-label">Dealer agreement file</span>
@@ -235,34 +219,9 @@ export function AdminDealAgreementManager({ deal }: { deal: DealRegistration }) 
           >
             {message ||
               (isClosedDeal
-                ? "Closed won deals can carry their own uploaded dealer agreement."
+                ? "Closed won deals can carry their own uploaded dealer agreement and send it automatically to the vendor."
                 : "Mark the deal closed won before uploading its dealer agreement and payout terms.")}
           </p>
-        </div>
-
-        <div className="stack-card">
-          <h3>2. Share with vendor</h3>
-          <p className="stack-note">Once the file and payout terms are ready, mark it as sent so the vendor can upload the signed copy.</p>
-          <div className="agreement-action-stack">
-            <button
-              className="button button-secondary"
-              disabled={sendStatus === "sending" || !deal.agreementFileName}
-              type="button"
-              onClick={handleMarkSent}
-            >
-              {sendStatus === "sending" ? "Updating..." : "Mark agreement sent"}
-            </button>
-            <p
-              className={`form-message ${
-                sendStatus === "success" ? "form-message-success" : ""
-              } ${sendStatus === "error" ? "form-message-error" : ""}`.trim()}
-            >
-              {sendMessage ||
-                (deal.agreementStatus === "signed"
-                  ? "Signed copy is already back on file."
-                  : "This keeps the in-app status explicit even if the file was shared outside the platform.")}
-            </p>
-          </div>
         </div>
       </div>
     </article>
