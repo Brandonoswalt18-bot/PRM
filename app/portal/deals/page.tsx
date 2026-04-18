@@ -65,6 +65,9 @@ export default async function PartnerDealsPage() {
               <p>Every deal you submitted through the GoAccess vendor portal.</p>
             </div>
           </div>
+          {deals.length > 0 ? (
+            <p className="table-note">Open any deal for agreement status, expected earnings, and the full review timeline.</p>
+          ) : null}
           <div className="data-table">
             <div className="table-head table-cols-5">
               <span>Community</span>

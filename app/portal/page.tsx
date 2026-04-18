@@ -140,12 +140,24 @@ export default async function PartnerPortalPage() {
           <article className="workspace-card">
             <span className="section-kicker">Next actions</span>
             <h3>Quick actions</h3>
-            <ul className="quick-link-list">
-              <li><a href="/portal/links">Register a new deal</a></li>
-              <li><a href="/portal/deals">Review deal statuses</a></li>
-              <li><a href="/portal/earnings">Check monthly RMR</a></li>
-              <li><a href="/portal/support">Open support</a></li>
-            </ul>
+            <div className="quick-action-grid">
+              <a className="quick-action-card" href="/portal/links">
+                <strong>Register a new deal</strong>
+                <span>Submit a new community and keep the queue moving.</span>
+              </a>
+              <a className="quick-action-card" href="/portal/deals">
+                <strong>Review deal statuses</strong>
+                <span>Check what is still in review and what GoAccess already approved.</span>
+              </a>
+              <a className="quick-action-card" href="/portal/earnings">
+                <strong>Check monthly RMR</strong>
+                <span>See current recurring revenue and expected earnings.</span>
+              </a>
+              <a className="quick-action-card" href="/portal/support">
+                <strong>Open support</strong>
+                <span>Ask a question without leaving the portal workflow.</span>
+              </a>
+            </div>
           </article>
 
           <article className="workspace-card">
@@ -156,7 +168,7 @@ export default async function PartnerPortalPage() {
                 {supportRequests.slice(0, 4).map((request) => (
                   <li key={request.id}>
                     <strong>{request.subject}</strong>
-                    {request.status === "in_progress" ? "In progress" : request.status === "resolved" ? "Resolved" : "Open"}
+                    <span>{request.status === "in_progress" ? "In progress" : request.status === "resolved" ? "Resolved" : "Open"}</span>
                   </li>
                 ))}
               </ul>
@@ -201,7 +213,7 @@ export default async function PartnerPortalPage() {
           <article className="workspace-card">
             <span className="section-kicker">How it works</span>
             <h3>How this portal works</h3>
-            <ul className="soft-list">
+            <ul className="summary-list">
               <li>You complete onboarding once, then manage deals, training, and support from this portal.</li>
               <li>GoAccess reviews each deal before it is written into HubSpot.</li>
               <li>Monthly RMR appears here after deals become active recurring revenue.</li>

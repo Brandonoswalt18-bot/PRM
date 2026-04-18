@@ -170,17 +170,22 @@ export default async function VendorDashboardPage() {
           </article>
 
           <article className="workspace-card">
+            <span className="section-kicker">HubSpot</span>
             <h3>Latest sync activity</h3>
             {syncEvents.length > 0 ? (
-              <ul>
+              <ul className="summary-list">
                 {syncEvents.slice(0, 4).map((event) => (
                   <li key={event.id}>
-                    {formatShortDate(event.createdAt)}: {event.action} ({titleCaseStatus(event.status)})
+                    <strong>{event.action}</strong>
+                    <span>{formatShortDate(event.createdAt)} · {titleCaseStatus(event.status)}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p>No recent sync activity.</p>
+              <div className="empty-state-card">
+                <span className="section-kicker">Clear</span>
+                <p>No recent sync activity.</p>
+              </div>
             )}
           </article>
 
@@ -195,15 +200,19 @@ export default async function VendorDashboardPage() {
               </a>
             </div>
             {outstandingSupportRequests.length > 0 ? (
-              <ul>
+              <ul className="summary-list">
                 {outstandingSupportRequests.slice(0, 4).map((request) => (
                   <li key={request.id}>
-                    {request.subject}: {titleCaseStatus(request.status)}
+                    <strong>{request.subject}</strong>
+                    <span>{titleCaseStatus(request.status)}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p>No outstanding support tickets.</p>
+              <div className="empty-state-card">
+                <span className="section-kicker">All clear</span>
+                <p>No outstanding support tickets.</p>
+              </div>
             )}
           </article>
         </section>
