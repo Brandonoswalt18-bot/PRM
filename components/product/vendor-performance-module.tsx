@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { formatCurrency } from "@/lib/goaccess-store";
 import type { DealRegistration, VendorApplication } from "@/types/goaccess";
 
 type PerformanceRange = "daily" | "weekly" | "monthly";
@@ -11,6 +10,14 @@ const RANGE_OPTIONS: Array<{ id: PerformanceRange; label: string }> = [
   { id: "weekly", label: "Weekly" },
   { id: "monthly", label: "Monthly" },
 ];
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
 
 function isWithinRange(value: string | undefined, range: PerformanceRange) {
   if (!value) {
