@@ -20,6 +20,10 @@ function formatShortDate(value: string) {
   });
 }
 
+function formatCountLabel(count: number, singular: string, plural: string) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 export default async function VendorDashboardPage() {
   const [applications, vendors, deals, syncEvents, supportRequests] = await Promise.all([
     listVendorApplications(),
@@ -47,6 +51,40 @@ export default async function VendorDashboardPage() {
   const forecastRmr = deals
     .filter((deal) => deal.status === "closed_won" || deal.status === "synced_to_hubspot")
     .reduce((sum, deal) => sum + deal.monthlyRmr, 0);
+  const hubspotFollowUpDeals = deals.filter((deal) => deal.status === "approved");
+  const agreementUploadDeals = deals.filter(
+    (deal) => deal.status === "closed_won" && deal.agreementStatus === "not_started"
+  );
+  const agreementSignatureDeals = deals.filter(
+    (deal) => deal.status === "closed_won" && deal.agreementStatus === "sent"
+  );
+  const attentionItems = [
+    {
+      title: formatCountLabel(pendingApplications.length, "application needs review", "applications need review"),
+      detail: "Start with the pending queue and move new vendors into review or onboarding.",
+      href: "/app/programs?queue=pending",
+    },
+    {
+      title: formatCountLabel(hubspotFollowUpDeals.length, "approved deal needs HubSpot follow-up", "approved deals need HubSpot follow-up"),
+      detail: "These deals are approved but still need internal sync attention.",
+      href: "/app/deal-registrations?queue=hubspot",
+    },
+    {
+      title: formatCountLabel(agreementUploadDeals.length, "closed won deal needs agreement upload", "closed won deals need agreement upload"),
+      detail: "Upload the dealer agreement and economics so the vendor can review it.",
+      href: "/app/deal-registrations?queue=closed",
+    },
+    {
+      title: formatCountLabel(agreementSignatureDeals.length, "agreement is awaiting signature", "agreements are awaiting signature"),
+      detail: "The agreement has been sent. Watch for the signed copy to return in the portal.",
+      href: "/app/deal-registrations?queue=closed",
+    },
+    {
+      title: formatCountLabel(outstandingSupportRequests.length, "support request needs attention", "support requests need attention"),
+      detail: "Keep vendor blockers visible so onboarding and deals can keep moving.",
+      href: "/app/settings?queue=open",
+    },
+  ];
 
   const metrics = [
     {
@@ -138,40 +176,27 @@ export default async function VendorDashboardPage() {
           <article className="workspace-card wide-card">
             <div className="card-header-row">
               <div>
-                <h3>Deal review and HubSpot sync</h3>
-                <p>Track each deal from submission through approval, HubSpot, and recurring revenue.</p>
+                <span className="section-kicker">Command center</span>
+                <h3>What needs attention</h3>
+                <p>The highest-priority work across applications, deal operations, agreements, and support.</p>
               </div>
-              <a href="/app/deal-registrations" className="button button-secondary">
-                Open deal queue
+              <a href="/app/deal-registrations?queue=review" className="button button-secondary">
+                Open review queue
               </a>
             </div>
-            <div className="data-table">
-              <div className="table-head table-cols-5">
-                <span>Account</span>
-                <span>Vendor</span>
-                <span>Status</span>
-                <span>HubSpot</span>
-                <span>Monthly RMR</span>
-              </div>
-              {deals.slice(0, 6).map((deal) => {
-                const vendor = vendors.find((item) => item.id === deal.vendorId);
-
-                return (
-                  <div className="table-row table-cols-5" key={deal.id}>
-                    <span>{deal.companyName}</span>
-                    <span>{vendor?.companyName ?? "Unknown vendor"}</span>
-                    <span>{titleCaseStatus(deal.status)}</span>
-                    <span>{deal.hubspotDealId ? `#${deal.hubspotDealId}` : "Pending"}</span>
-                    <span>{formatCurrency(deal.monthlyRmr)}</span>
-                  </div>
-                );
-              })}
+            <div className="attention-list">
+              {attentionItems.map((item) => (
+                <a className="attention-card" href={item.href} key={item.title}>
+                  <strong>{item.title}</strong>
+                  <span>{item.detail}</span>
+                </a>
+              ))}
             </div>
           </article>
 
           <article className="workspace-card">
-            <span className="section-kicker">HubSpot</span>
-            <h3>Latest sync activity</h3>
+            <span className="section-kicker">Recent activity</span>
+            <h3>Recent activity</h3>
             {syncEvents.length > 0 ? (
               <ul className="summary-list">
                 {syncEvents.slice(0, 4).map((event) => (
@@ -185,33 +210,6 @@ export default async function VendorDashboardPage() {
               <div className="empty-state-card">
                 <span className="section-kicker">Clear</span>
                 <p>No recent sync activity.</p>
-              </div>
-            )}
-          </article>
-
-          <article className="workspace-card">
-            <div className="card-header-row">
-              <div>
-                <h3>Outstanding support tickets</h3>
-                <p>Keep unresolved vendor issues visible while applications and deals keep moving.</p>
-              </div>
-              <a href="/app/settings" className="button button-secondary">
-                Open support
-              </a>
-            </div>
-            {outstandingSupportRequests.length > 0 ? (
-              <ul className="summary-list">
-                {outstandingSupportRequests.slice(0, 4).map((request) => (
-                  <li key={request.id}>
-                    <strong>{request.subject}</strong>
-                    <span>{titleCaseStatus(request.status)}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="empty-state-card">
-                <span className="section-kicker">All clear</span>
-                <p>No outstanding support tickets.</p>
               </div>
             )}
           </article>
