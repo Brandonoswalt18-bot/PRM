@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { VendorPerformanceModule } from "@/components/product/vendor-performance-module";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { MetricGrid } from "@/components/product/product-page-sections";
 import { getWorkspaceSession } from "@/lib/auth";
@@ -17,6 +18,7 @@ import {
   getVendorById,
   listDeals,
   listSupportRequests,
+  listVendorApplications,
 } from "@/lib/goaccess-store";
 
 function formatShortDate(value: string) {
@@ -29,13 +31,15 @@ function formatShortDate(value: string) {
 export default async function PartnerPortalPage() {
   const session = await getWorkspaceSession();
   const vendorId = session?.vendorId;
-  const [vendor, deals, supportRequests, currentRmr, forecastRmr] = await Promise.all([
+  const [vendor, deals, supportRequests, currentRmr, forecastRmr, applications] = await Promise.all([
     vendorId ? getVendorById(vendorId) : Promise.resolve(null),
     listDeals(vendorId),
     listSupportRequests(vendorId),
     vendorId ? getCurrentMonthlyRmrForVendor(vendorId) : Promise.resolve(0),
     vendorId ? getForecastMonthlyRmrForVendor(vendorId) : Promise.resolve(0),
+    listVendorApplications(),
   ]);
+  const vendorApplication = vendor ? applications.find((application) => application.id === vendor.applicationId) ?? null : null;
 
   const metrics = [
     {
@@ -197,6 +201,10 @@ export default async function PartnerPortalPage() {
               <span>{vendor ? formatVendorStatusLabel(vendor.status) : "Pending review"}</span>
             </div>
           </article>
+        </section>
+
+        <section className="dashboard-grid">
+          <VendorPerformanceModule application={vendorApplication} deals={deals} />
         </section>
 
         <section className="dashboard-grid">

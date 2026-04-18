@@ -1793,7 +1793,8 @@ li + li {
 .control-action-grid,
 .earnings-panel,
 .recent-deal-list,
-.compact-activity-list {
+.compact-activity-list,
+.performance-grid {
   display: grid;
   gap: 12px;
 }
@@ -1917,6 +1918,75 @@ li + li {
 
 .compact-activity-card small {
   font-size: 0.76rem;
+}
+
+.performance-header-row {
+  align-items: center;
+}
+
+.performance-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid rgba(31, 100, 216, 0.12);
+  border-radius: 999px;
+  background: rgba(247, 250, 255, 0.94);
+}
+
+.performance-toggle-pill {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
+
+.performance-toggle-pill-active {
+  background: linear-gradient(135deg, var(--signal), var(--signal-deep));
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(31, 100, 216, 0.16);
+}
+
+.performance-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.performance-card {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  border: 1px solid rgba(31, 100, 216, 0.08);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(31, 100, 216, 0.08), transparent 38%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(245, 249, 255, 0.92));
+  box-shadow: 0 10px 24px rgba(20, 44, 96, 0.05);
+}
+
+.performance-card span {
+  color: var(--signal);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.performance-card strong {
+  color: var(--ink);
+  font-size: 1.38rem;
+  letter-spacing: -0.03em;
+}
+
+.performance-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
 }
 
 .quick-action-card {
@@ -2157,6 +2227,7 @@ li + li {
   .product-columns,
   .control-action-grid,
   .earnings-panel,
+  .performance-grid,
   .stack-meta-grid,
   .agreement-grid,
   .agreement-form-grid,
@@ -2249,6 +2320,15 @@ li + li {
   .recent-deal-meta {
     justify-items: start;
     text-align: left;
+  }
+
+  .performance-toggle {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .performance-toggle-pill {
+    flex: 1 1 0;
   }
 
   .table-head span,
