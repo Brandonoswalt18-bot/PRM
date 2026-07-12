@@ -22,6 +22,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             ? "Portal auth is not configured yet. Add AUTH_SECRET in Vercel."
           : error === "mock-disabled"
             ? "The old demo login route is disabled."
+          : error === "rate-limited"
+            ? "Too many sign-in attempts. Wait a few minutes, then try again."
             : error === "not-found"
             ? "We could not match that email to an active GoAccess portal account."
             : "Use the same email that received your GoAccess portal invite.";

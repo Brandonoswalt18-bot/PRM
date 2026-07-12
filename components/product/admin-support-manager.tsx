@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
 import { buildSupportTimeline } from "@/lib/goaccess-timeline";
-import type { ApprovedVendor, SupportRequest, SupportRequestStatus } from "@/types/goaccess";
+import type { ClientApprovedVendor, SupportRequest, SupportRequestStatus } from "@/types/goaccess";
 
 type AdminSupportManagerProps = {
   supportRequests: SupportRequest[];
-  vendors: ApprovedVendor[];
+  vendors: ClientApprovedVendor[];
   activeQueue: "all" | "open" | "in_progress" | "resolved";
   selectedRequestId?: string;
   queueCounts: {
@@ -126,6 +126,7 @@ export function AdminSupportManager({
       </div>
       <div className="queue-filter-row" aria-label="Support queue filters">
         <Link
+          aria-current={activeQueue === "all" ? "page" : undefined}
           className={`queue-filter-pill${activeQueue === "all" ? " queue-filter-pill-active" : ""}`}
           href="/app/settings"
         >
@@ -133,6 +134,7 @@ export function AdminSupportManager({
           <span>{queueCounts.all}</span>
         </Link>
         <Link
+          aria-current={activeQueue === "open" ? "page" : undefined}
           className={`queue-filter-pill${activeQueue === "open" ? " queue-filter-pill-active" : ""}`}
           href="/app/settings?queue=open"
         >
@@ -140,6 +142,7 @@ export function AdminSupportManager({
           <span>{queueCounts.open}</span>
         </Link>
         <Link
+          aria-current={activeQueue === "in_progress" ? "page" : undefined}
           className={`queue-filter-pill${activeQueue === "in_progress" ? " queue-filter-pill-active" : ""}`}
           href="/app/settings?queue=in_progress"
         >
@@ -147,6 +150,7 @@ export function AdminSupportManager({
           <span>{queueCounts.in_progress}</span>
         </Link>
         <Link
+          aria-current={activeQueue === "resolved" ? "page" : undefined}
           className={`queue-filter-pill${activeQueue === "resolved" ? " queue-filter-pill-active" : ""}`}
           href="/app/settings?queue=resolved"
         >
@@ -154,7 +158,7 @@ export function AdminSupportManager({
           <span>{queueCounts.resolved}</span>
         </Link>
       </div>
-      {message ? <p className="table-note">{message}</p> : null}
+      {message ? <p className="table-note" aria-live="polite" role="status">{message}</p> : null}
       {supportRequests.length === 0 ? <p className="table-note">No support requests in this queue.</p> : null}
       <div className="stack-list">
         {supportRequests.map((request) => {
@@ -232,7 +236,7 @@ export function AdminSupportManager({
                   </div>
                   {vendor ? (
                     <div className="detail-link-row">
-                      <Link className="detail-link-chip" href={`/app/partners?vendor=${vendor.id}`}>
+                      <Link className="detail-link-chip" href={`/app/partners#vendor-${encodeURIComponent(vendor.id)}`}>
                         Open vendor
                       </Link>
                     </div>

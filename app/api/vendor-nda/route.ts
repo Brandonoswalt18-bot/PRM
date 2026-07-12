@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireVendorRouteAccess } from "@/lib/auth-guards";
+import { toClientApprovedVendor } from "@/lib/goaccess-client-data";
 import { getVendorById, uploadSignedNdaForVendor } from "@/lib/goaccess-store";
 
 export async function GET() {
@@ -17,7 +18,7 @@ export async function GET() {
     return NextResponse.json({ message: "Approved vendor not found." }, { status: 404 });
   }
 
-  return NextResponse.json({ vendor });
+  return NextResponse.json({ vendor: toClientApprovedVendor(vendor) });
 }
 
 export async function POST(request: Request) {
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      vendor,
+      vendor: vendor ? toClientApprovedVendor(vendor) : null,
       result,
       message: "Signed NDA uploaded. GoAccess can review it before issuing credentials.",
     });

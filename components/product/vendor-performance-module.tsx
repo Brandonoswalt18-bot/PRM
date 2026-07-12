@@ -120,15 +120,14 @@ export function VendorPerformanceModule({
           <h3>Your performance</h3>
           <p>Switch between daily, weekly, and monthly windows to see how your pipeline is moving.</p>
         </div>
-        <div className="performance-toggle" role="tablist" aria-label="Performance timeframe">
+        <div className="performance-toggle" role="group" aria-label="Performance timeframe">
           {RANGE_OPTIONS.map((option) => (
             <button
               key={option.id}
+              aria-pressed={range === option.id}
               className={`performance-toggle-pill${range === option.id ? " performance-toggle-pill-active" : ""}`}
               onClick={() => setRange(option.id)}
-              role="tab"
               type="button"
-              aria-selected={range === option.id}
             >
               {option.label}
             </button>

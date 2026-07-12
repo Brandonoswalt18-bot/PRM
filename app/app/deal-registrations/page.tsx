@@ -1,5 +1,6 @@
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { AdminDealManager } from "@/components/product/admin-deal-manager";
+import { toClientApprovedVendors } from "@/lib/goaccess-client-data";
 import { listApprovedVendors, listDeals, listSupportRequests, listSyncEvents, listVendorApplications } from "@/lib/goaccess-store";
 
 type DealRegistrationsPageProps = {
@@ -39,7 +40,7 @@ export default async function DealRegistrationsPage({ searchParams }: DealRegist
           applications={applications}
           deals={deals}
           syncEvents={syncEvents}
-          vendors={vendors}
+          vendors={toClientApprovedVendors(vendors)}
           activeQueue={activeQueue}
           selectedDealId={selectedDealId}
           openSupportCount={supportRequests.filter((request) => request.status !== "resolved").length}

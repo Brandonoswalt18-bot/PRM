@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   MetricGrid,
 } from "@/components/product/product-page-sections";
@@ -50,7 +51,7 @@ export default async function PartnersPage() {
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
         title="Vendor roster"
-        subtitle="Manage active vendor profiles, status, access, and current monthly recurring revenue contribution."
+        subtitle="Review active vendor profiles, onboarding state, portal access, and current monthly recurring revenue contribution."
         primaryLabel="Review applications"
         primaryHref="/app/programs"
       />
@@ -73,14 +74,26 @@ export default async function PartnersPage() {
                 <span>Monthly RMR</span>
               </div>
               {vendorRows.map((vendor) => (
-                <div className="table-row table-cols-5" key={vendor.id}>
-                  <span>{vendor.companyName}</span>
+                <div className="table-row table-cols-5" id={`vendor-${vendor.id}`} key={vendor.id}>
+                  <span>
+                    <Link
+                      href={`/app/programs?application=${encodeURIComponent(vendor.applicationId)}#application-${encodeURIComponent(vendor.applicationId)}`}
+                    >
+                      {vendor.companyName}
+                    </Link>
+                  </span>
                   <span>{[vendor.city, vendor.state].filter(Boolean).join(", ") || vendor.region}</span>
                   <span>{formatVendorStatusLabel(vendor.status)} · NDA {formatNdaStatusLabel(vendor.ndaStatus)}</span>
                   <span>{formatPortalAccessLabel(vendor.portalAccess)}</span>
                   <span>{formatCurrency(vendor.currentRmr)}</span>
                 </div>
               ))}
+              {vendorRows.length === 0 ? (
+                <div className="empty-state-card">
+                  <strong>No approved vendors yet.</strong>
+                  <p>Approved applications will appear here after the onboarding record is created.</p>
+                </div>
+              ) : null}
             </div>
           </article>
           <article className="workspace-card">

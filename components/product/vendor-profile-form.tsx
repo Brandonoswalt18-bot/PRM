@@ -3,10 +3,10 @@
 import { FormEvent, useState } from "react";
 import { startTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { ApprovedVendor } from "@/types/goaccess";
+import type { ClientApprovedVendor } from "@/types/goaccess";
 
 type VendorProfileFormProps = {
-  vendor: ApprovedVendor;
+  vendor: ClientApprovedVendor;
 };
 
 type FormState = {
@@ -18,7 +18,7 @@ type FormState = {
   primaryContactEmail: string;
 };
 
-function getInitialState(vendor: ApprovedVendor): FormState {
+function getInitialState(vendor: ClientApprovedVendor): FormState {
   return {
     companyName: vendor.companyName,
     website: vendor.website,
@@ -82,51 +82,75 @@ export function VendorProfileForm({ vendor }: VendorProfileFormProps) {
       </div>
       <form className="cta-form" onSubmit={handleSubmit}>
         <div className="inline-form-grid">
-          <input
-            type="text"
-            placeholder="Company name"
-            value={form.companyName}
-            onChange={(event) => update("companyName", event.target.value)}
-            required
-          />
-          <input
-            type="text"
-            placeholder="Website"
-            value={form.website}
-            onChange={(event) => update("website", event.target.value)}
-          />
+          <label className="form-field">
+            <span className="access-label">Company name</span>
+            <input
+              maxLength={160}
+              placeholder="Company name"
+              type="text"
+              value={form.companyName}
+              onChange={(event) => update("companyName", event.target.value)}
+              required
+            />
+          </label>
+          <label className="form-field">
+            <span className="access-label">Website</span>
+            <input
+              maxLength={300}
+              placeholder="Website"
+              type="text"
+              value={form.website}
+              onChange={(event) => update("website", event.target.value)}
+            />
+          </label>
         </div>
         <div className="inline-form-grid">
-          <input
-            type="text"
-            placeholder="City"
-            value={form.city}
-            onChange={(event) => update("city", event.target.value)}
-            required
-          />
-          <input
-            type="text"
-            placeholder="State"
-            value={form.state}
-            onChange={(event) => update("state", event.target.value)}
-            required
-          />
+          <label className="form-field">
+            <span className="access-label">City</span>
+            <input
+              maxLength={100}
+              placeholder="City"
+              type="text"
+              value={form.city}
+              onChange={(event) => update("city", event.target.value)}
+              required
+            />
+          </label>
+          <label className="form-field">
+            <span className="access-label">State</span>
+            <input
+              maxLength={100}
+              placeholder="State"
+              type="text"
+              value={form.state}
+              onChange={(event) => update("state", event.target.value)}
+              required
+            />
+          </label>
         </div>
         <div className="inline-form-grid">
-          <input
-            type="text"
-            placeholder="Primary contact"
-            value={form.primaryContactName}
-            onChange={(event) => update("primaryContactName", event.target.value)}
-            required
-          />
-          <input
-            type="email"
-            placeholder="Primary contact email"
-            value={form.primaryContactEmail}
-            onChange={(event) => update("primaryContactEmail", event.target.value)}
-            required
-          />
+          <label className="form-field">
+            <span className="access-label">Primary contact</span>
+            <input
+              maxLength={120}
+              placeholder="Primary contact"
+              type="text"
+              value={form.primaryContactName}
+              onChange={(event) => update("primaryContactName", event.target.value)}
+              required
+            />
+          </label>
+          <label className="form-field">
+            <span className="access-label">Primary contact email</span>
+            <input
+              maxLength={254}
+              placeholder="Primary contact email"
+              type="email"
+              value={form.primaryContactEmail}
+              onChange={(event) => update("primaryContactEmail", event.target.value)}
+              required
+            />
+          </label>
         </div>
         <button className="button button-primary" type="submit" disabled={status === "saving"}>
           {status === "saving" ? "Saving..." : "Save vendor profile"}

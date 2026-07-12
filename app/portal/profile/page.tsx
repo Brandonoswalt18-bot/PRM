@@ -7,6 +7,7 @@ import {
 import { VendorProfileForm } from "@/components/product/vendor-profile-form";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
+import { toClientApprovedVendor } from "@/lib/goaccess-client-data";
 import {
   formatNdaStatusLabel,
   formatVendorStatusLabel,
@@ -124,7 +125,7 @@ export default async function PartnerProfilePage() {
       <div className="app-content">
         <MetricGrid metrics={metrics} />
         <section className="dashboard-grid">
-          {vendor ? <VendorProfileForm vendor={vendor} /> : null}
+        {vendor ? <VendorProfileForm vendor={toClientApprovedVendor(vendor)} /> : null}
           <TableSection
             title="Account snapshot"
             description="This live summary reflects the approved vendor record GoAccess uses for onboarding, legal tracking, and account operations."

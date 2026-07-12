@@ -74,8 +74,8 @@ export default async function VendorAssetsPage() {
         workspace="VENDOR ADMIN"
         title="Documents"
         subtitle="Manage NDAs, onboarding guides, deal registration rules, and internal review documents in one place."
-        primaryLabel="Upload document"
-        primaryHref="/app/assets"
+        primaryLabel="Manage documents"
+        primaryHref="/app/learning"
       />
       <div className="app-content">
         <MetricGrid metrics={metrics} />
@@ -83,8 +83,8 @@ export default async function VendorAssetsPage() {
           <TableSection
             title="Document library"
             description="A GoAccess-controlled source for legal, onboarding, and operating documents."
-            actionLabel="Publish document"
-            actionHref="/app/assets"
+            actionLabel="Manage library"
+            actionHref="/app/learning"
             headers={["Document", "Type", "Audience", "Status"]}
             rows={rows}
             renderRow={AssetRow}

@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
-import type { ApprovedVendor } from "@/types/goaccess";
+import type { ClientApprovedVendor } from "@/types/goaccess";
 
-export function VendorNdaManager({ vendor }: { vendor: ApprovedVendor | null }) {
+export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | null }) {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");

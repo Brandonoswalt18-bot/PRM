@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminRouteAccess } from "@/lib/auth-guards";
+import { toClientApprovedVendor } from "@/lib/goaccess-client-data";
 import {
   inspectDealRegistrationForHubSpot,
   syncDealRegistrationToHubSpot,
@@ -114,7 +115,7 @@ export async function GET(
     return NextResponse.json({
       ok: true,
       deal,
-      vendor,
+      vendor: toClientApprovedVendor(vendor),
       hubspot,
     });
   } catch (error) {

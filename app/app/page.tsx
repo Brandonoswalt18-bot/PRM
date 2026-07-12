@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { MetricGrid } from "@/components/product/product-page-sections";
 import {
@@ -180,9 +181,9 @@ export default async function VendorDashboardPage() {
                 <h3>What needs attention</h3>
                 <p>The highest-priority work across applications, deal operations, agreements, and support.</p>
               </div>
-              <a href="/app/deal-registrations?queue=review" className="button button-secondary">
+              <Link href="/app/deal-registrations?queue=review" className="button button-secondary">
                 Open review queue
-              </a>
+              </Link>
             </div>
             <div className="attention-list">
               {attentionItems.map((item) => (

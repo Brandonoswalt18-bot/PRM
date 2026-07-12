@@ -43,12 +43,14 @@ export default async function PartnerSupportPage() {
         title="Support"
         subtitle="Open a request for deal review, HubSpot sync, profile corrections, or monthly recurring revenue questions."
         primaryLabel="Open support request"
-        primaryHref="/portal/support"
+        primaryHref="#support-request-form"
       />
       <div className="app-content">
         <MetricGrid metrics={metrics} />
         <section className="dashboard-grid">
-          <SupportRequestForm />
+          <div id="support-request-form">
+            <SupportRequestForm />
+          </div>
           <article className="workspace-card">
             <h3>Support categories</h3>
             <ul>

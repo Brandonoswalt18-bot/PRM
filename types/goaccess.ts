@@ -100,6 +100,11 @@ export type ApprovedVendor = {
   updatedAt: string;
 };
 
+export type ClientApprovedVendor = Omit<
+  ApprovedVendor,
+  "inviteToken" | "passwordSalt" | "passwordHash"
+>;
+
 export type DealRegistration = {
   id: string;
   vendorId: string;
@@ -191,6 +196,7 @@ export type PortalStore = {
   notifications: VendorNotification[];
   supportRequests: SupportRequest[];
   trainingAssets: TrainingAsset[];
+  rmrStatements: VendorRmrStatement[];
 };
 
 export type CreateVendorApplicationInput = {
@@ -305,6 +311,8 @@ export type CreateExternalTrainingAssetInput = {
 };
 
 export type VendorRmrStatement = {
+  id: string;
+  vendorId: string;
   periodKey: string;
   periodLabel: string;
   type: RmrStatementType;
@@ -312,4 +320,6 @@ export type VendorRmrStatement = {
   amount: number;
   dealCount: number;
   dealIds: string[];
+  generatedAt: string;
+  closedAt?: string;
 };

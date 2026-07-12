@@ -89,8 +89,27 @@ async function signValue(value: string) {
 }
 
 async function verifyValue(value: string, signature: string) {
-  const expected = await signValue(value);
-  return expected === signature;
+  const secret = getAuthSecret();
+  const signatureBytes = fromBase64Url(signature);
+
+  if (!secret || !signatureBytes) {
+    return false;
+  }
+
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["verify"]
+  );
+
+  return crypto.subtle.verify(
+    "HMAC",
+    key,
+    signatureBytes,
+    encoder.encode(value)
+  );
 }
 
 export async function createSignedSession(input: {

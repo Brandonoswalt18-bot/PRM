@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { MetricGrid, SideSections } from "@/components/product/product-page-sections";
 import { DealRegistrationForm } from "@/components/product/deal-registration-form";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
@@ -76,12 +77,14 @@ export default async function LinksPage() {
         title="Register a deal"
         subtitle="Submit a clean community registration for GoAccess review and CRM creation."
         primaryLabel="Start registration"
-        primaryHref="/portal/links"
+        primaryHref="#deal-registration-form"
       />
       <div className="app-content">
         <MetricGrid metrics={metrics} />
         <section className="dashboard-grid">
-          <DealRegistrationForm />
+          <div id="deal-registration-form">
+            <DealRegistrationForm />
+          </div>
           <SideSections sections={sections} />
         </section>
         <section className="dashboard-grid">
@@ -92,9 +95,9 @@ export default async function LinksPage() {
                 <h3>Recent registrations</h3>
                 <p>The latest opportunities you have already sent to GoAccess.</p>
               </div>
-              <a href="/portal/deals" className="button button-secondary">
+              <Link href="/portal/deals" className="button button-secondary">
                 Open full history
-              </a>
+              </Link>
             </div>
             <div className="data-table">
             <div className="table-head table-cols-5">
@@ -111,7 +114,7 @@ export default async function LinksPage() {
                 <span>{new Date(deal.createdAt).toLocaleDateString()}</span>
                 <span>{titleCaseStatus(deal.status)}</span>
                   <span>
-                    <a href={`/portal/deals/${deal.id}`}>Open</a>
+                    <Link href={`/portal/deals/${deal.id}`}>Open</Link>
                   </span>
                 </div>
               ))}

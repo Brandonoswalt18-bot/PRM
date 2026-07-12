@@ -215,9 +215,9 @@ export default async function PartnerPortalPage() {
                 <h3>Your deals</h3>
                 <p>Keep an eye on the handful of records most likely to need a follow-up next.</p>
               </div>
-              <a href="/portal/deals" className="button button-secondary">
+              <Link href="/portal/deals" className="button button-secondary">
                 Open all deals
-              </a>
+              </Link>
             </div>
             <div className="recent-deal-list">
               {recentDeals.map((deal) => (

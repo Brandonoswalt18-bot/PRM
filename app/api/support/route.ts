@@ -58,6 +58,10 @@ export async function POST(request: Request) {
     );
   }
 
+  if (subject.length > 160 || message.length > 4000) {
+    return NextResponse.json({ message: "Support request is too long." }, { status: 400 });
+  }
+
   if (!allowedCategories.includes(category)) {
     return NextResponse.json({ message: "Unsupported support category." }, { status: 400 });
   }

@@ -79,32 +79,43 @@ export function SupportRequestForm() {
         </div>
       </div>
       <form className="cta-form" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Subject"
-          value={form.subject}
-          onChange={(event) => update("subject", event.target.value)}
-          required
-        />
-        <select
-          className="cta-select"
-          value={form.category}
-          onChange={(event) => update("category", event.target.value as SupportRequestCategory)}
-        >
-          {categories.map((category) => (
-            <option key={category.value} value={category.value}>
-              {category.label}
-            </option>
-          ))}
-        </select>
-        <textarea
-          className="cta-textarea"
-          placeholder="Describe what you need help with"
-          rows={5}
-          value={form.message}
-          onChange={(event) => update("message", event.target.value)}
-          required
-        />
+        <label className="form-field">
+          <span className="access-label">Subject</span>
+          <input
+            maxLength={160}
+            placeholder="Subject"
+            type="text"
+            value={form.subject}
+            onChange={(event) => update("subject", event.target.value)}
+            required
+          />
+        </label>
+        <label className="form-field">
+          <span className="access-label">Category</span>
+          <select
+            className="cta-select"
+            value={form.category}
+            onChange={(event) => update("category", event.target.value as SupportRequestCategory)}
+          >
+            {categories.map((category) => (
+              <option key={category.value} value={category.value}>
+                {category.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="form-field">
+          <span className="access-label">Details</span>
+          <textarea
+            className="cta-textarea"
+            maxLength={4000}
+            placeholder="Describe what you need help with"
+            rows={5}
+            value={form.message}
+            onChange={(event) => update("message", event.target.value)}
+            required
+          />
+        </label>
         <button className="button button-primary" type="submit" disabled={status === "submitting"}>
           {status === "submitting" ? "Submitting..." : "Submit request"}
         </button>

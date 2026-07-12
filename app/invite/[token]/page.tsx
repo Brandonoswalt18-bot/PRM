@@ -48,12 +48,10 @@ export default async function InvitePage({ params, searchParams }: InvitePagePro
     <main className="login-shell">
       <div className="login-card">
         <span className="eyebrow">VENDOR INVITE</span>
-        <h1>{vendor.passwordHash ? "Your vendor account is ready." : "Create your vendor password."}</h1>
+        <h1>Create your vendor password.</h1>
         <p>
           {vendor.companyName} has been approved. NDA status: {formatNdaStatusLabel(vendor.ndaStatus)}. Your portal invite is ready.
-          {vendor.passwordHash
-            ? " Sign in with your email and password to enter the portal."
-            : " Set your password to activate the vendor portal."}
+          {" Set your password to activate the vendor portal. This link can only be used once and expires after seven days."}
         </p>
         <div className="stack-list">
           <div className="stack-card">
@@ -64,18 +62,8 @@ export default async function InvitePage({ params, searchParams }: InvitePagePro
             </div>
           </div>
         </div>
-        {vendor.passwordHash ? (
-          <div className="login-actions">
-            <Link className="button button-primary" href="/login">
-              Continue to sign in
-            </Link>
-            <Link className="button button-secondary" href="/">
-              Back to public page
-            </Link>
-          </div>
-        ) : (
-          <>
-            <form action="/auth/activate" className="login-form" method="post">
+        <>
+          <form action="/auth/activate" className="login-form" method="post">
               <input name="token" type="hidden" value={token} />
               <input name="next" type="hidden" value="/portal/profile" />
               <label className="login-field">
@@ -105,19 +93,18 @@ export default async function InvitePage({ params, searchParams }: InvitePagePro
               <button className="button button-primary login-submit" type="submit">
                 Activate vendor access
               </button>
-            </form>
-            {message ? (
-              <p className="form-message form-message-error" aria-live="polite">
-                {message}
-              </p>
-            ) : null}
-            <div className="login-actions">
-              <Link className="button button-secondary" href="/login">
-                Back to login
-              </Link>
-            </div>
-          </>
-        )}
+          </form>
+          {message ? (
+            <p className="form-message form-message-error" aria-live="polite">
+              {message}
+            </p>
+          ) : null}
+          <div className="login-actions">
+            <Link className="button button-secondary" href="/login">
+              Back to login
+            </Link>
+          </div>
+        </>
       </div>
     </main>
   );

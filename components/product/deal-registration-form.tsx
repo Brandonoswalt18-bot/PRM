@@ -8,8 +8,14 @@ type DealFormState = {
   communityAddress: string;
   city: string;
   state: string;
+  domain: string;
   contactName: string;
   contactEmail: string;
+  contactPhone: string;
+  estimatedValue: string;
+  monthlyRmr: string;
+  productInterest: string;
+  notes: string;
 };
 
 const initialState: DealFormState = {
@@ -17,8 +23,14 @@ const initialState: DealFormState = {
   communityAddress: "",
   city: "",
   state: "",
+  domain: "",
   contactName: "",
   contactEmail: "",
+  contactPhone: "",
+  estimatedValue: "",
+  monthlyRmr: "",
+  productInterest: "",
+  notes: "",
 };
 
 export function DealRegistrationForm() {
@@ -79,6 +91,7 @@ export function DealRegistrationForm() {
             <label className="field-group">
               <span className="field-label">Community name</span>
               <input
+                maxLength={160}
                 type="text"
                 placeholder="Maple Crest HOA"
                 value={form.companyName}
@@ -89,6 +102,7 @@ export function DealRegistrationForm() {
             <label className="field-group">
               <span className="field-label">Community address</span>
               <input
+                maxLength={300}
                 type="text"
                 placeholder="4127 Redwood Terrace"
                 value={form.communityAddress}
@@ -97,10 +111,22 @@ export function DealRegistrationForm() {
               />
             </label>
           </div>
+          <label className="field-group">
+            <span className="field-label">Community website or domain</span>
+            <input
+              maxLength={300}
+              placeholder="maplecresthoa.com"
+              type="text"
+              value={form.domain}
+              onChange={(event) => update("domain", event.target.value)}
+              required
+            />
+          </label>
           <div className="inline-form-grid">
             <label className="field-group">
               <span className="field-label">City</span>
               <input
+                maxLength={100}
                 type="text"
                 placeholder="San Diego"
                 value={form.city}
@@ -111,6 +137,7 @@ export function DealRegistrationForm() {
             <label className="field-group">
               <span className="field-label">State</span>
               <input
+                maxLength={100}
                 type="text"
                 placeholder="CA"
                 value={form.state}
@@ -123,6 +150,7 @@ export function DealRegistrationForm() {
             <label className="field-group">
               <span className="field-label">Contact name</span>
               <input
+                maxLength={120}
                 type="text"
                 placeholder="Jamie Sloan"
                 value={form.contactName}
@@ -133,6 +161,7 @@ export function DealRegistrationForm() {
             <label className="field-group">
               <span className="field-label">Contact email</span>
               <input
+                maxLength={254}
                 type="email"
                 placeholder="jamie.sloan@community.com"
                 value={form.contactEmail}
@@ -141,8 +170,70 @@ export function DealRegistrationForm() {
               />
             </label>
           </div>
+          <div className="inline-form-grid">
+            <label className="field-group">
+              <span className="field-label">Contact phone</span>
+              <input
+                autoComplete="tel"
+                maxLength={40}
+                placeholder="(555) 555-0123"
+                type="tel"
+                value={form.contactPhone}
+                onChange={(event) => update("contactPhone", event.target.value)}
+                required
+              />
+            </label>
+            <label className="field-group">
+              <span className="field-label">Product interest</span>
+              <input
+                maxLength={160}
+                placeholder="Access control and video intercom"
+                type="text"
+                value={form.productInterest}
+                onChange={(event) => update("productInterest", event.target.value)}
+                required
+              />
+            </label>
+          </div>
+          <div className="inline-form-grid">
+            <label className="field-group">
+              <span className="field-label">Estimated project value</span>
+              <input
+                min="0"
+                placeholder="25000"
+                step="1"
+                type="number"
+                value={form.estimatedValue}
+                onChange={(event) => update("estimatedValue", event.target.value)}
+                required
+              />
+            </label>
+            <label className="field-group">
+              <span className="field-label">Estimated monthly RMR</span>
+              <input
+                min="0"
+                placeholder="1200"
+                step="1"
+                type="number"
+                value={form.monthlyRmr}
+                onChange={(event) => update("monthlyRmr", event.target.value)}
+                required
+              />
+            </label>
+          </div>
+          <label className="field-group">
+            <span className="field-label">Opportunity notes</span>
+            <textarea
+              className="cta-textarea"
+              maxLength={2000}
+              placeholder="Share timing, scope, incumbent systems, or other useful review context."
+              rows={4}
+              value={form.notes}
+              onChange={(event) => update("notes", event.target.value)}
+            />
+          </label>
         </div>
-        <p className="field-hint">Use the real community and contact details so GoAccess can review and route the deal without follow-up.</p>
+        <p className="field-hint">Use the real community, contact, scope, and revenue estimates so GoAccess can review duplicates and route the deal without follow-up.</p>
         <button className="button button-primary" type="submit" disabled={status === "submitting"}>
           {status === "submitting" ? "Submitting..." : "Submit deal for review"}
         </button>
