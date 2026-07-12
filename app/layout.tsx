@@ -1,9 +1,18 @@
 import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 import type { ReactNode } from "react";
 import { getPortalBaseUrl } from "@/lib/email";
 import "./globals.css";
 
 const portalBaseUrl = getPortalBaseUrl();
+const geistSans = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist-sans",
+});
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+});
 
 export const metadata: Metadata = {
   title: "GoAccess Vendor Portal",
@@ -32,7 +41,11 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html data-scroll-behavior="smooth" lang="en">
+    <html
+      className={`${geistSans.variable} ${geistMono.variable}`}
+      data-scroll-behavior="smooth"
+      lang="en"
+    >
       <body>{children}</body>
     </html>
   );

@@ -16,7 +16,7 @@ function buildSections(): InfoListSection[] {
       title: "Vendor documents",
       description: "These assets are visible to approved GoAccess vendors.",
       items: [
-        "Keep only current NDA and onboarding materials here.",
+        "Keep only current NDA, Partner Terms, and onboarding materials here.",
         "Do not upload confidential items without explicit vendor access.",
         "Use descriptions to make legal intent clear.",
       ],
@@ -26,7 +26,7 @@ function buildSections(): InfoListSection[] {
       description: "This page reflects documents attached in the shared portal store.",
       items: [
         "Upload a private file or add an external reference.",
-        "Signed NDA is managed separately in account security settings.",
+        "Signed NDA and Partner Terms acceptance remain visible in legal onboarding.",
         "Track source and uploader for each item.",
       ],
     },
@@ -72,7 +72,7 @@ export default async function PartnerAssetsPage() {
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="Documents"
-        subtitle="Access the NDA, onboarding guides, and GoAccess operating documents tied to your approved vendor account."
+        subtitle="Access the NDA, Partner Terms, onboarding guides, and GoAccess operating documents tied to your approved vendor account."
         primaryLabel="Browse library"
         primaryHref="/portal/learning"
       />

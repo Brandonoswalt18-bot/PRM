@@ -54,8 +54,9 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
     <article className="workspace-card wide-card">
       <div className="card-header-row">
         <div>
-          <h3>NDA documents</h3>
-          <p>Download the GoAccess NDA, sign it offline, then upload the signed copy here.</p>
+          <span className="section-kicker">Legal onboarding</span>
+          <h3>NDA and Partner Terms</h3>
+          <p>Keep the legal documents and recorded acceptance tied to your approved vendor account.</p>
         </div>
       </div>
 
@@ -111,6 +112,29 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
               </a>
             </p>
           ) : null}
+        </div>
+
+        <div className="stack-card">
+          <h3>3. Partner Terms & Conditions</h3>
+          <p className="stack-note">Review the current version accepted during legal onboarding.</p>
+          <div className="stack-meta-grid">
+            <span>Version {vendor?.termsVersion ?? "Current"}</span>
+            <span>{vendor?.termsAcceptedAt ? "Accepted" : "Acceptance required"}</span>
+          </div>
+          {vendor?.termsDocumentUrl ? (
+            <a className="button button-secondary" href={vendor.termsDocumentUrl} target="_blank" rel="noreferrer">
+              Open Partner Terms
+            </a>
+          ) : (
+            <p className="stack-note">The current Partner Terms will appear here when configured.</p>
+          )}
+          {vendor?.termsAcceptedAt ? (
+            <p className="onboarding-complete-note">
+              Accepted by {vendor.termsAcceptedBy ?? vendor.primaryContactName} on {new Date(vendor.termsAcceptedAt).toLocaleDateString()}.
+            </p>
+          ) : (
+            <p className="stack-note">Terms acceptance must be completed from the secure onboarding link.</p>
+          )}
         </div>
       </div>
     </article>

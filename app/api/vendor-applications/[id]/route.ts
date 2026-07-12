@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminRouteAccess } from "@/lib/auth-guards";
+import { buildInviteUrl, buildOnboardingUrl } from "@/lib/email";
 import { toClientApprovedVendor } from "@/lib/goaccess-client-data";
 import {
   canTransitionApplicationStatus,
@@ -24,11 +25,11 @@ function getApplicationStatusMessage(status: VendorApplicationStatus) {
     case "under_review":
       return "Application moved into review.";
     case "approved":
-      return "Application approved. Next step: send the NDA email.";
+      return "Application approved. Next step: send the legal onboarding link.";
     case "nda_sent":
-      return "NDA marked as sent. The vendor is now waiting on the signed copy.";
+      return "Legal onboarding sent. The vendor must upload the NDA and accept the Partner Terms.";
     case "nda_signed":
-      return "Signed NDA confirmed. Next step: issue the portal invite.";
+      return "Signed NDA confirmed and Partner Terms recorded. Next step: issue portal access.";
     case "credentials_issued":
       return "Portal invite issued. The vendor can now set a password and activate access.";
     case "rejected":
@@ -66,7 +67,10 @@ export async function PATCH(
         ok: true,
         application: result.application,
         inviteUrl: result.inviteUrl,
-        message: "Portal invite reissued. The previous password has been cleared.",
+        message:
+          result.kind === "onboarding"
+            ? "Legal onboarding link reissued. The previous link is no longer valid."
+            : "Portal invite reissued. The previous password has been cleared.",
       });
     } catch (error) {
       return NextResponse.json(
@@ -103,12 +107,20 @@ export async function PATCH(
       ok: true,
       application,
       vendor: vendor ? toClientApprovedVendor(vendor) : null,
+      onboardingUrl:
+        body.status === "nda_sent" && vendor?.inviteToken
+          ? buildOnboardingUrl(vendor.inviteToken)
+          : undefined,
+      inviteUrl:
+        body.status === "credentials_issued" && vendor?.inviteToken
+          ? buildInviteUrl(vendor.inviteToken)
+          : undefined,
       message: getApplicationStatusMessage(body.status),
     });
   } catch (error) {
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "Unable to update application." },
-      { status: 404 }
+      { status: 400 }
     );
   }
 }

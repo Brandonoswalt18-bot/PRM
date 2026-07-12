@@ -79,73 +79,98 @@ export function DemoRequestForm() {
 
   return (
     <form className="cta-form" onSubmit={handleSubmit}>
-      <input
-        type="text"
-        placeholder="Company name"
-        aria-label="Company name"
-        maxLength={160}
-        value={form.companyName}
-        onFocus={() => trackEvent("vendor_application_field_focused", { field: "companyName" })}
-        onChange={(event) => update("companyName", event.target.value)}
-        required
-      />
-      <input
-        type="text"
-        placeholder="Website (optional)"
-        aria-label="Website"
-        maxLength={300}
-        value={form.website}
-        onFocus={() => trackEvent("vendor_application_field_focused", { field: "website" })}
-        onChange={(event) => update("website", event.target.value)}
-      />
+      <label className="form-field public-form-field" htmlFor="vendor-company-name">
+        <span>Company name</span>
+        <input
+          autoComplete="organization"
+          id="vendor-company-name"
+          maxLength={160}
+          placeholder="Acme Security Integrators"
+          type="text"
+          value={form.companyName}
+          onChange={(event) => update("companyName", event.target.value)}
+          onFocus={() => trackEvent("vendor_application_field_focused", { field: "companyName" })}
+          required
+        />
+      </label>
+      <label className="form-field public-form-field" htmlFor="vendor-website">
+        <span>Website <small>Optional</small></span>
+        <input
+          autoComplete="url"
+          id="vendor-website"
+          maxLength={300}
+          placeholder="https://acmesecurity.com"
+          type="url"
+          value={form.website}
+          onChange={(event) => update("website", event.target.value)}
+          onFocus={() => trackEvent("vendor_application_field_focused", { field: "website" })}
+        />
+      </label>
       <div className="inline-form-grid">
-        <input
-          type="text"
-          placeholder="City"
-          aria-label="City"
-          maxLength={100}
-          value={form.city}
-          onFocus={() => trackEvent("vendor_application_field_focused", { field: "city" })}
-          onChange={(event) => update("city", event.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="State"
-          aria-label="State"
-          maxLength={100}
-          value={form.state}
-          onFocus={() => trackEvent("vendor_application_field_focused", { field: "state" })}
-          onChange={(event) => update("state", event.target.value)}
-          required
-        />
+        <label className="form-field public-form-field" htmlFor="vendor-city">
+          <span>City</span>
+          <input
+            autoComplete="address-level2"
+            id="vendor-city"
+            maxLength={100}
+            placeholder="San Diego"
+            type="text"
+            value={form.city}
+            onChange={(event) => update("city", event.target.value)}
+            onFocus={() => trackEvent("vendor_application_field_focused", { field: "city" })}
+            required
+          />
+        </label>
+        <label className="form-field public-form-field" htmlFor="vendor-state">
+          <span>State</span>
+          <input
+            autoComplete="address-level1"
+            id="vendor-state"
+            maxLength={100}
+            placeholder="CA"
+            type="text"
+            value={form.state}
+            onChange={(event) => update("state", event.target.value)}
+            onFocus={() => trackEvent("vendor_application_field_focused", { field: "state" })}
+            required
+          />
+        </label>
       </div>
-      <input
-        type="text"
-        placeholder="Primary contact"
-        aria-label="Primary contact"
-        maxLength={120}
-        value={form.primaryContactName}
-        onFocus={() =>
-          trackEvent("vendor_application_field_focused", { field: "primaryContactName" })
-        }
-        onChange={(event) => update("primaryContactName", event.target.value)}
-        required
-      />
-      <input
-        type="email"
-        placeholder="Email address"
-        aria-label="Email address"
-        maxLength={254}
-        value={form.primaryContactEmail}
-        onFocus={() =>
-          trackEvent("vendor_application_field_focused", { field: "primaryContactEmail" })
-        }
-        onChange={(event) => update("primaryContactEmail", event.target.value)}
-        required
-      />
+      <label className="form-field public-form-field" htmlFor="vendor-contact-name">
+        <span>Primary contact</span>
+        <input
+          autoComplete="name"
+          id="vendor-contact-name"
+          maxLength={120}
+          placeholder="Taylor Morgan"
+          type="text"
+          value={form.primaryContactName}
+          onChange={(event) => update("primaryContactName", event.target.value)}
+          onFocus={() =>
+            trackEvent("vendor_application_field_focused", { field: "primaryContactName" })
+          }
+          required
+        />
+      </label>
+      <label className="form-field public-form-field" htmlFor="vendor-contact-email">
+        <span>Work email</span>
+        <input
+          autoComplete="email"
+          id="vendor-contact-email"
+          maxLength={254}
+          placeholder="taylor@acmesecurity.com"
+          type="email"
+          value={form.primaryContactEmail}
+          onChange={(event) => update("primaryContactEmail", event.target.value)}
+          onFocus={() =>
+            trackEvent("vendor_application_field_focused", { field: "primaryContactEmail" })
+          }
+          required
+        />
+      </label>
       <button className="button button-primary" type="submit" disabled={status === "submitting"}>
-        {status === "submitting" ? "Submitting..." : "Submit vendor application"}
+        <span>{status === "submitting" ? "Submitting..." : "Submit vendor application"}</span>
+        {status !== "submitting" ? <span aria-hidden="true" className="button-arrow">→</span> : null}
       </button>
       <p
         className={`form-message ${

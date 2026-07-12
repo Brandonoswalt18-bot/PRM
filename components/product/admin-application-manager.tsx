@@ -45,9 +45,9 @@ const lifecycleStages: Array<{ label: string; status: VendorApplicationStatus }>
   { label: "Submitted", status: "submitted" },
   { label: "Under review", status: "under_review" },
   { label: "Approved", status: "approved" },
-  { label: "NDA sent", status: "nda_sent" },
-  { label: "NDA signed", status: "nda_signed" },
-  { label: "Credentials issued", status: "credentials_issued" },
+  { label: "Legal onboarding", status: "nda_sent" },
+  { label: "Legal confirmed", status: "nda_signed" },
+  { label: "Portal invite", status: "credentials_issued" },
 ];
 
 function getLifecycleStageState(
@@ -81,8 +81,18 @@ function getQueueReason(application: VendorApplication, vendor?: ClientApprovedV
     return application.status === "under_review" ? "Waiting on GoAccess review" : "New application received";
   }
 
-  if (vendor.ndaStatus !== "signed") {
-    return vendor.signedNdaFileUrl ? "Signed NDA uploaded and waiting on GoAccess confirmation" : "Waiting on NDA completion";
+  if (vendor.ndaStatus !== "signed" || !vendor.termsAcceptedAt) {
+    if (vendor.signedNdaFileUrl && vendor.termsAcceptedAt) {
+      return "Legal steps complete and waiting on GoAccess NDA confirmation";
+    }
+
+    if (!vendor.signedNdaFileUrl && !vendor.termsAcceptedAt) {
+      return "Waiting on NDA upload and Partner Terms acceptance";
+    }
+
+    return vendor.signedNdaFileUrl
+      ? "Waiting on Partner Terms acceptance"
+      : "Waiting on signed NDA upload";
   }
 
   if (!vendor.credentialsIssued) {
@@ -107,16 +117,20 @@ function getApplicationActionNote(
       : "Open the record and start review.";
   }
 
-  if (vendor.ndaStatus !== "signed") {
-      return hasSignedNdaUpload
-        ? "Signed NDA is attached. Confirm it to continue onboarding."
-        : vendor.ndaStatus === "sent"
-          ? "Wait for the vendor to email the signed NDA back, then confirm it here."
-          : "Send the NDA email to keep onboarding moving.";
+  if (vendor.ndaStatus !== "signed" || !vendor.termsAcceptedAt) {
+    if (hasSignedNdaUpload && vendor.termsAcceptedAt) {
+      return "The NDA is uploaded and Partner Terms are accepted. Confirm the NDA to continue.";
+    }
+
+    if (vendor.ndaStatus === "sent") {
+      return "Wait for the vendor to upload the NDA and accept the Partner Terms from the secure onboarding link.";
+    }
+
+    return "Send the legal onboarding link to start the NDA and Partner Terms steps.";
   }
 
   if (!vendor.credentialsIssued) {
-    return "NDA is confirmed. Issue the portal invite next.";
+    return "Legal onboarding is confirmed. Issue the portal invite next.";
   }
 
   if (vendor.portalAccess !== "active") {
@@ -137,14 +151,18 @@ function getApplicationStepSummary(application: VendorApplication, vendor?: Clie
       : "This application is waiting for first review.";
   }
 
-  if (vendor.ndaStatus !== "signed") {
+  if (vendor.ndaStatus !== "signed" || !vendor.termsAcceptedAt) {
+    if (vendor.signedNdaUploadedAt && vendor.termsAcceptedAt) {
+      return "The vendor completed both legal steps. Confirm the signed NDA to continue."
+    }
+
     return vendor.ndaStatus === "sent"
-      ? "NDA email has been sent. Wait for the signed copy before moving forward."
-      : "Approval is complete. The next step is sending the NDA email.";
+      ? "Legal onboarding is open. The vendor must upload the NDA and accept the Partner Terms."
+      : "Approval is complete. Send the legal onboarding link next.";
   }
 
   if (!vendor.credentialsIssued) {
-    return "The signed NDA is confirmed. The next step is issuing the portal invite.";
+    return "The NDA and Partner Terms are confirmed. The next step is issuing portal access.";
   }
 
   if (vendor.portalAccess !== "active") {
@@ -248,7 +266,7 @@ export function AdminApplicationManager({
 
   async function reissueInvite(applicationId: string) {
     if (
-      !window.confirm("Reissue this invite? The vendor's existing password will be cleared and the previous invite link will stop working.")
+      !window.confirm("Reissue this secure link? The previous onboarding or activation link will stop working. If the vendor already activated an account, the existing password will be cleared.")
     ) {
       return;
     }
@@ -276,8 +294,8 @@ export function AdminApplicationManager({
       setMessage(
         payload.message ??
           (payload.inviteUrl
-            ? `Portal invite reissued. Fresh activation link: ${payload.inviteUrl}`
-            : "Portal invite reissued.")
+            ? `Secure link reissued: ${payload.inviteUrl}`
+            : "Secure link reissued.")
       );
     } catch {
       setMessage("Network error while reissuing invite.");
@@ -459,6 +477,10 @@ export function AdminApplicationManager({
                         <strong>{vendor ? formatNdaStatusLabel(vendor.ndaStatus) : "Not started"}</strong>
                       </div>
                       <div className="detail-fact">
+                        <span>Partner Terms</span>
+                        <strong>{vendor?.termsAcceptedAt ? "Accepted" : "Pending"}</strong>
+                      </div>
+                      <div className="detail-fact">
                         <span>Portal invite</span>
                         <strong>{vendor?.credentialsIssued ? "Sent" : "Pending"}</strong>
                       </div>
@@ -478,14 +500,19 @@ export function AdminApplicationManager({
                           View signed NDA
                         </a>
                       ) : null}
-                      {vendor?.credentialsIssued ? (
+                      {vendor?.termsDocumentUrl ? (
+                        <a className="detail-link-chip" href={vendor.termsDocumentUrl} target="_blank" rel="noreferrer">
+                          Open Partner Terms
+                        </a>
+                      ) : null}
+                      {vendor && (vendor.ndaStatus === "sent" || vendor.credentialsIssued) ? (
                         <button
                           className="detail-link-chip"
                           type="button"
                           disabled={busyId === application.id}
                           onClick={() => reissueInvite(application.id)}
                         >
-                          Reissue invite
+                          {vendor.credentialsIssued ? "Reissue portal invite" : "Reissue onboarding link"}
                         </button>
                       ) : null}
                     </div>

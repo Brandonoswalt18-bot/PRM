@@ -30,8 +30,11 @@ export default async function PartnersPage() {
       delta: `${vendorRows.filter((vendor) => vendor.portalAccess === "active").length} have active portal access`,
     },
     {
-      label: "Pending NDA",
-      value: String(vendorRows.filter((vendor) => vendor.ndaStatus !== "signed").length),
+      label: "Pending legal onboarding",
+      value: String(
+        vendorRows.filter((vendor) => vendor.ndaStatus !== "signed" || !vendor.termsAcceptedAt)
+          .length
+      ),
       delta: "Legal onboarding still in progress",
     },
     {
@@ -83,7 +86,9 @@ export default async function PartnersPage() {
                     </Link>
                   </span>
                   <span>{[vendor.city, vendor.state].filter(Boolean).join(", ") || vendor.region}</span>
-                  <span>{formatVendorStatusLabel(vendor.status)} · NDA {formatNdaStatusLabel(vendor.ndaStatus)}</span>
+                  <span>
+                    {formatVendorStatusLabel(vendor.status)} · NDA {formatNdaStatusLabel(vendor.ndaStatus)} · Terms {vendor.termsAcceptedAt ? "accepted" : "pending"}
+                  </span>
                   <span>{formatPortalAccessLabel(vendor.portalAccess)}</span>
                   <span>{formatCurrency(vendor.currentRmr)}</span>
                 </div>

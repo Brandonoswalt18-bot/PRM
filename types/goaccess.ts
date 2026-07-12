@@ -86,6 +86,10 @@ export type ApprovedVendor = {
   signedNdaFileUrl?: string;
   signedNdaBlobPath?: string;
   signedNdaUploadedAt?: string;
+  termsDocumentUrl?: string;
+  termsVersion?: string;
+  termsAcceptedAt?: string;
+  termsAcceptedBy?: string;
   credentialsIssued: boolean;
   credentialsIssuedAt?: string;
   portalAccess: "not_ready" | "invited" | "active";

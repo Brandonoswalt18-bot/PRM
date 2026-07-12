@@ -1,6 +1,18 @@
 export type WorkspaceNavItem = {
   label: string;
   href: string;
+  group: string;
+  icon:
+    | "home"
+    | "applications"
+    | "vendors"
+    | "deals"
+    | "sync"
+    | "learning"
+    | "revenue"
+    | "documents"
+    | "profile"
+    | "support";
 };
 
 export type WorkspaceSession = {

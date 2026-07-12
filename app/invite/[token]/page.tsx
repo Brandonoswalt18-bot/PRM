@@ -30,15 +30,38 @@ export default async function InvitePage({ params, searchParams }: InvitePagePro
   if (!vendor) {
     return (
       <main className="login-shell">
-        <div className="login-card">
-          <span className="eyebrow">INVITE NOT FOUND</span>
-          <h1>This GoAccess vendor invite is invalid.</h1>
-          <p>The invite link may have expired or already been replaced. Contact GoAccess to receive a fresh portal invite.</p>
-          <div className="login-footer">
-            <Link className="button button-primary" href="/">
-              Back to vendor access
-            </Link>
-          </div>
+        <div className="login-layout login-layout-single">
+          <section className="login-card">
+            <span className="eyebrow">INVITE NOT FOUND</span>
+            <h1>This GoAccess vendor invite is invalid.</h1>
+            <p>The invite link may have expired or already been replaced. Contact GoAccess to receive a fresh portal invite.</p>
+            <div className="login-actions">
+              <Link className="button button-primary" href="/">
+                Back to vendor access
+              </Link>
+            </div>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  if (!vendor.credentialsIssued) {
+    return (
+      <main className="login-shell">
+        <div className="login-layout login-layout-single">
+          <section className="login-card">
+            <span className="eyebrow">LEGAL ONBOARDING FIRST</span>
+            <h1>Complete your NDA and Vendor Terms.</h1>
+            <p>
+              {vendor.companyName} is approved to continue, but full portal access unlocks after the signed NDA and Partner Terms & Conditions are complete.
+            </p>
+            <div className="login-actions">
+              <Link className="button button-primary" href={`/onboarding/${encodeURIComponent(token)}`}>
+                Continue onboarding
+              </Link>
+            </div>
+          </section>
         </div>
       </main>
     );
@@ -46,7 +69,8 @@ export default async function InvitePage({ params, searchParams }: InvitePagePro
 
   return (
     <main className="login-shell">
-      <div className="login-card">
+      <div className="login-layout login-layout-single">
+        <section className="login-card">
         <span className="eyebrow">VENDOR INVITE</span>
         <h1>Create your vendor password.</h1>
         <p>
@@ -65,7 +89,7 @@ export default async function InvitePage({ params, searchParams }: InvitePagePro
         <>
           <form action="/auth/activate" className="login-form" method="post">
               <input name="token" type="hidden" value={token} />
-              <input name="next" type="hidden" value="/portal/profile" />
+              <input name="next" type="hidden" value="/portal" />
               <label className="login-field">
                 <span className="access-label">Create password</span>
                 <input
@@ -105,6 +129,7 @@ export default async function InvitePage({ params, searchParams }: InvitePagePro
             </Link>
           </div>
         </>
+        </section>
       </div>
     </main>
   );

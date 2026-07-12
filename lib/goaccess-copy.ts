@@ -22,9 +22,9 @@ export function formatApplicationStatusLabel(status: VendorApplicationStatus) {
     case "approved":
       return "Approved";
     case "nda_sent":
-      return "NDA sent";
+      return "Legal onboarding sent";
     case "nda_signed":
-      return "NDA signed";
+      return "Legal onboarding confirmed";
     case "credentials_issued":
       return "Portal invite sent";
     case "rejected":
@@ -41,9 +41,9 @@ export function formatApplicationActionLabel(status: VendorApplicationStatus) {
     case "approved":
       return "Approve";
     case "nda_sent":
-      return "Send NDA email";
+      return "Send legal onboarding";
     case "nda_signed":
-      return "Mark NDA signed";
+      return "Confirm legal onboarding";
     case "credentials_issued":
       return "Issue portal invite";
     default:
@@ -54,7 +54,7 @@ export function formatApplicationActionLabel(status: VendorApplicationStatus) {
 export function formatVendorStatusLabel(status: VendorStatus) {
   switch (status) {
     case "pending_nda":
-      return "Waiting on NDA";
+      return "Legal onboarding";
     case "onboarding":
       return "Onboarding";
     case "active":
@@ -153,10 +153,14 @@ export function getVendorNextStep(vendor: ApprovedVendor | null | undefined) {
     return "GoAccess is still reviewing your application.";
   }
 
-  if (vendor.ndaStatus !== "signed") {
+  if (vendor.ndaStatus !== "signed" || !vendor.termsAcceptedAt) {
+    if (vendor.signedNdaUploadedAt && vendor.termsAcceptedAt) {
+      return "Your legal steps are complete. GoAccess is reviewing the signed NDA now.";
+    }
+
     return vendor.ndaStatus === "sent"
-      ? "Download the NDA, sign it offline, and email the signed copy back to GoAccess."
-      : "GoAccess still needs to send your NDA before portal setup can continue.";
+      ? "Use your secure onboarding link to upload the NDA and accept the Partner Terms & Conditions."
+      : "GoAccess still needs to send your legal onboarding link before portal setup can continue.";
   }
 
   if (!vendor.credentialsIssued) {

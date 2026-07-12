@@ -31,6 +31,10 @@ export function buildInviteUrl(inviteToken: string) {
   return `${getPortalBaseUrl()}/invite/${inviteToken}`;
 }
 
+export function buildOnboardingUrl(inviteToken: string) {
+  return `${getPortalBaseUrl()}/onboarding/${inviteToken}`;
+}
+
 export function getApplicationNotificationRecipients() {
   const raw = process.env.GOACCESS_APPLICATION_NOTIFICATION_EMAIL ?? "";
 

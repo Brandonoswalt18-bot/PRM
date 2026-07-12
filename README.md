@@ -58,8 +58,9 @@ Current behavior:
 - submits to HubSpot Forms API when env vars are present
 - creates or updates HubSpot companies, contacts, and deals when an admin syncs an approved vendor deal
 - inspects HubSpot for existing company, contact, and open associated deal conflicts before writing a new approved vendor deal
-- records outbound applicant, admin, approval, NDA, and credential invite notifications in the local store
-- uses a Google Docs NDA link for the current lightweight legal workflow
+- records outbound applicant, admin, approval, legal onboarding, and credential notifications in the durable portal store
+- sends approved vendors to a secure legal checklist where they upload the NDA and accept the versioned Partner Terms & Conditions
+- prevents NDA confirmation, portal activation, and deal registration until the required legal steps are complete
 - sends vendor lifecycle emails through Resend when email env vars are configured
 - supports admin-managed training videos and documents for vendor learning
 
@@ -91,6 +92,8 @@ Operational notes:
 Portal workflow env vars:
 
 - `GOACCESS_NDA_DOCUMENT_URL`
+- `GOACCESS_TERMS_DOCUMENT_URL`
+- `GOACCESS_TERMS_VERSION`
 - `GOACCESS_PORTAL_BASE_URL`
 - `GOACCESS_APPLICATION_NOTIFICATION_EMAIL`
 - `BLOB_READ_WRITE_TOKEN`
@@ -103,7 +106,7 @@ Typical production follow-up:
 
 ## Supabase storage
 
-Phase 1 adds an optional Supabase backing store under the existing `lib/goaccess-store.ts` API.
+Supabase is the primary durable backing store under the existing `lib/goaccess-store.ts` API.
 
 Required env vars to enable Supabase mode:
 
@@ -117,10 +120,10 @@ How it works:
   - vendor applications
   - deal registrations
   - sync events
-- lower-priority entities still use the legacy store path for now:
   - notifications
   - support requests
   - training asset metadata
+  - immutable monthly RMR statements
 - when Supabase env is missing or invalid, the app safely falls back to the existing legacy store behavior
 - the login/session flow stays custom; Supabase Auth is not used in this phase
 
@@ -130,16 +133,10 @@ Legacy fallback behavior:
 - local development can persist to `data/goaccess-vendor-portal.json`
 - if neither is available, the app falls back to the seeded in-code store
 
-Run the Phase 1 schema:
+Apply all current migrations:
 
 ```bash
 supabase db push
-```
-
-or apply the SQL in:
-
-```text
-supabase/migrations/20260403_phase1_vendor_portal.sql
 ```
 
 Operational notes:
@@ -183,8 +180,11 @@ Current auth flow:
 - visit `/login`
 - sign in with email + password
 - middleware redirects unauthorized role access back to login
-- when credentials are issued, the vendor invite route `/invite/[token]` is used to create the vendor password and activate portal access
-- invite links expire after seven days, work only once, and are replaced when an admin reissues access
+- after approval, `/onboarding/[token]` is the vendor's first secure step for the signed NDA and Partner Terms acceptance
+- GoAccess cannot confirm legal onboarding until the NDA upload and versioned Terms acceptance are both present
+- after legal confirmation, `/invite/[token]` creates the vendor password and activates full portal access
+- secure onboarding and activation links expire after seven days, work only for the intended stage, and are replaced when an admin reissues them
+- deal registration requires confirmed NDA, recorded Partner Terms acceptance, issued credentials, and active portal access
 - public form and login endpoints use basic per-instance throttling; production should also use platform-level rate limiting
 
 Required auth env vars for production:
@@ -204,8 +204,6 @@ Optional HubSpot deal property env vars:
 - `HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY`
 - `HUBSPOT_DEAL_VENDOR_NAME_PROPERTY`
 
-## Remaining production integrations
+## Scheduled reconciliation
 
-The portal supports outbound HubSpot inspection and deal creation/update. A production launch should also add an authenticated HubSpot webhook or scheduled reconciliation job so HubSpot deal-stage and recurring-revenue changes flow back into the portal automatically.
-
-Support requests, notification history, and training metadata still use the legacy store path. Move those entities to row-level Supabase mutations before relying on the portal for high-concurrency operations. Historical RMR statements should likewise become persisted, closed accounting records instead of being recomputed from the latest deal state.
+Vercel invokes the authenticated `/api/hubspot/reconcile` route daily. The route reads linked HubSpot deals and applies guarded status and recurring-revenue changes back into the durable portal store.

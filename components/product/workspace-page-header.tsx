@@ -18,10 +18,6 @@ export function WorkspacePageHeader({
   return (
     <header className="app-topbar">
       <div className="app-topbar-main">
-        <Link className="brand app-topbar-brand" href="/">
-          <span className="brand-mark">G</span>
-          <span className="brand-text">GoAccess</span>
-        </Link>
         <div className="app-title-copy">
           <span className="app-workspace-label">{workspace}</span>
           <h1 className="app-title">{title}</h1>
@@ -30,7 +26,8 @@ export function WorkspacePageHeader({
       </div>
       <div className="app-topbar-actions">
         <Link className="button button-primary" href={primaryHref ?? "#"} prefetch={false}>
-          {primaryLabel}
+          <span>{primaryLabel}</span>
+          <span aria-hidden="true" className="button-arrow">→</span>
         </Link>
       </div>
     </header>

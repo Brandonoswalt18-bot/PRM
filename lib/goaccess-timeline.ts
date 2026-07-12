@@ -46,19 +46,26 @@ export function buildApplicationTimeline(
 
   if (application.ndaSentAt) {
     entries.push({
-      title: "NDA sent",
-      detail: vendor?.ndaDocumentUrl
-        ? "Legal document delivered and awaiting signature."
-        : "Legal document sent to the vendor.",
+      title: "Legal onboarding sent",
+      detail: "The vendor received the secure NDA and Partner Terms checklist.",
       timestamp: application.ndaSentAt,
       tone: "warning",
+    });
+  }
+
+  if (vendor?.termsAcceptedAt) {
+    entries.push({
+      title: "Partner Terms accepted",
+      detail: `${vendor.termsAcceptedBy ?? vendor.primaryContactName} accepted version ${vendor.termsVersion ?? "current"}.`,
+      timestamp: vendor.termsAcceptedAt,
+      tone: "success",
     });
   }
 
   if (application.ndaSignedAt) {
     entries.push({
       title: "NDA completed",
-      detail: "Vendor completed legal onboarding and is ready for credentials.",
+      detail: "The signed NDA was confirmed and legal onboarding is complete.",
       timestamp: application.ndaSignedAt,
       tone: "success",
     });

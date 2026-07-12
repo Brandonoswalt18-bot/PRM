@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { VendorPerformanceModule } from "@/components/product/vendor-performance-module";
+import { VendorNextStepCard } from "@/components/product/vendor-next-step-card";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { MetricGrid } from "@/components/product/product-page-sections";
 import { getWorkspaceSession } from "@/lib/auth";
+import { toClientApprovedVendor } from "@/lib/goaccess-client-data";
 import {
   formatDealAgreementStatusLabel,
   formatNdaStatusLabel,
@@ -155,6 +157,10 @@ export default async function PartnerPortalPage() {
         primaryHref="/portal/links"
       />
       <div className="app-content">
+        <VendorNextStepCard
+          dealCount={deals.length}
+          vendor={vendor ? toClientApprovedVendor(vendor) : null}
+        />
         <MetricGrid metrics={metrics} />
 
         <section className="dashboard-grid">
@@ -197,6 +203,7 @@ export default async function PartnerPortalPage() {
             </div>
             <div className="stack-meta-grid earnings-meta-grid">
               <span>NDA: {vendor ? formatNdaStatusLabel(vendor.ndaStatus) : "Waiting on review"}</span>
+              <span>Partner Terms: {vendor?.termsAcceptedAt ? "Accepted" : "Pending"}</span>
               <span>Portal access: {vendor ? formatPortalAccessLabel(vendor.portalAccess) : "Not ready"}</span>
               <span>{vendor ? formatVendorStatusLabel(vendor.status) : "Pending review"}</span>
             </div>

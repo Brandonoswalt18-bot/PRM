@@ -33,7 +33,12 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
       return false;
     }
 
-    return vendor.ndaStatus !== "signed" || !vendor.credentialsIssued || vendor.portalAccess !== "active";
+    return (
+      vendor.ndaStatus !== "signed" ||
+      !vendor.termsAcceptedAt ||
+      !vendor.credentialsIssued ||
+      vendor.portalAccess !== "active"
+    );
   });
 
   const filteredApplications =
@@ -51,7 +56,7 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
       href: "/app/programs?queue=pending",
     },
     {
-      label: "NDA / portal holds",
+      label: "Legal / portal holds",
       value: String(onboardingApplications.length),
       delta: "Approved vendors still mid-onboarding",
       href: "/app/programs?queue=onboarding",
@@ -74,7 +79,7 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
         title="Vendor applications"
-        subtitle="Use the queue for quick triage, then open a partner when you need the full onboarding record, NDA trail, and access state."
+        subtitle="Use the queue for quick triage, then open a partner when you need the NDA, Partner Terms, and portal access trail."
         primaryLabel={primaryLabel}
         primaryHref={primaryHref}
       />

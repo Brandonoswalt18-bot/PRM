@@ -22,6 +22,86 @@ test("public vendor application is accepted and protected APIs reject anonymous 
   expect(deals.status()).toBe(401);
 });
 
+test("approved vendor completes NDA and Partner Terms before portal activation", async ({ page }) => {
+  const unique = Date.now();
+  const email = `onboarding+${unique}@example.com`;
+  const submission = await page.request.post("/api/vendor-applications", {
+    data: {
+      companyName: `Onboarding Partner ${unique}`,
+      website: "https://onboarding-partner.example",
+      city: "San Diego",
+      state: "CA",
+      primaryContactName: "Alex Onboarding",
+      primaryContactEmail: email,
+    },
+  });
+  expect(submission.ok()).toBeTruthy();
+  const submissionPayload = (await submission.json()) as { application: { id: string } };
+
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill("maya@goaccess.com");
+  await page.getByLabel("Password").fill("goaccess-admin-demo");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/app$/);
+
+  const approve = await page.request.patch(
+    `/api/vendor-applications/${submissionPayload.application.id}`,
+    { data: { status: "approved" } },
+  );
+  expect(approve.ok()).toBeTruthy();
+  const startLegal = await page.request.patch(
+    `/api/vendor-applications/${submissionPayload.application.id}`,
+    { data: { status: "nda_sent" } },
+  );
+  expect(startLegal.ok()).toBeTruthy();
+  const legalPayload = (await startLegal.json()) as { onboardingUrl: string };
+
+  await page.goto(legalPayload.onboardingUrl);
+  await expect(
+    page.getByRole("heading", { name: "Complete the NDA and Terms & Conditions." }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: /Open NDA document/ })).toHaveAttribute(
+    "href",
+    /17mAo8aotjxbz7tT-Xs0SGI1614IdmgEp/,
+  );
+  await expect(page.getByRole("link", { name: /Read Terms & Conditions/ })).toHaveAttribute(
+    "href",
+    /1--W8AKJPwh6L2CzSi-eTxYycSUUdNP7pAakEDFfIbgQ/,
+  );
+
+  await page.getByLabel("Signed NDA file").setInputFiles({
+    name: "signed-goaccess-nda.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from("%PDF-1.4\nGoAccess onboarding test\n%%EOF"),
+  });
+  await page.getByRole("button", { name: "Upload signed NDA" }).click();
+  await expect(page.getByText("Signed NDA uploaded. GoAccess will review it.")).toBeVisible();
+
+  await page.getByLabel(/I have read and agree/).check();
+  await page.getByRole("button", { name: "Accept Terms & Conditions" }).click();
+  await expect(page.getByText("Terms & Conditions accepted and recorded.")).toBeVisible();
+  await expect(page.getByText("2 of 2 complete")).toBeVisible();
+
+  const confirmLegal = await page.request.patch(
+    `/api/vendor-applications/${submissionPayload.application.id}`,
+    { data: { status: "nda_signed" } },
+  );
+  expect(confirmLegal.ok()).toBeTruthy();
+  const issueAccess = await page.request.patch(
+    `/api/vendor-applications/${submissionPayload.application.id}`,
+    { data: { status: "credentials_issued" } },
+  );
+  expect(issueAccess.ok()).toBeTruthy();
+  const accessPayload = (await issueAccess.json()) as { inviteUrl: string };
+
+  await page.goto(accessPayload.inviteUrl);
+  await page.getByLabel("Create password").fill("goaccess-onboarding-test");
+  await page.getByLabel("Confirm password").fill("goaccess-onboarding-test");
+  await page.getByRole("button", { name: "Activate vendor access" }).click();
+  await expect(page).toHaveURL(/\/portal$/);
+  await expect(page.getByRole("heading", { name: "Register your first deal" })).toBeVisible();
+});
+
 test("admin can sign in, use global search, and remains isolated from vendor pages", async ({
   page,
 }) => {
@@ -71,4 +151,21 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
 
   await page.goto("/app");
   await expect(page).toHaveURL(/\/login\?next=%2Fapp/);
+});
+
+test("vendor mobile navigation keeps grouped destinations accessible", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill("jordan@bluehavenintegrators.com");
+  await page.getByLabel("Password").fill("goaccess-vendor-demo");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/portal$/);
+
+  await page.getByRole("button", { name: "Open navigation" }).click();
+  const navigation = page.getByRole("navigation", { name: "Workspace pages" });
+  await expect(navigation.getByText("Deal pipeline")).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Register deal" })).toBeVisible();
+  await expect(navigation.getByText("Earnings")).toBeVisible();
+  await navigation.getByRole("link", { name: "My deals" }).click();
+  await expect(page).toHaveURL(/\/portal\/deals$/);
 });

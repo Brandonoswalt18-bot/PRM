@@ -7,15 +7,16 @@ import type { WorkspaceNavItem } from "@/types/prm";
 export const dynamic = "force-dynamic";
 
 const partnerNavigation: WorkspaceNavItem[] = [
-  { label: "Home", href: "/portal" },
-  { label: "Register Deal", href: "/portal/links" },
-  { label: "My Deals", href: "/portal/deals" },
-  { label: "Learning", href: "/portal/learning" },
-  { label: "Monthly RMR", href: "/portal/earnings" },
-  { label: "RMR Statements", href: "/portal/payouts" },
-  { label: "Documents", href: "/portal/assets" },
-  { label: "Profile", href: "/portal/profile" },
-  { label: "Support", href: "/portal/support" },
+  { label: "Home", href: "/portal", group: "Workspace", icon: "home" },
+  { label: "Onboarding", href: "/portal/onboarding", group: "Workspace", icon: "applications" },
+  { label: "Register deal", href: "/portal/links", group: "Deal pipeline", icon: "applications" },
+  { label: "My deals", href: "/portal/deals", group: "Deal pipeline", icon: "deals" },
+  { label: "Monthly RMR", href: "/portal/earnings", group: "Earnings", icon: "revenue" },
+  { label: "RMR statements", href: "/portal/payouts", group: "Earnings", icon: "documents" },
+  { label: "Learning", href: "/portal/learning", group: "Resources", icon: "learning" },
+  { label: "Documents", href: "/portal/assets", group: "Resources", icon: "documents" },
+  { label: "Profile", href: "/portal/profile", group: "Account", icon: "profile" },
+  { label: "Support", href: "/portal/support", group: "Account", icon: "support" },
 ];
 
 export default async function PartnerLayout({

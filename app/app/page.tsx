@@ -38,7 +38,7 @@ export default async function VendorDashboardPage() {
     (application) => application.status === "submitted" || application.status === "under_review"
   );
   const onboardingVendors = vendors.filter(
-    (vendor) => vendor.ndaStatus !== "signed" || !vendor.credentialsIssued
+    (vendor) => vendor.ndaStatus !== "signed" || !vendor.termsAcceptedAt || !vendor.credentialsIssued
   );
   const reviewDeals = deals.filter((deal) =>
     ["submitted", "under_review", "approved"].includes(deal.status)
@@ -95,7 +95,7 @@ export default async function VendorDashboardPage() {
       href: "/app/programs?queue=pending",
     },
     {
-      label: "NDA or access holds",
+      label: "Legal or access holds",
       value: String(onboardingVendors.length),
       delta: `${vendors.filter((vendor) => vendor.credentialsIssued).length} vendors have credentials`,
       href: "/app/programs?queue=onboarding",
@@ -128,7 +128,7 @@ export default async function VendorDashboardPage() {
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
         title="GoAccess vendor operations"
-        subtitle="Run the vendor flow from review through NDA, credentials, deal approval, HubSpot, and monthly RMR."
+        subtitle="Run the vendor flow from review through legal onboarding, credentials, deal approval, HubSpot, and monthly RMR."
         primaryLabel="Review applications"
         primaryHref="/app/programs"
       />
@@ -140,7 +140,7 @@ export default async function VendorDashboardPage() {
             <div className="card-header-row">
               <div>
                 <h3>Application and onboarding queue</h3>
-                <p>Review, NDA, credentials, then active vendor access.</p>
+                <p>Review, legal onboarding, credentials, then active vendor access.</p>
               </div>
               <a href="/app/programs" className="button button-secondary">
                 Open applications
@@ -150,7 +150,7 @@ export default async function VendorDashboardPage() {
               <div className="table-head table-cols-4">
                 <span>Vendor</span>
                 <span>Application</span>
-                <span>NDA / access</span>
+                <span>Legal / access</span>
                 <span>Last update</span>
               </div>
               {applications.slice(0, 6).map((application) => {
@@ -162,7 +162,7 @@ export default async function VendorDashboardPage() {
                     <span>{titleCaseStatus(application.status)}</span>
                     <span>
                       {vendor
-                        ? `NDA ${vendor.ndaStatus} / ${vendor.credentialsIssued ? "credentials active" : "credentials pending"}`
+                        ? `NDA ${vendor.ndaStatus} / Terms ${vendor.termsAcceptedAt ? "accepted" : "pending"} / ${vendor.credentialsIssued ? "access issued" : "access pending"}`
                         : "Awaiting approval"}
                     </span>
                     <span>{formatShortDate(application.updatedAt)}</span>

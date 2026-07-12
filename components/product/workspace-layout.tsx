@@ -34,6 +34,29 @@ function isActivePath(currentPath: string, itemHref: string) {
   return currentPath.startsWith(itemHref);
 }
 
+function WorkspaceNavIcon({ icon }: { icon: WorkspaceNavItem["icon"] }) {
+  const paths: Record<WorkspaceNavItem["icon"], ReactNode> = {
+    home: <path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z" />,
+    applications: <path d="M7 3h10v4h3v14H4V7h3Zm2 4h6V5H9Zm-1 5h8M8 16h5" />,
+    vendors: <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm8-2a4 4 0 0 1 0 8m5 4v-2a4 4 0 0 0-3-3.87" />,
+    deals: <path d="M4 7h16v13H4Zm4 0V4h8v3m-4 4v5m-2-2h4" />,
+    sync: <path d="M20 7h-5V2m5 5a8 8 0 0 0-13.7-2.7L4 7m0 10h5v5m-5-5a8 8 0 0 0 13.7 2.7L20 17" />,
+    learning: <path d="m2 8 10-5 10 5-10 5Zm4 2.5V16c3.5 2.6 8.5 2.6 12 0v-5.5M22 8v7" />,
+    revenue: <path d="M12 2v20m5-16.5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />,
+    documents: <path d="M6 2h9l5 5v15H6Zm9 0v6h5M9 13h8M9 17h8" />,
+    profile: <path d="M20 21a8 8 0 0 0-16 0m8-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />,
+    support: <path d="M4 13v-1a8 8 0 0 1 16 0v1M4 13H2v6h4v-6Zm16 0h2v6h-4v-6Zm0 6c0 2-2 3-5 3" />,
+  };
+
+  return (
+    <svg aria-hidden="true" className="app-nav-icon" fill="none" viewBox="0 0 24 24">
+      <g stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8">
+        {paths[icon]}
+      </g>
+    </svg>
+  );
+}
+
 export function WorkspaceLayout({
   brand,
   workspace,
@@ -47,6 +70,26 @@ export function WorkspaceLayout({
   const mobileToggleRef = useRef<HTMLButtonElement | null>(null);
   const mobileCloseRef = useRef<HTMLButtonElement | null>(null);
   const activeItem = navItems.find((item) => isActivePath(pathname, item.href)) ?? navItems[0];
+  const navGroups = navItems.reduce<Array<{ label: string; items: WorkspaceNavItem[] }>>(
+    (groups, item) => {
+      const currentGroup = groups.find((group) => group.label === item.group);
+
+      if (currentGroup) {
+        currentGroup.items.push(item);
+      } else {
+        groups.push({ label: item.group, items: [item] });
+      }
+
+      return groups;
+    },
+    [],
+  );
+  const sessionInitials = session.fullName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   useEffect(() => {
     setMobileNavOpen(false);
@@ -131,17 +174,25 @@ export function WorkspaceLayout({
           </button>
         </div>
         <nav aria-label="Workspace pages" className="app-nav">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
-              className={`app-nav-item ${isActivePath(pathname, item.href) ? "is-active" : ""}`.trim()}
-              href={item.href}
-              prefetch={false}
-              onClick={() => closeMobileNavigation()}
-            >
-              {item.label}
-            </Link>
+          {navGroups.map((group) => (
+            <div className="app-nav-group" key={group.label}>
+              <span className="app-nav-group-label">{group.label}</span>
+              <div className="app-nav-group-items">
+                {group.items.map((item) => (
+                  <Link
+                    key={item.href}
+                    aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
+                    className={`app-nav-item ${isActivePath(pathname, item.href) ? "is-active" : ""}`.trim()}
+                    href={item.href}
+                    prefetch={false}
+                    onClick={() => closeMobileNavigation()}
+                  >
+                    <WorkspaceNavIcon icon={item.icon} />
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
         <div className="app-drawer-links">
@@ -154,10 +205,14 @@ export function WorkspaceLayout({
           </Link>
         </div>
         <div className="session-card">
-          <span className="session-label">Signed in as</span>
-          <span className="session-name">{session.fullName}</span>
+          <div className="session-card-main">
+            <span aria-hidden="true" className="session-avatar">{sessionInitials}</span>
+            <div>
+              <span className="session-label">Signed in as</span>
+              <span className="session-name">{session.fullName}</span>
+            </div>
+          </div>
           <div className="session-meta">
-            <span className="session-role">{session.role}</span>
             <span>{session.organization}</span>
             <span className="session-email">{session.email}</span>
           </div>

@@ -12,15 +12,15 @@ import type { WorkspaceNavItem } from "@/types/prm";
 export const dynamic = "force-dynamic";
 
 const vendorNavigation: WorkspaceNavItem[] = [
-  { label: "Overview", href: "/app" },
-  { label: "Applications", href: "/app/programs" },
-  { label: "Vendor Roster", href: "/app/partners" },
-  { label: "Deal Review", href: "/app/deal-registrations" },
-  { label: "HubSpot Sync", href: "/app/commissions" },
-  { label: "Learning", href: "/app/learning" },
-  { label: "RMR Ledger", href: "/app/payouts" },
-  { label: "Documents", href: "/app/assets" },
-  { label: "Support Ops", href: "/app/settings" },
+  { label: "Overview", href: "/app", group: "Workspace", icon: "home" },
+  { label: "Applications", href: "/app/programs", group: "Vendor operations", icon: "applications" },
+  { label: "Vendor roster", href: "/app/partners", group: "Vendor operations", icon: "vendors" },
+  { label: "Deal review", href: "/app/deal-registrations", group: "Revenue operations", icon: "deals" },
+  { label: "HubSpot sync", href: "/app/commissions", group: "Revenue operations", icon: "sync" },
+  { label: "RMR ledger", href: "/app/payouts", group: "Revenue operations", icon: "revenue" },
+  { label: "Learning", href: "/app/learning", group: "Resources", icon: "learning" },
+  { label: "Documents", href: "/app/assets", group: "Resources", icon: "documents" },
+  { label: "Support ops", href: "/app/settings", group: "Resources", icon: "support" },
 ];
 
 export default async function VendorLayout({
