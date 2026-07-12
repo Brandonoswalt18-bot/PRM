@@ -2,6 +2,7 @@ import { MetricGrid, SideSections, TableSection, AssetRow } from "@/components/p
 import { VendorNdaManager } from "@/components/product/vendor-nda-manager";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
+import { toClientApprovedVendor } from "@/lib/goaccess-client-data";
 import { getVendorById, listTrainingAssets } from "@/lib/goaccess-store";
 import type { AssetRecord, InfoListSection, MetricCard } from "@/types/prm";
 
@@ -72,18 +73,18 @@ export default async function PartnerAssetsPage() {
         workspace="VENDOR PORTAL"
         title="Documents"
         subtitle="Access the NDA, onboarding guides, and GoAccess operating documents tied to your approved vendor account."
-        primaryLabel="Download NDA"
-        primaryHref="/portal/assets"
+        primaryLabel="Browse library"
+        primaryHref="/portal/learning"
       />
       <div className="app-content">
         <MetricGrid metrics={metrics} />
-        <VendorNdaManager vendor={vendor} />
+        <VendorNdaManager vendor={vendor ? toClientApprovedVendor(vendor) : null} />
         <section className="dashboard-grid">
           <TableSection
             title="Available documents"
             description="Vendor-facing legal, onboarding, and operating files."
-            actionLabel="Open file"
-            actionHref="/portal/assets"
+            actionLabel="Open library"
+            actionHref="/portal/learning"
             headers={["Document", "Type", "Audience", "Status"]}
             rows={rows}
             renderRow={AssetRow}

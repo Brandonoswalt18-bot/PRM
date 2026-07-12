@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { getPortalBaseUrl } from "@/lib/email";
 import "./globals.css";
+
+const portalBaseUrl = getPortalBaseUrl();
 
 export const metadata: Metadata = {
   title: "GoAccess Vendor Portal",
   description:
     "Apply to become a GoAccess vendor, complete onboarding, register deals, and track monthly recurring revenue.",
-  metadataBase: new URL("https://prm-gamma.vercel.app"),
+  metadataBase: new URL(portalBaseUrl),
   openGraph: {
     title: "GoAccess Vendor Portal",
     description:
       "GoAccess vendor application, onboarding, deal registration, and recurring revenue tracking.",
-    url: "https://prm-gamma.vercel.app",
+    url: portalBaseUrl,
     siteName: "GoAccess Vendor Portal",
     type: "website",
   },
@@ -29,7 +32,7 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html data-scroll-behavior="smooth" lang="en">
       <body>{children}</body>
     </html>
   );

@@ -40,17 +40,13 @@ import type {
 
 const STORE_FILENAME = "goaccess-vendor-portal.json";
 const BLOB_STORE_PATHNAME = `portal-store/${STORE_FILENAME}`;
-const TRAINING_ASSET_METADATA_PREFIX = "training-assets/records/";
 const SIGNED_NDA_MAX_BYTES = 10 * 1024 * 1024;
 const DEAL_AGREEMENT_MAX_BYTES = 15 * 1024 * 1024;
 const DEFAULT_NDA_DOCUMENT_NAME = "GoAccess Partner NDA";
 const DEFAULT_NDA_DOCUMENT_URL =
   "https://docs.google.com/document/d/1akFHM1h4UM6mN9qe0WvJMbZs_gIT9J3C/edit";
 
-type CorePortalStore = Pick<
-  PortalStore,
-  "vendorApplications" | "approvedVendors" | "deals" | "syncEvents"
->;
+type DatabasePortalStore = PortalStore;
 
 type VendorApplicationRow = {
   id: string;
@@ -153,6 +149,60 @@ type DealSyncEventRow = {
   status: DealSyncEvent["status"];
   reference: string;
   created_at: string;
+};
+
+type VendorNotificationRow = {
+  id: string;
+  application_id: string | null;
+  vendor_id: string | null;
+  recipient_email: string;
+  subject: string;
+  category: VendorNotification["category"];
+  status: VendorNotification["status"];
+  reference: string | null;
+  created_at: string;
+};
+
+type SupportRequestRow = {
+  id: string;
+  vendor_id: string;
+  subject: string;
+  category: SupportRequest["category"];
+  message: string;
+  status: SupportRequest["status"];
+  created_at: string;
+  updated_at: string;
+};
+
+type TrainingAssetRow = {
+  id: string;
+  title: string;
+  description: string;
+  type: TrainingAsset["type"];
+  source: TrainingAsset["source"];
+  file_name: string | null;
+  content_type: string | null;
+  external_url: string | null;
+  file_url: string | null;
+  blob_path: string | null;
+  embedded_data_base64: string | null;
+  uploaded_by: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type VendorRmrStatementRow = {
+  id: string;
+  vendor_id: string;
+  period_key: string;
+  period_label: string;
+  type: VendorRmrStatement["type"];
+  status: VendorRmrStatement["status"];
+  amount: number;
+  deal_count: number;
+  deal_ids: string[];
+  generated_at: string;
+  closed_at: string | null;
 };
 
 const seedStore: PortalStore = {
@@ -480,9 +530,16 @@ const seedStore: PortalStore = {
       updatedAt: "2026-03-05T18:03:00.000Z",
     },
   ],
+  rmrStatements: [],
 };
 
 function getStorePath() {
+  const configuredPath = process.env.GOACCESS_STORE_PATH?.trim();
+
+  if (configuredPath) {
+    return path.resolve(configuredPath);
+  }
+
   if (process.env.NODE_ENV === "production") {
     return path.join("/tmp", STORE_FILENAME);
   }
@@ -505,27 +562,12 @@ function normalizeStore(store: PortalStore | Partial<PortalStore>): PortalStore 
     notifications: store.notifications ?? seed.notifications,
     supportRequests: store.supportRequests ?? seed.supportRequests,
     trainingAssets: store.trainingAssets ?? seed.trainingAssets,
+    rmrStatements: store.rmrStatements ?? seed.rmrStatements,
   };
 }
 
-function getCoreSeedStore(): CorePortalStore {
-  const seed = cloneSeedStore();
-  return {
-    vendorApplications: seed.vendorApplications,
-    approvedVendors: seed.approvedVendors,
-    deals: seed.deals,
-    syncEvents: seed.syncEvents,
-  };
-}
-
-function mergeStoreWithCore(store: PortalStore, core: CorePortalStore): PortalStore {
-  return {
-    ...store,
-    vendorApplications: core.vendorApplications,
-    approvedVendors: core.approvedVendors,
-    deals: core.deals,
-    syncEvents: core.syncEvents,
-  };
+function getDatabaseSeedStore(): DatabasePortalStore {
+  return cloneSeedStore();
 }
 
 function vendorApplicationToRow(application: VendorApplication): VendorApplicationRow {
@@ -752,61 +794,136 @@ function rowToDealSyncEvent(row: DealSyncEventRow): DealSyncEvent {
   };
 }
 
+function vendorNotificationToRow(notification: VendorNotification): VendorNotificationRow {
+  return {
+    id: notification.id,
+    application_id: notification.applicationId ?? null,
+    vendor_id: notification.vendorId ?? null,
+    recipient_email: notification.recipientEmail,
+    subject: notification.subject,
+    category: notification.category,
+    status: notification.status,
+    reference: notification.reference ?? null,
+    created_at: notification.createdAt,
+  };
+}
+
+function rowToVendorNotification(row: VendorNotificationRow): VendorNotification {
+  return {
+    id: row.id,
+    applicationId: row.application_id ?? undefined,
+    vendorId: row.vendor_id ?? undefined,
+    recipientEmail: row.recipient_email,
+    subject: row.subject,
+    category: row.category,
+    status: row.status,
+    reference: row.reference ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
+function supportRequestToRow(request: SupportRequest): SupportRequestRow {
+  return {
+    id: request.id,
+    vendor_id: request.vendorId,
+    subject: request.subject,
+    category: request.category,
+    message: request.message,
+    status: request.status,
+    created_at: request.createdAt,
+    updated_at: request.updatedAt,
+  };
+}
+
+function rowToSupportRequest(row: SupportRequestRow): SupportRequest {
+  return {
+    id: row.id,
+    vendorId: row.vendor_id,
+    subject: row.subject,
+    category: row.category,
+    message: row.message,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function trainingAssetToRow(asset: TrainingAsset): TrainingAssetRow {
+  return {
+    id: asset.id,
+    title: asset.title,
+    description: asset.description,
+    type: asset.type,
+    source: asset.source,
+    file_name: asset.fileName ?? null,
+    content_type: asset.contentType ?? null,
+    external_url: asset.externalUrl ?? null,
+    file_url: asset.fileUrl ?? null,
+    blob_path: asset.blobPath ?? null,
+    embedded_data_base64: asset.embeddedDataBase64 ?? null,
+    uploaded_by: asset.uploadedBy,
+    created_at: asset.createdAt,
+    updated_at: asset.updatedAt,
+  };
+}
+
+function rowToTrainingAsset(row: TrainingAssetRow): TrainingAsset {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    type: row.type,
+    source: row.source,
+    fileName: row.file_name ?? undefined,
+    contentType: row.content_type ?? undefined,
+    externalUrl: row.external_url ?? undefined,
+    fileUrl: row.file_url ?? undefined,
+    blobPath: row.blob_path ?? undefined,
+    embeddedDataBase64: row.embedded_data_base64 ?? undefined,
+    uploadedBy: row.uploaded_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function vendorRmrStatementToRow(statement: VendorRmrStatement): VendorRmrStatementRow {
+  return {
+    id: statement.id,
+    vendor_id: statement.vendorId,
+    period_key: statement.periodKey,
+    period_label: statement.periodLabel,
+    type: statement.type,
+    status: statement.status,
+    amount: statement.amount,
+    deal_count: statement.dealCount,
+    deal_ids: statement.dealIds,
+    generated_at: statement.generatedAt,
+    closed_at: statement.closedAt ?? null,
+  };
+}
+
+function rowToVendorRmrStatement(row: VendorRmrStatementRow): VendorRmrStatement {
+  return {
+    id: row.id,
+    vendorId: row.vendor_id,
+    periodKey: row.period_key,
+    periodLabel: row.period_label,
+    type: row.type,
+    status: row.status,
+    amount: Number(row.amount),
+    dealCount: Number(row.deal_count),
+    dealIds: row.deal_ids ?? [],
+    generatedAt: row.generated_at,
+    closedAt: row.closed_at ?? undefined,
+  };
+}
+
 function getBlobStoreToken() {
   return process.env.BLOB_READ_WRITE_TOKEN?.trim() || null;
 }
 
 async function getBlobClient() {
   return import("@vercel/blob");
-}
-
-function getTrainingAssetRecordPath(assetId: string) {
-  return `${TRAINING_ASSET_METADATA_PREFIX}${assetId}.json`;
-}
-
-async function listDedicatedTrainingAssets(token: string) {
-  const { list: listBlob, get: getBlob } = await getBlobClient();
-  const assets: TrainingAsset[] = [];
-  let cursor: string | undefined;
-
-  do {
-    const result = await listBlob({
-      token,
-      prefix: TRAINING_ASSET_METADATA_PREFIX,
-      cursor,
-      limit: 100,
-    });
-
-    for (const blob of result.blobs) {
-      const record = await getBlob(blob.pathname, {
-        access: "private",
-        token,
-        useCache: false,
-      });
-
-      if (!record || record.statusCode !== 200) {
-        continue;
-      }
-
-      const raw = await new Response(record.stream).text();
-      assets.push(JSON.parse(raw) as TrainingAsset);
-    }
-
-    cursor = result.hasMore ? result.cursor : undefined;
-  } while (cursor);
-
-  return assets;
-}
-
-async function writeDedicatedTrainingAsset(asset: TrainingAsset, token: string) {
-  const { put: putBlob } = await getBlobClient();
-  await putBlob(getTrainingAssetRecordPath(asset.id), JSON.stringify(asset, null, 2), {
-    access: "private",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json",
-    token,
-  });
 }
 
 async function readBlobStore(token: string): Promise<PortalStore> {
@@ -866,47 +983,17 @@ async function writeLegacyStore(store: PortalStore) {
   await writeFile(filePath, JSON.stringify(store, null, 2), "utf8");
 }
 
-async function seedSupabaseCoreStore() {
+async function seedSupabaseStore() {
   const client = await getSupabaseAdminClient();
 
   if (!client) {
     return false;
   }
 
-  const coreSeed = getCoreSeedStore();
-
-  const [{ error: vendorApplicationsError }, { error: approvedVendorsError }, { error: dealsError }, { error: syncEventsError }] =
-    await Promise.all([
-      client.from("vendor_applications").upsert(
-        coreSeed.vendorApplications.map(vendorApplicationToRow),
-        { onConflict: "id" }
-      ),
-      client.from("approved_vendors").upsert(
-        coreSeed.approvedVendors.map(approvedVendorToRow),
-        { onConflict: "id" }
-      ),
-      client.from("deal_registrations").upsert(coreSeed.deals.map(dealRegistrationToRow), {
-        onConflict: "id",
-      }),
-      client.from("sync_events").upsert(coreSeed.syncEvents.map(dealSyncEventToRow), {
-        onConflict: "id",
-      }),
-    ]);
-
-  if (vendorApplicationsError || approvedVendorsError || dealsError || syncEventsError) {
-    console.error("Failed to seed Supabase portal store.", {
-      vendorApplicationsError,
-      approvedVendorsError,
-      dealsError,
-      syncEventsError,
-    });
-    return false;
-  }
-
-  return true;
+  return writeSupabaseStore(getDatabaseSeedStore(), client);
 }
 
-async function readSupabaseCoreStore(): Promise<CorePortalStore | null> {
+async function readSupabaseStore(): Promise<DatabasePortalStore | null> {
   const client = await getSupabaseAdminClient();
 
   if (!client) {
@@ -918,108 +1005,174 @@ async function readSupabaseCoreStore(): Promise<CorePortalStore | null> {
     { data: approvedVendorRows, error: approvedVendorsError },
     { data: dealRows, error: dealsError },
     { data: syncEventRows, error: syncEventsError },
+    { data: notificationRows, error: notificationsError },
+    { data: supportRequestRows, error: supportRequestsError },
+    { data: trainingAssetRows, error: trainingAssetsError },
+    { data: rmrStatementRows, error: rmrStatementsError },
   ] = await Promise.all([
     client.from("vendor_applications").select("*"),
     client.from("approved_vendors").select("*"),
     client.from("deal_registrations").select("*"),
     client.from("sync_events").select("*"),
+    client.from("vendor_notifications").select("*"),
+    client.from("support_requests").select("*"),
+    client.from("training_assets").select("*"),
+    client.from("rmr_statements").select("*"),
   ]);
 
-  if (vendorApplicationsError || approvedVendorsError || dealsError || syncEventsError) {
-    console.error("Failed to read Supabase portal store.", {
-      vendorApplicationsError,
-      approvedVendorsError,
-      dealsError,
-      syncEventsError,
-    });
-    return null;
+  const readError =
+    vendorApplicationsError ??
+    approvedVendorsError ??
+    dealsError ??
+    syncEventsError ??
+    notificationsError ??
+    supportRequestsError ??
+    trainingAssetsError ??
+    rmrStatementsError;
+
+  if (readError) {
+    throw new Error(`Failed to read Supabase portal store: ${readError.message}`);
   }
 
-  const coreStore: CorePortalStore = {
+  const databaseStore: DatabasePortalStore = {
     vendorApplications: ((vendorApplicationRows ?? []) as VendorApplicationRow[]).map(
       rowToVendorApplication
     ),
     approvedVendors: ((approvedVendorRows ?? []) as ApprovedVendorRow[]).map(rowToApprovedVendor),
     deals: ((dealRows ?? []) as DealRegistrationRow[]).map(rowToDealRegistration),
     syncEvents: ((syncEventRows ?? []) as DealSyncEventRow[]).map(rowToDealSyncEvent),
+    notifications: ((notificationRows ?? []) as VendorNotificationRow[]).map(
+      rowToVendorNotification
+    ),
+    supportRequests: ((supportRequestRows ?? []) as SupportRequestRow[]).map(rowToSupportRequest),
+    trainingAssets: ((trainingAssetRows ?? []) as TrainingAssetRow[]).map(rowToTrainingAsset),
+    rmrStatements: ((rmrStatementRows ?? []) as VendorRmrStatementRow[]).map(
+      rowToVendorRmrStatement
+    ),
   };
 
   if (
-    coreStore.vendorApplications.length === 0 &&
-    coreStore.approvedVendors.length === 0 &&
-    coreStore.deals.length === 0 &&
-    coreStore.syncEvents.length === 0
+    databaseStore.vendorApplications.length === 0 &&
+    databaseStore.approvedVendors.length === 0 &&
+    databaseStore.deals.length === 0 &&
+    databaseStore.syncEvents.length === 0
   ) {
-    const seeded = await seedSupabaseCoreStore();
+    const seeded = await seedSupabaseStore();
 
     if (!seeded) {
-      return null;
+      throw new Error("Failed to seed the Supabase portal store.");
     }
 
-    return getCoreSeedStore();
+    return getDatabaseSeedStore();
   }
 
-  return coreStore;
+  const extendedSeed = getDatabaseSeedStore();
+  let seededExtendedData = false;
+
+  if (databaseStore.supportRequests.length === 0 && extendedSeed.supportRequests.length > 0) {
+    databaseStore.supportRequests = extendedSeed.supportRequests;
+    seededExtendedData = true;
+  }
+
+  if (databaseStore.trainingAssets.length === 0 && extendedSeed.trainingAssets.length > 0) {
+    databaseStore.trainingAssets = extendedSeed.trainingAssets;
+    seededExtendedData = true;
+  }
+
+  if (databaseStore.notifications.length === 0 && extendedSeed.notifications.length > 0) {
+    databaseStore.notifications = extendedSeed.notifications;
+    seededExtendedData = true;
+  }
+
+  if (seededExtendedData) {
+    const wroteSeed = await writeSupabaseStore(databaseStore, client);
+
+    if (!wroteSeed) {
+      throw new Error("Failed to migrate legacy portal metadata into Supabase.");
+    }
+  }
+
+  return databaseStore;
 }
 
-async function writeSupabaseCoreStore(store: PortalStore) {
-  const client = await getSupabaseAdminClient();
+async function upsertRows(
+  client: NonNullable<Awaited<ReturnType<typeof getSupabaseAdminClient>>>,
+  table: string,
+  rows: Record<string, unknown>[]
+) {
+  if (rows.length === 0) {
+    return;
+  }
+
+  const { error } = await client.from(table).upsert(rows, { onConflict: "id" });
+
+  if (error) {
+    throw new Error(`Failed to write ${table}: ${error.message}`);
+  }
+}
+
+async function writeSupabaseStore(
+  store: PortalStore,
+  existingClient?: NonNullable<Awaited<ReturnType<typeof getSupabaseAdminClient>>>
+) {
+  const client = existingClient ?? (await getSupabaseAdminClient());
 
   if (!client) {
     return false;
   }
 
-  const [{ error: vendorApplicationsError }, { error: approvedVendorsError }, { error: dealsError }, { error: syncEventsError }] =
-    await Promise.all([
-      client.from("vendor_applications").upsert(
-        store.vendorApplications.map(vendorApplicationToRow),
-        { onConflict: "id" }
-      ),
-      client.from("approved_vendors").upsert(store.approvedVendors.map(approvedVendorToRow), {
-        onConflict: "id",
-      }),
-      client.from("deal_registrations").upsert(store.deals.map(dealRegistrationToRow), {
-        onConflict: "id",
-      }),
-      client.from("sync_events").upsert(store.syncEvents.map(dealSyncEventToRow), {
-        onConflict: "id",
-      }),
-    ]);
-
-  if (vendorApplicationsError || approvedVendorsError || dealsError || syncEventsError) {
-    console.error("Failed to write Supabase portal store.", {
-      vendorApplicationsError,
-      approvedVendorsError,
-      dealsError,
-      syncEventsError,
-    });
+  try {
+    await upsertRows(client, "vendor_applications", store.vendorApplications.map(vendorApplicationToRow));
+    await upsertRows(client, "approved_vendors", store.approvedVendors.map(approvedVendorToRow));
+    await upsertRows(client, "deal_registrations", store.deals.map(dealRegistrationToRow));
+    await upsertRows(client, "sync_events", store.syncEvents.map(dealSyncEventToRow));
+    await upsertRows(client, "vendor_notifications", store.notifications.map(vendorNotificationToRow));
+    await upsertRows(client, "support_requests", store.supportRequests.map(supportRequestToRow));
+    await upsertRows(client, "training_assets", store.trainingAssets.map(trainingAssetToRow));
+    await upsertRows(client, "rmr_statements", store.rmrStatements.map(vendorRmrStatementToRow));
+    return true;
+  } catch (error) {
+    console.error("Failed to write Supabase portal store.", error);
     return false;
   }
-
-  return true;
 }
 
 async function readStore(): Promise<PortalStore> {
-  const legacyStore = await readLegacyStore();
-  const supabaseCoreStore = await readSupabaseCoreStore();
+  const supabaseConfig = getSupabaseServerConfig();
 
-  if (!supabaseCoreStore) {
-    return legacyStore;
+  if (supabaseConfig.enabled) {
+    const supabaseStore = await readSupabaseStore();
+
+    if (!supabaseStore) {
+      throw new Error("Supabase is configured but unavailable.");
+    }
+
+    return supabaseStore;
   }
 
-  return mergeStoreWithCore(legacyStore, supabaseCoreStore);
+  return readLegacyStore();
 }
 
 async function writeStore(store: PortalStore) {
   const supabaseConfig = getSupabaseServerConfig();
 
   if (supabaseConfig.enabled) {
-    await writeSupabaseCoreStore(store);
+    const wroteStore = await writeSupabaseStore(store);
+
+    if (!wroteStore) {
+      throw new Error("Failed to persist the portal store in Supabase.");
+    }
+
+    return;
   }
 
   await writeLegacyStore(store);
 }
 
+/*
+ * Metadata is stored in Supabase whenever it is configured. The JSON store remains
+ * only as a deterministic local-development and isolated-browser-test fallback.
+ */
 function computeExpectedVendorMonthlyRevenue(
   expectedMonthlyRmr: number,
   payoutType?: VendorPayoutType,
@@ -1212,51 +1365,10 @@ export async function listSupportRequests(vendorId?: string) {
 
 export async function listTrainingAssets() {
   const store = await readStore();
-  const blobToken = getBlobStoreToken();
-
-  if (!blobToken) {
-    return [...store.trainingAssets].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  }
-
-  try {
-    const dedicatedAssets = await listDedicatedTrainingAssets(blobToken);
-    const mergedAssets = new Map<string, TrainingAsset>();
-
-    for (const asset of store.trainingAssets) {
-      mergedAssets.set(asset.id, asset);
-    }
-
-    for (const asset of dedicatedAssets) {
-      mergedAssets.set(asset.id, asset);
-    }
-
-    return [...mergedAssets.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  } catch {
-    return [...store.trainingAssets].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  }
+  return [...store.trainingAssets].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function getTrainingAssetById(assetId: string) {
-  const blobToken = getBlobStoreToken();
-
-  if (blobToken) {
-    try {
-      const { get: getBlob } = await getBlobClient();
-      const record = await getBlob(getTrainingAssetRecordPath(assetId), {
-        access: "private",
-        token: blobToken,
-        useCache: false,
-      });
-
-      if (record && record.statusCode === 200) {
-        const raw = await new Response(record.stream).text();
-        return JSON.parse(raw) as TrainingAsset;
-      }
-    } catch {
-      // Fall back to the shared store below.
-    }
-  }
-
   const store = await readStore();
   return store.trainingAssets.find((item) => item.id === assetId) ?? null;
 }
@@ -1266,9 +1378,25 @@ export async function getDealById(dealId: string) {
   return store.deals.find((item) => item.id === dealId) ?? null;
 }
 
+const vendorInviteMaxAgeMs = 7 * 24 * 60 * 60 * 1000;
+
+function isActiveVendorInvite(vendor: ApprovedVendor, inviteToken: string) {
+  if (
+    !vendor.inviteToken ||
+    vendor.inviteToken !== inviteToken ||
+    vendor.passwordConfiguredAt ||
+    !vendor.inviteSentAt
+  ) {
+    return false;
+  }
+
+  const issuedAt = Date.parse(vendor.inviteSentAt);
+  return !Number.isNaN(issuedAt) && Date.now() - issuedAt <= vendorInviteMaxAgeMs;
+}
+
 export async function getVendorByInviteToken(inviteToken: string) {
   const store = await readStore();
-  return store.approvedVendors.find((item) => item.inviteToken === inviteToken) ?? null;
+  return store.approvedVendors.find((item) => isActiveVendorInvite(item, inviteToken)) ?? null;
 }
 
 export async function getVendorByEmail(email: string) {
@@ -1483,6 +1611,20 @@ async function recordWorkflowEmail(input: {
   });
 }
 
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (character) => {
+    const entities: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
+    };
+
+    return entities[character] ?? character;
+  });
+}
+
 export async function submitVendorApplication(input: CreateVendorApplicationInput) {
   const store = await readStore();
   const timestamp = nowIso();
@@ -1513,7 +1655,7 @@ export async function submitVendorApplication(input: CreateVendorApplicationInpu
     category: "application_received",
     reference: application.companyName,
     text: `Hi ${application.primaryContactName},\n\nWe received your GoAccess vendor application for ${application.companyName}. Our team will review it and follow up with next steps.\n\nGoAccess`,
-    html: `<p>Hi ${application.primaryContactName},</p><p>We received your GoAccess vendor application for <strong>${application.companyName}</strong>. Our team will review it and follow up with next steps.</p><p>GoAccess</p>`,
+    html: `<p>Hi ${escapeHtml(application.primaryContactName)},</p><p>We received your GoAccess vendor application for <strong>${escapeHtml(application.companyName)}</strong>. Our team will review it and follow up with next steps.</p><p>GoAccess</p>`,
   });
 
   createdNotifications.push(applicantNotification);
@@ -1546,13 +1688,13 @@ export async function submitVendorApplication(input: CreateVendorApplicationInpu
       html: [
         "<p>A new GoAccess vendor application was submitted.</p>",
         "<ul>",
-        `<li><strong>Company:</strong> ${application.companyName}</li>`,
-        `<li><strong>Website:</strong> ${application.website || "Not provided"}</li>`,
-        `<li><strong>City:</strong> ${application.city || "Not provided"}</li>`,
-        `<li><strong>State:</strong> ${application.state || "Not provided"}</li>`,
-        `<li><strong>Primary contact:</strong> ${application.primaryContactName}</li>`,
-        `<li><strong>Email:</strong> ${application.primaryContactEmail}</li>`,
-        application.notes ? `<li><strong>Notes:</strong> ${application.notes}</li>` : "",
+        `<li><strong>Company:</strong> ${escapeHtml(application.companyName)}</li>`,
+        `<li><strong>Website:</strong> ${escapeHtml(application.website || "Not provided")}</li>`,
+        `<li><strong>City:</strong> ${escapeHtml(application.city || "Not provided")}</li>`,
+        `<li><strong>State:</strong> ${escapeHtml(application.state || "Not provided")}</li>`,
+        `<li><strong>Primary contact:</strong> ${escapeHtml(application.primaryContactName)}</li>`,
+        `<li><strong>Email:</strong> ${escapeHtml(application.primaryContactEmail)}</li>`,
+        application.notes ? `<li><strong>Notes:</strong> ${escapeHtml(application.notes)}</li>` : "",
         "</ul>",
         "<p>Review it in the GoAccess admin portal under Applications.</p>",
       ]
@@ -1623,7 +1765,7 @@ export async function updateVendorApplicationStatus(
           category: "application_approved",
           reference: vendor.hubspotPartnerId,
           text: `Hi ${application.primaryContactName},\n\nYour company ${application.companyName} has been approved as a GoAccess vendor candidate. The next step is NDA review.\n\nVendor ID: ${vendor.hubspotPartnerId}\n\nGoAccess`,
-          html: `<p>Hi ${application.primaryContactName},</p><p>Your company <strong>${application.companyName}</strong> has been approved as a GoAccess vendor candidate. The next step is NDA review.</p><p><strong>Vendor ID:</strong> ${vendor.hubspotPartnerId}</p><p>GoAccess</p>`,
+          html: `<p>Hi ${escapeHtml(application.primaryContactName)},</p><p>Your company <strong>${escapeHtml(application.companyName)}</strong> has been approved as a GoAccess vendor candidate. The next step is NDA review.</p><p><strong>Vendor ID:</strong> ${escapeHtml(vendor.hubspotPartnerId)}</p><p>GoAccess</p>`,
         })
       );
     }
@@ -1652,10 +1794,10 @@ export async function updateVendorApplicationStatus(
             "Once completed, please email the signed NDA back to support@goaccess.com.\n\n" +
             "GoAccess",
           html:
-            `<p>Hi ${application.primaryContactName},</p>` +
+            `<p>Hi ${escapeHtml(application.primaryContactName)},</p>` +
             "<p>Thank you for your interest in partnering with GoAccess.</p>" +
             "<p>Please review the NDA at the link below, download it, and sign it:</p>" +
-            `<p><a href="${vendor.ndaDocumentUrl}">${vendor.ndaDocumentUrl}</a></p>` +
+            `<p><a href="${escapeHtml(vendor.ndaDocumentUrl)}">${escapeHtml(vendor.ndaDocumentUrl)}</a></p>` +
             "<p>Once completed, please email the signed NDA back to <a href=\"mailto:support@goaccess.com\">support@goaccess.com</a>.</p>" +
             "<p>GoAccess</p>",
         })
@@ -1688,7 +1830,7 @@ export async function updateVendorApplicationStatus(
           category: "credentials_issued",
           reference: inviteUrl,
           text: `Hi ${application.primaryContactName},\n\nYour GoAccess vendor portal access is ready.\n\nActivate your account here:\n${inviteUrl}\n\nAfter logging in, you can complete your vendor profile and register deals.\n\nGoAccess`,
-          html: `<p>Hi ${application.primaryContactName},</p><p>Your GoAccess vendor portal access is ready.</p><p><a href="${inviteUrl}">Activate your account</a></p><p>After logging in, you can complete your vendor profile and register deals.</p><p>GoAccess</p>`,
+          html: `<p>Hi ${escapeHtml(application.primaryContactName)},</p><p>Your GoAccess vendor portal access is ready.</p><p><a href="${escapeHtml(inviteUrl)}">Activate your account</a></p><p>After logging in, you can complete your vendor profile and register deals.</p><p>GoAccess</p>`,
         })
       );
     }
@@ -1751,7 +1893,7 @@ export async function reissueVendorInvite(applicationId: string) {
       category: "credentials_issued",
       reference: inviteUrl,
       text: `Hi ${application.primaryContactName},\n\nYour GoAccess vendor portal access has been reissued.\n\nActivate your account here:\n${inviteUrl}\n\nAfter logging in, you can complete your vendor profile and register deals.\n\nGoAccess`,
-      html: `<p>Hi ${application.primaryContactName},</p><p>Your GoAccess vendor portal access has been reissued.</p><p><a href="${inviteUrl}">Activate your account</a></p><p>After logging in, you can complete your vendor profile and register deals.</p><p>GoAccess</p>`,
+      html: `<p>Hi ${escapeHtml(application.primaryContactName)},</p><p>Your GoAccess vendor portal access has been reissued.</p><p><a href="${escapeHtml(inviteUrl)}">Activate your account</a></p><p>After logging in, you can complete your vendor profile and register deals.</p><p>GoAccess</p>`,
     })
   );
 
@@ -1786,7 +1928,7 @@ export function canTransitionApplicationStatus(
 
 export async function acceptVendorInvite(inviteToken: string) {
   const store = await readStore();
-  const vendor = store.approvedVendors.find((item) => item.inviteToken === inviteToken);
+  const vendor = store.approvedVendors.find((item) => isActiveVendorInvite(item, inviteToken));
 
   if (!vendor) {
     return null;
@@ -1801,7 +1943,7 @@ export async function acceptVendorInvite(inviteToken: string) {
 
 export async function setVendorPasswordFromInvite(inviteToken: string, password: string) {
   const store = await readStore();
-  const vendor = store.approvedVendors.find((item) => item.inviteToken === inviteToken);
+  const vendor = store.approvedVendors.find((item) => isActiveVendorInvite(item, inviteToken));
 
   if (!vendor) {
     throw new Error("Invite not found.");
@@ -1817,6 +1959,7 @@ export async function setVendorPasswordFromInvite(inviteToken: string, password:
   vendor.passwordConfiguredAt = nowIso();
   vendor.portalAccess = "active";
   vendor.inviteAcceptedAt = vendor.inviteAcceptedAt ?? nowIso();
+  vendor.inviteToken = undefined;
   vendor.updatedAt = nowIso();
   await writeStore(store);
   return vendor;
@@ -1960,6 +2103,58 @@ export async function updateDealStatus(
 
   await writeStore(store);
   return deal;
+}
+
+export async function applyHubSpotDealReconciliation(
+  dealId: string,
+  input: {
+    status: DealStatus;
+    monthlyRmr: number | null;
+    stageId: string | null;
+    hubspotUpdatedAt: string | null;
+  }
+) {
+  const store = await readStore();
+  const deal = store.deals.find((item) => item.id === dealId);
+
+  if (!deal) {
+    throw new Error("Deal not found.");
+  }
+
+  const previousStatus = deal.status;
+  const previousMonthlyRmr = deal.monthlyRmr;
+  const statusChanged = input.status !== previousStatus;
+  const rmrChanged = input.monthlyRmr !== null && input.monthlyRmr !== previousMonthlyRmr;
+
+  if (!statusChanged && !rmrChanged) {
+    return { deal, changed: false };
+  }
+
+  deal.status = input.status;
+
+  if (input.monthlyRmr !== null) {
+    deal.monthlyRmr = input.monthlyRmr;
+  }
+
+  deal.updatedAt = input.hubspotUpdatedAt ?? nowIso();
+  store.syncEvents.unshift({
+    id: makeId("sync"),
+    dealId: deal.id,
+    vendorId: deal.vendorId,
+    action: "Portal reconciled from HubSpot",
+    status: "synced",
+    reference: [
+      statusChanged ? `${previousStatus.replaceAll("_", " ")} → ${deal.status.replaceAll("_", " ")}` : "",
+      rmrChanged ? `${formatCurrency(previousMonthlyRmr)} → ${formatCurrency(deal.monthlyRmr)} RMR` : "",
+      input.stageId ? `stage ${input.stageId}` : "",
+    ]
+      .filter(Boolean)
+      .join(" · "),
+    createdAt: nowIso(),
+  });
+
+  await writeStore(store);
+  return { deal, changed: true };
 }
 
 export async function updateVendorProfile(vendorId: string, input: UpdateVendorProfileInput) {
@@ -2239,9 +2434,9 @@ export async function markDealerAgreementSent(
         "Please review the agreement, download it, and upload the signed copy in the portal.\n\n" +
         "GoAccess",
       html:
-        `<p>Hi ${vendor.primaryContactName},</p>` +
-        `<p>GoAccess uploaded the dealer agreement for <strong>${deal.companyName}</strong> and it is ready in your vendor portal.</p>` +
-        `<p><a href="${portalDealUrl}">Open this deal in the vendor portal</a></p>` +
+        `<p>Hi ${escapeHtml(vendor.primaryContactName)},</p>` +
+        `<p>GoAccess uploaded the dealer agreement for <strong>${escapeHtml(deal.companyName)}</strong> and it is ready in your vendor portal.</p>` +
+        `<p><a href="${escapeHtml(portalDealUrl)}">Open this deal in the vendor portal</a></p>` +
         "<p>Please review the agreement, download it, and upload the signed copy in the portal.</p>" +
         "<p>GoAccess</p>",
     });
@@ -2326,13 +2521,6 @@ export async function createExternalTrainingAsset(input: CreateExternalTrainingA
     updatedAt: timestamp,
   };
 
-  const blobToken = getBlobStoreToken();
-
-  if (blobToken) {
-    await writeDedicatedTrainingAsset(asset, blobToken);
-    return asset;
-  }
-
   const store = await readStore();
   store.trainingAssets.unshift(asset);
   await writeStore(store);
@@ -2356,13 +2544,6 @@ export async function finalizeTrainingUpload(input: TrainingUploadFinalizeInput)
     createdAt: timestamp,
     updatedAt: timestamp,
   };
-
-  const blobToken = getBlobStoreToken();
-
-  if (blobToken) {
-    await writeDedicatedTrainingAsset(asset, blobToken);
-    return asset;
-  }
 
   const store = await readStore();
   store.trainingAssets.unshift(asset);
@@ -2442,24 +2623,34 @@ export async function getForecastMonthlyRmrForVendor(vendorId: string) {
 }
 
 export async function listVendorRmrStatements(vendorId: string): Promise<VendorRmrStatement[]> {
-  const deals = await listDeals(vendorId);
-  const currentMonthKey = getMonthKey(nowIso());
-  const statements = new Map<string, VendorRmrStatement>();
+  const store = await readStore();
+  const deals = store.deals.filter((deal) => deal.vendorId === vendorId);
+  const timestamp = nowIso();
+  const currentMonthKey = getMonthKey(timestamp);
+  const originalStatements = JSON.stringify(store.rmrStatements);
+  const statements = new Map(
+    store.rmrStatements
+      .filter((statement) => statement.vendorId === vendorId)
+      .map((statement) => [`${statement.periodKey}:${statement.type}`, statement])
+  );
+
+  for (const statement of statements.values()) {
+    if (statement.status === "open" && statement.periodKey !== currentMonthKey) {
+      statement.status = "closed";
+      statement.closedAt = timestamp;
+    }
+  }
 
   for (const deal of deals) {
     const periodKey = getMonthKey(deal.updatedAt);
-    let type: VendorRmrStatement["type"] | null = null;
-    let status: VendorRmrStatement["status"] | null = null;
+    const type =
+      deal.status === "closed_won"
+        ? "recognized"
+        : deal.status === "synced_to_hubspot"
+          ? "forecast"
+          : null;
 
-    if (deal.status === "closed_won") {
-      type = "recognized";
-      status = periodKey === currentMonthKey ? "open" : "closed";
-    } else if (deal.status === "synced_to_hubspot") {
-      type = "forecast";
-      status = periodKey === currentMonthKey ? "open" : "closed";
-    }
-
-    if (!type || !status) {
+    if (!type || periodKey === currentMonthKey) {
       continue;
     }
 
@@ -2467,21 +2658,79 @@ export async function listVendorRmrStatements(vendorId: string): Promise<VendorR
     const existing = statements.get(statementKey);
 
     if (existing) {
-      existing.amount += deal.monthlyRmr;
-      existing.dealCount += 1;
-      existing.dealIds.push(deal.id);
       continue;
     }
 
+    const historicalDeals = deals.filter(
+      (candidate) =>
+        getMonthKey(candidate.updatedAt) === periodKey &&
+        (type === "recognized"
+          ? candidate.status === "closed_won"
+          : candidate.status === "synced_to_hubspot")
+    );
+
     statements.set(statementKey, {
+      id: `rmr-${slugify(vendorId)}-${periodKey}-${type}`,
+      vendorId,
       periodKey,
       periodLabel: formatStatementMonth(periodKey),
       type,
-      status,
-      amount: deal.monthlyRmr,
-      dealCount: 1,
-      dealIds: [deal.id],
+      status: "closed",
+      amount: historicalDeals.reduce((total, candidate) => total + candidate.monthlyRmr, 0),
+      dealCount: historicalDeals.length,
+      dealIds: historicalDeals.map((candidate) => candidate.id),
+      generatedAt: timestamp,
+      closedAt: timestamp,
     });
+  }
+
+  const currentGroups: Array<{
+    type: VendorRmrStatement["type"];
+    deals: DealRegistration[];
+  }> = [
+    {
+      type: "recognized",
+      deals: deals.filter((deal) => deal.status === "closed_won"),
+    },
+    {
+      type: "forecast",
+      deals: deals.filter(
+        (deal) => deal.status === "closed_won" || deal.status === "synced_to_hubspot"
+      ),
+    },
+  ];
+
+  for (const group of currentGroups) {
+    const statementKey = `${currentMonthKey}:${group.type}`;
+    const existing = statements.get(statementKey);
+
+    if (!existing && group.deals.length === 0) {
+      continue;
+    }
+
+    const statement: VendorRmrStatement = {
+      id: existing?.id ?? `rmr-${slugify(vendorId)}-${currentMonthKey}-${group.type}`,
+      vendorId,
+      periodKey: currentMonthKey,
+      periodLabel: formatStatementMonth(currentMonthKey),
+      type: group.type,
+      status: "open",
+      amount: group.deals.reduce((total, deal) => total + deal.monthlyRmr, 0),
+      dealCount: group.deals.length,
+      dealIds: group.deals.map((deal) => deal.id),
+      generatedAt: existing?.generatedAt ?? timestamp,
+    };
+
+    statements.set(statementKey, statement);
+  }
+
+  store.rmrStatements = [
+    ...store.rmrStatements.filter((statement) => statement.vendorId !== vendorId),
+    ...statements.values(),
+  ];
+
+  if (JSON.stringify(store.rmrStatements) !== originalStatements) {
+    await writeStore(store);
   }
 
   return [...statements.values()].sort((a, b) => {

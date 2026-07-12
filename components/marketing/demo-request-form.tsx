@@ -83,6 +83,7 @@ export function DemoRequestForm() {
         type="text"
         placeholder="Company name"
         aria-label="Company name"
+        maxLength={160}
         value={form.companyName}
         onFocus={() => trackEvent("vendor_application_field_focused", { field: "companyName" })}
         onChange={(event) => update("companyName", event.target.value)}
@@ -92,6 +93,7 @@ export function DemoRequestForm() {
         type="text"
         placeholder="Website (optional)"
         aria-label="Website"
+        maxLength={300}
         value={form.website}
         onFocus={() => trackEvent("vendor_application_field_focused", { field: "website" })}
         onChange={(event) => update("website", event.target.value)}
@@ -101,6 +103,7 @@ export function DemoRequestForm() {
           type="text"
           placeholder="City"
           aria-label="City"
+          maxLength={100}
           value={form.city}
           onFocus={() => trackEvent("vendor_application_field_focused", { field: "city" })}
           onChange={(event) => update("city", event.target.value)}
@@ -110,6 +113,7 @@ export function DemoRequestForm() {
           type="text"
           placeholder="State"
           aria-label="State"
+          maxLength={100}
           value={form.state}
           onFocus={() => trackEvent("vendor_application_field_focused", { field: "state" })}
           onChange={(event) => update("state", event.target.value)}
@@ -120,6 +124,7 @@ export function DemoRequestForm() {
         type="text"
         placeholder="Primary contact"
         aria-label="Primary contact"
+        maxLength={120}
         value={form.primaryContactName}
         onFocus={() =>
           trackEvent("vendor_application_field_focused", { field: "primaryContactName" })
@@ -131,6 +136,7 @@ export function DemoRequestForm() {
         type="email"
         placeholder="Email address"
         aria-label="Email address"
+        maxLength={254}
         value={form.primaryContactEmail}
         onFocus={() =>
           trackEvent("vendor_application_field_focused", { field: "primaryContactEmail" })

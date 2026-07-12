@@ -1,4 +1,4 @@
-import type { ApprovedVendor, DealRegistration } from "@/types/goaccess";
+import type { ApprovedVendor, DealRegistration, DealStatus } from "@/types/goaccess";
 
 type LeadPayload = {
   name: string;
@@ -54,6 +54,14 @@ type HubSpotAssociationResponse = {
 
 type HubSpotApiError = Error & {
   status?: number;
+};
+
+export type HubSpotDealReconciliationSnapshot = {
+  hubspotDealId: string;
+  status: DealStatus;
+  monthlyRmr: number | null;
+  stageId: string | null;
+  hubspotUpdatedAt: string | null;
 };
 
 const HUBSPOT_BASE_URL = "https://api.hubapi.com";
@@ -268,6 +276,73 @@ async function hubSpotRequest<T>(pathname: string, init: RequestInit = {}) {
   }
 
   return (await response.json()) as T;
+}
+
+function isTruthyHubSpotBoolean(value: string | null | undefined) {
+  return value?.toLowerCase() === "true";
+}
+
+export async function readHubSpotDealForReconciliation(
+  deal: DealRegistration
+): Promise<HubSpotDealReconciliationSnapshot> {
+  if (!deal.hubspotDealId) {
+    throw new Error("Deal is not linked to HubSpot.");
+  }
+
+  const statusProperty = normalizeHubSpotPropertyName(
+    process.env.HUBSPOT_DEAL_REGISTRATION_STATUS_PROPERTY
+  );
+  const submissionIdProperty = normalizeHubSpotPropertyName(
+    process.env.HUBSPOT_DEAL_SUBMISSION_ID_PROPERTY
+  );
+  const monthlyRmrProperty = normalizeHubSpotPropertyName(
+    process.env.HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY
+  );
+  const properties = [
+    "dealstage",
+    "hs_is_closed",
+    "hs_is_closed_won",
+    submissionIdProperty,
+    statusProperty,
+    monthlyRmrProperty,
+  ].filter(Boolean) as string[];
+  const remote = await hubSpotRequest<HubSpotObjectResponse & { updatedAt?: string }>(
+    `/crm/v3/objects/deals/${encodeURIComponent(deal.hubspotDealId)}?properties=${encodeURIComponent(properties.join(","))}`
+  );
+  const remoteProperties = remote.properties ?? {};
+
+  if (
+    submissionIdProperty &&
+    remoteProperties[submissionIdProperty] !== deal.id
+  ) {
+    throw new Error(
+      `HubSpot deal ${deal.hubspotDealId} is not linked to portal submission ${deal.id}.`
+    );
+  }
+
+  const customStatus = statusProperty ? remoteProperties[statusProperty] : null;
+  let status = deal.status;
+
+  if (isTruthyHubSpotBoolean(remoteProperties.hs_is_closed)) {
+    status = isTruthyHubSpotBoolean(remoteProperties.hs_is_closed_won)
+      ? "closed_won"
+      : "closed_lost";
+  } else if (customStatus === "closed_won" || customStatus === "closed_lost") {
+    status = customStatus;
+  }
+
+  const parsedMonthlyRmr = monthlyRmrProperty
+    ? Number(remoteProperties[monthlyRmrProperty])
+    : Number.NaN;
+
+  return {
+    hubspotDealId: deal.hubspotDealId,
+    status,
+    monthlyRmr:
+      Number.isFinite(parsedMonthlyRmr) && parsedMonthlyRmr >= 0 ? parsedMonthlyRmr : null,
+    stageId: remoteProperties.dealstage ?? null,
+    hubspotUpdatedAt: remote.updatedAt ?? null,
+  };
 }
 
 async function searchCompanyByDomain(domain: string) {

@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  GlobalWorkspaceSearch,
+  type GlobalSearchRecord,
+} from "@/components/product/global-workspace-search";
 import type { WorkspaceNavItem, WorkspaceSession } from "@/types/prm";
 
 type WorkspaceLayoutProps = {
@@ -10,6 +14,7 @@ type WorkspaceLayoutProps = {
   workspace: string;
   navItems: WorkspaceNavItem[];
   session: WorkspaceSession;
+  globalSearchRecords?: GlobalSearchRecord[];
   children: ReactNode;
 };
 
@@ -34,10 +39,13 @@ export function WorkspaceLayout({
   workspace,
   navItems,
   session,
+  globalSearchRecords,
   children,
 }: WorkspaceLayoutProps) {
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const mobileToggleRef = useRef<HTMLButtonElement | null>(null);
+  const mobileCloseRef = useRef<HTMLButtonElement | null>(null);
   const activeItem = navItems.find((item) => isActivePath(pathname, item.href)) ?? navItems[0];
 
   useEffect(() => {
@@ -58,43 +66,79 @@ export function WorkspaceLayout({
     };
   }, [mobileNavOpen]);
 
+  useEffect(() => {
+    if (!mobileNavOpen) {
+      return;
+    }
+
+    mobileCloseRef.current?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMobileNavOpen(false);
+        requestAnimationFrame(() => mobileToggleRef.current?.focus());
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileNavOpen]);
+
+  function closeMobileNavigation(restoreFocus = false) {
+    setMobileNavOpen(false);
+
+    if (restoreFocus) {
+      requestAnimationFrame(() => mobileToggleRef.current?.focus());
+    }
+  }
+
   return (
     <div className="app-frame">
+      <a className="skip-link" href="#workspace-main">
+        Skip to main content
+      </a>
       <button
+        aria-label="Close navigation"
         aria-hidden={!mobileNavOpen}
         className={`mobile-nav-backdrop${mobileNavOpen ? " is-open" : ""}`}
         tabIndex={mobileNavOpen ? 0 : -1}
         type="button"
-        onClick={() => setMobileNavOpen(false)}
+        onClick={() => closeMobileNavigation(true)}
       />
 
-      <aside className={`app-sidebar${mobileNavOpen ? " is-mobile-open" : ""}`}>
+      <aside
+        aria-label={`${workspace} navigation`}
+        className={`app-sidebar${mobileNavOpen ? " is-mobile-open" : ""}`}
+        id="workspace-navigation"
+      >
         <div className="app-sidebar-top">
           <div>
             <Link className="brand" href="/">
               <span className="brand-mark">G</span>
               <span className="brand-text">{brand}</span>
             </Link>
-            <div className="sidebar-label" id="workspace-navigation">{workspace}</div>
+            <div className="sidebar-label">{workspace}</div>
           </div>
           <button
             aria-label="Close navigation"
             className="mobile-nav-close"
+            ref={mobileCloseRef}
             type="button"
-            onClick={() => setMobileNavOpen(false)}
+            onClick={() => closeMobileNavigation(true)}
           >
             <span />
             <span />
           </button>
         </div>
-        <nav className="app-nav">
+        <nav aria-label="Workspace pages" className="app-nav">
           {navItems.map((item) => (
             <Link
               key={item.href}
+              aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
               className={`app-nav-item ${isActivePath(pathname, item.href) ? "is-active" : ""}`.trim()}
               href={item.href}
               prefetch={false}
-              onClick={() => setMobileNavOpen(false)}
+              onClick={() => closeMobileNavigation()}
             >
               {item.label}
             </Link>
@@ -104,7 +148,7 @@ export function WorkspaceLayout({
           <Link
             className="app-drawer-link"
             href="/"
-            onClick={() => setMobileNavOpen(false)}
+            onClick={() => closeMobileNavigation()}
           >
             Public page
           </Link>
@@ -121,20 +165,21 @@ export function WorkspaceLayout({
             className="button button-ghost session-signout"
             href="/auth/logout"
             prefetch={false}
-            onClick={() => setMobileNavOpen(false)}
+            onClick={() => closeMobileNavigation()}
           >
             Sign out
           </Link>
         </div>
       </aside>
 
-      <div className="app-main">
+      <main className="app-main" id="workspace-main" inert={mobileNavOpen || undefined}>
         <div className="mobile-workspace-bar">
           <button
             aria-controls="workspace-navigation"
             aria-expanded={mobileNavOpen}
             aria-label={mobileNavOpen ? "Close navigation" : "Open navigation"}
             className={`mobile-nav-toggle${mobileNavOpen ? " is-open" : ""}`}
+            ref={mobileToggleRef}
             type="button"
             onClick={() => setMobileNavOpen((current) => !current)}
           >
@@ -157,8 +202,14 @@ export function WorkspaceLayout({
             <strong className="mobile-workspace-title">{activeItem?.label ?? brand}</strong>
           </div>
         </div>
+        {globalSearchRecords && globalSearchRecords.length > 0 ? (
+          <GlobalWorkspaceSearch
+            placeholder="Search deals, vendors, or applications"
+            records={globalSearchRecords}
+          />
+        ) : null}
         {children}
-      </div>
+      </main>
     </div>
   );
 }

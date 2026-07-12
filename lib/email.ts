@@ -18,7 +18,13 @@ export function isVendorEmailEnabled() {
 }
 
 export function getPortalBaseUrl() {
-  return process.env.GOACCESS_PORTAL_BASE_URL || "https://prm-site-8tt6tcck5-brandonoswalt18-bots-projects.vercel.app";
+  const configuredUrl = process.env.GOACCESS_PORTAL_BASE_URL?.trim();
+
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/$/, "");
+  }
+
+  return process.env.NODE_ENV === "production" ? "https://goaccess.com" : "http://localhost:3000";
 }
 
 export function buildInviteUrl(inviteToken: string) {

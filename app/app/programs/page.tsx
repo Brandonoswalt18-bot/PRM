@@ -3,6 +3,7 @@ import {
 } from "@/components/product/product-page-sections";
 import { AdminApplicationManager } from "@/components/product/admin-application-manager";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
+import { toClientApprovedVendors } from "@/lib/goaccess-client-data";
 import { listApprovedVendors, listVendorApplications, listVendorNotifications } from "@/lib/goaccess-store";
 
 type ProgramsPageProps = {
@@ -82,7 +83,7 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
         <section className="dashboard-grid dashboard-grid-single">
           <AdminApplicationManager
             applications={filteredApplications}
-            vendors={vendors}
+            vendors={toClientApprovedVendors(vendors)}
             notifications={notifications}
             activeQueue={activeQueue}
             selectedApplicationId={selectedApplicationId}

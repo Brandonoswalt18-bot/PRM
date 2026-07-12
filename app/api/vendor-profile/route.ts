@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireVendorRouteAccess } from "@/lib/auth-guards";
+import { toClientApprovedVendor } from "@/lib/goaccess-client-data";
 import { getVendorById, updateVendorProfile } from "@/lib/goaccess-store";
 
 type VendorProfilePayload = {
@@ -26,7 +27,7 @@ export async function GET() {
     return NextResponse.json({ message: "Approved vendor not found." }, { status: 404 });
   }
 
-  return NextResponse.json({ vendor });
+  return NextResponse.json({ vendor: toClientApprovedVendor(vendor) });
 }
 
 export async function PATCH(request: Request) {
@@ -64,6 +65,17 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ message: "Enter a valid email address." }, { status: 400 });
   }
 
+  if (
+    companyName.length > 160 ||
+    website.length > 300 ||
+    city.length > 100 ||
+    state.length > 100 ||
+    primaryContactName.length > 120 ||
+    primaryContactEmail.length > 254
+  ) {
+    return NextResponse.json({ message: "One or more fields are too long." }, { status: 400 });
+  }
+
   try {
     const vendor = await updateVendorProfile(session.vendorId, {
       companyName,
@@ -76,7 +88,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      vendor,
+      vendor: toClientApprovedVendor(vendor),
       message: "Vendor profile updated.",
     });
   } catch (error) {

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { requireAdminRouteAccess } from "@/lib/auth-guards";
 import { createHubSpotLead, isHubSpotLeadRoutingEnabled } from "@/lib/hubspot";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { listVendorApplications, submitVendorApplication } from "@/lib/goaccess-store";
 
 type VendorApplicationPayload = {
@@ -24,11 +26,26 @@ function summarizeEmailFailure(reference: string) {
 }
 
 export async function GET() {
+  const authError = await requireAdminRouteAccess();
+
+  if (authError) {
+    return authError;
+  }
+
   const applications = await listVendorApplications();
   return NextResponse.json({ items: applications });
 }
 
 export async function POST(request: Request) {
+  const rateLimit = checkRateLimit(request, "vendor-application", 5, 15 * 60 * 1000);
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { message: "Too many applications were submitted from this connection. Try again later." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+    );
+  }
+
   let body: VendorApplicationPayload;
 
   try {
@@ -55,6 +72,32 @@ export async function POST(request: Request) {
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(primaryContactEmail)) {
     return NextResponse.json({ message: "Enter a valid email address." }, { status: 400 });
+  }
+
+  if (
+    companyName.length > 160 ||
+    website.length > 300 ||
+    city.length > 100 ||
+    state.length > 100 ||
+    primaryContactName.length > 120 ||
+    primaryContactEmail.length > 254
+  ) {
+    return NextResponse.json({ message: "One or more fields are too long." }, { status: 400 });
+  }
+
+  const existingApplications = await listVendorApplications();
+  const isDuplicate = existingApplications.some(
+    (application) =>
+      application.status !== "rejected" &&
+      application.companyName.trim().toLowerCase() === companyName.toLowerCase() &&
+      application.primaryContactEmail.trim().toLowerCase() === primaryContactEmail
+  );
+
+  if (isDuplicate) {
+    return NextResponse.json(
+      { message: "An active application already exists for this company and contact." },
+      { status: 409 }
+    );
   }
 
   const result = await submitVendorApplication({

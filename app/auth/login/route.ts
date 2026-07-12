@@ -3,6 +3,7 @@ import { SESSION_COOKIE, VENDOR_ID_COOKIE } from "@/lib/auth-constants";
 import { createSignedSession } from "@/lib/auth-session";
 import { resolveWorkspaceDestination } from "@/lib/auth";
 import { verifyVendorPassword } from "@/lib/goaccess-store";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 function getAdminEmail() {
   return (process.env.GOACCESS_ADMIN_EMAIL?.trim().toLowerCase() || "maya@goaccess.com");
@@ -60,6 +61,14 @@ export async function POST(request: Request) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
   const next = String(formData.get("next") ?? "");
+
+  const rateLimit = checkRateLimit(request, "login", 10, 15 * 60 * 1000);
+
+  if (!rateLimit.allowed) {
+    const response = NextResponse.redirect(buildLoginRedirect(request, "rate-limited", next), 303);
+    response.headers.set("Retry-After", String(rateLimit.retryAfterSeconds));
+    return response;
+  }
 
   if (!email || !password) {
     return NextResponse.redirect(buildLoginRedirect(request, "missing-credentials", next), 303);

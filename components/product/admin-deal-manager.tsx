@@ -7,13 +7,13 @@ import { AdminDealAgreementManager } from "@/components/product/admin-deal-agree
 import { formatDealLocation } from "@/lib/deal-registration";
 import { formatDealStatusLabel } from "@/lib/goaccess-copy";
 import { buildDealTimeline } from "@/lib/goaccess-timeline";
-import type { ApprovedVendor, DealRegistration, DealStatus, DealSyncEvent, VendorApplication } from "@/types/goaccess";
+import type { ClientApprovedVendor, DealRegistration, DealStatus, DealSyncEvent, VendorApplication } from "@/types/goaccess";
 
 type AdminDealManagerProps = {
   applications: VendorApplication[];
   deals: DealRegistration[];
   syncEvents: DealSyncEvent[];
-  vendors: ApprovedVendor[];
+  vendors: ClientApprovedVendor[];
   activeQueue: "all" | "review" | "hubspot" | "closed";
   selectedDealId?: string;
   openSupportCount: number;
@@ -368,6 +368,13 @@ export function AdminDealManager({
   }, [actionFilter, deals, deferredSearch, vendors]);
 
   async function updateStatus(dealId: string, status: DealStatus) {
+    if (
+      status === "rejected" &&
+      !window.confirm("Reject this deal? This removes it from the active deal workflow and cannot be undone here.")
+    ) {
+      return;
+    }
+
     setBusyId(dealId);
     setMessage("");
 
@@ -417,15 +424,14 @@ export function AdminDealManager({
           <h3>Deal operations command center</h3>
           <p>Watch the pace of new work, jump into the next required action, and keep the queue moving without digging.</p>
         </div>
-        <div className="performance-toggle" role="tablist" aria-label="Deal review performance timeframe">
+        <div className="performance-toggle" role="group" aria-label="Deal review performance timeframe">
           {(["daily", "weekly", "monthly"] as const).map((range) => (
             <button
               key={range}
+              aria-pressed={performanceRange === range}
               className={`performance-toggle-pill${performanceRange === range ? " performance-toggle-pill-active" : ""}`}
               onClick={() => setPerformanceRange(range)}
-              role="tab"
               type="button"
-              aria-selected={performanceRange === range}
             >
               {range.charAt(0).toUpperCase() + range.slice(1)}
             </button>
@@ -466,6 +472,7 @@ export function AdminDealManager({
       <div className="action-filter-grid" aria-label="Operational deal queue filters">
         {actionFilters.map((filter) => (
           <button
+            aria-pressed={actionFilter === filter.id}
             key={filter.id}
             className={`action-filter-card${actionFilter === filter.id ? " action-filter-card-active" : ""}`}
             type="button"
@@ -477,7 +484,7 @@ export function AdminDealManager({
           </button>
         ))}
       </div>
-      {message ? <p className="table-note">{message}</p> : null}
+      {message ? <p className="table-note" aria-live="polite" role="status">{message}</p> : null}
       {visibleDeals.length === 0 ? (
         <div className="empty-state-card">
           <span className="section-kicker">Queue clear</span>
@@ -499,7 +506,11 @@ export function AdminDealManager({
             const isSelected = selectedDealId === deal.id;
 
             return (
-              <div className={`stack-card application-queue-card${isSelected ? " application-queue-card-selected" : ""}`} key={deal.id}>
+              <div
+                className={`stack-card application-queue-card${isSelected ? " application-queue-card-selected" : ""}`}
+                id={`deal-${deal.id}`}
+                key={deal.id}
+              >
                 <div className="stack-card-header">
                   <div>
                     <span className="stack-section-label">{vendor?.companyName ?? "Unknown vendor"}</span>

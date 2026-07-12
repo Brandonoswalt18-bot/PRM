@@ -61,15 +61,23 @@ export async function getWorkspaceSession(): Promise<WorkspaceSession | null> {
   }
 
   if (role === "vendor") {
+    if (!vendorId) {
+      return null;
+    }
+
     const { getVendorById } = await import("@/lib/goaccess-store");
-    const vendor = await getVendorById(vendorId ?? "vendor-blue-haven");
+    const vendor = await getVendorById(vendorId);
+
+    if (!vendor) {
+      return null;
+    }
 
     return {
-      fullName: vendor?.primaryContactName ?? "Jordan Lee",
-      email: signedSession?.email ?? vendor?.primaryContactEmail ?? "jordan@bluehavenintegrators.com",
+      fullName: vendor.primaryContactName,
+      email: signedSession?.email ?? vendor.primaryContactEmail,
       role: "Vendor",
-      organization: vendor?.companyName ?? "Blue Haven Integrators",
-      vendorId: vendor?.id ?? "vendor-blue-haven",
+      organization: vendor.companyName,
+      vendorId: vendor.id,
     };
   }
 

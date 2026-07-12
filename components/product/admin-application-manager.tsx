@@ -12,7 +12,7 @@ import {
 } from "@/lib/goaccess-copy";
 import { buildApplicationTimeline } from "@/lib/goaccess-timeline";
 import type {
-  ApprovedVendor,
+  ClientApprovedVendor,
   VendorApplication,
   VendorApplicationStatus,
   VendorNotification,
@@ -20,7 +20,7 @@ import type {
 
 type AdminApplicationManagerProps = {
   applications: VendorApplication[];
-  vendors: ApprovedVendor[];
+  vendors: ClientApprovedVendor[];
   notifications: VendorNotification[];
   activeQueue: "all" | "pending" | "onboarding";
   selectedApplicationId?: string;
@@ -76,7 +76,7 @@ function getStageActionLabel(status: VendorApplicationStatus) {
   return formatApplicationActionLabel(status);
 }
 
-function getQueueReason(application: VendorApplication, vendor?: ApprovedVendor) {
+function getQueueReason(application: VendorApplication, vendor?: ClientApprovedVendor) {
   if (!vendor) {
     return application.status === "under_review" ? "Waiting on GoAccess review" : "New application received";
   }
@@ -98,7 +98,7 @@ function getQueueReason(application: VendorApplication, vendor?: ApprovedVendor)
 
 function getApplicationActionNote(
   application: VendorApplication,
-  vendor: ApprovedVendor | undefined,
+  vendor: ClientApprovedVendor | undefined,
   hasSignedNdaUpload: boolean
 ) {
   if (!vendor) {
@@ -126,7 +126,7 @@ function getApplicationActionNote(
   return "Vendor is active in the portal.";
 }
 
-function getApplicationStepSummary(application: VendorApplication, vendor?: ApprovedVendor) {
+function getApplicationStepSummary(application: VendorApplication, vendor?: ClientApprovedVendor) {
   if (application.status === "rejected") {
     return "Application was declined and removed from the active onboarding flow.";
   }
@@ -187,11 +187,18 @@ export function AdminApplicationManager({
 }: AdminApplicationManagerProps) {
   const router = useRouter();
   const [optimisticApplications, setOptimisticApplications] = useState<Record<string, VendorApplication>>({});
-  const [optimisticVendors, setOptimisticVendors] = useState<Record<string, ApprovedVendor>>({});
+  const [optimisticVendors, setOptimisticVendors] = useState<Record<string, ClientApprovedVendor>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
 
   async function updateStatus(applicationId: string, status: VendorApplicationStatus) {
+    if (
+      status === "rejected" &&
+      !window.confirm("Decline this application? This removes it from the active onboarding flow and cannot be undone here.")
+    ) {
+      return;
+    }
+
     setBusyId(applicationId);
     setMessage("");
 
@@ -205,7 +212,7 @@ export function AdminApplicationManager({
       const payload = (await response.json()) as {
         message?: string;
         application?: VendorApplication;
-        vendor?: ApprovedVendor | null;
+        vendor?: ClientApprovedVendor | null;
       };
 
       if (!response.ok) {
@@ -240,6 +247,12 @@ export function AdminApplicationManager({
   }
 
   async function reissueInvite(applicationId: string) {
+    if (
+      !window.confirm("Reissue this invite? The vendor's existing password will be cleared and the previous invite link will stop working.")
+    ) {
+      return;
+    }
+
     setBusyId(applicationId);
     setMessage("");
 
@@ -284,6 +297,7 @@ export function AdminApplicationManager({
       </div>
       <div className="queue-filter-row" aria-label="Application queue filters">
         <Link
+          aria-current={activeQueue === "all" ? "page" : undefined}
           className={`queue-filter-pill${activeQueue === "all" ? " queue-filter-pill-active" : ""}`}
           href="/app/programs"
         >
@@ -291,6 +305,7 @@ export function AdminApplicationManager({
           <span>{queueCounts.all}</span>
         </Link>
         <Link
+          aria-current={activeQueue === "pending" ? "page" : undefined}
           className={`queue-filter-pill${activeQueue === "pending" ? " queue-filter-pill-active" : ""}`}
           href="/app/programs?queue=pending"
         >
@@ -298,6 +313,7 @@ export function AdminApplicationManager({
           <span>{queueCounts.pending}</span>
         </Link>
         <Link
+          aria-current={activeQueue === "onboarding" ? "page" : undefined}
           className={`queue-filter-pill${activeQueue === "onboarding" ? " queue-filter-pill-active" : ""}`}
           href="/app/programs?queue=onboarding"
         >
@@ -305,7 +321,7 @@ export function AdminApplicationManager({
           <span>{queueCounts.onboarding}</span>
         </Link>
       </div>
-      {message ? <p className="table-note">{message}</p> : null}
+      {message ? <p className="table-note" aria-live="polite" role="status">{message}</p> : null}
       {applications.length === 0 ? (
         <div className="empty-state-card">
           <span className="section-kicker">Queue clear</span>
@@ -325,7 +341,6 @@ export function AdminApplicationManager({
               vendors.find((item) => item.applicationId === resolvedApplication.id);
             const appNotifications = notifications.filter((item) => item.applicationId === application.id);
             const latestNotification = appNotifications[0];
-            const inviteUrl = vendor?.inviteToken ? `/invite/${vendor.inviteToken}` : null;
             const timeline = buildApplicationTimeline(resolvedApplication, vendor ?? null, appNotifications).slice(0, 4);
             const isRejected = resolvedApplication.status === "rejected";
             const allowedNextSteps = allowedTransitions[resolvedApplication.status];
@@ -342,7 +357,11 @@ export function AdminApplicationManager({
                   : "No further action";
 
             return (
-              <div className={`stack-card application-queue-card${isSelected ? " application-queue-card-selected" : ""}`} key={application.id}>
+              <div
+                className={`stack-card application-queue-card${isSelected ? " application-queue-card-selected" : ""}`}
+                id={`application-${application.id}`}
+                key={application.id}
+              >
                 <div className="stack-card-header">
                   <div>
                     <h3>
@@ -457,11 +476,6 @@ export function AdminApplicationManager({
                       {vendor?.signedNdaFileUrl ? (
                         <a className="detail-link-chip" href={vendor.signedNdaFileUrl} target="_blank" rel="noreferrer">
                           View signed NDA
-                        </a>
-                      ) : null}
-                      {inviteUrl ? (
-                        <a className="detail-link-chip" href={inviteUrl}>
-                          Invite link
                         </a>
                       ) : null}
                       {vendor?.credentialsIssued ? (

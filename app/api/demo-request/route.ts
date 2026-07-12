@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createHubSpotLead, isHubSpotLeadRoutingEnabled } from "@/lib/hubspot";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 type DemoRequestPayload = {
   name?: string;
@@ -24,6 +25,15 @@ function isWorkEmail(email: string) {
 }
 
 export async function POST(request: Request) {
+  const rateLimit = checkRateLimit(request, "demo-request", 5, 15 * 60 * 1000);
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { message: "Too many requests were submitted from this connection. Try again later." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+    );
+  }
+
   let body: DemoRequestPayload;
 
   try {

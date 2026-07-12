@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminRouteAccess } from "@/lib/auth-guards";
+import { toClientApprovedVendor } from "@/lib/goaccess-client-data";
 import {
   canTransitionApplicationStatus,
   listApprovedVendors,
@@ -101,7 +102,7 @@ export async function PATCH(
     return NextResponse.json({
       ok: true,
       application,
-      vendor,
+      vendor: vendor ? toClientApprovedVendor(vendor) : null,
       message: getApplicationStatusMessage(body.status),
     });
   } catch (error) {

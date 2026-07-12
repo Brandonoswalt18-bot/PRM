@@ -7,8 +7,14 @@ type DealPayload = {
   communityAddress?: string;
   city?: string;
   state?: string;
+  domain?: string;
   contactName?: string;
   contactEmail?: string;
+  contactPhone?: string;
+  estimatedValue?: number | string;
+  monthlyRmr?: number | string;
+  productInterest?: string;
+  notes?: string;
 };
 
 export async function GET() {
@@ -44,14 +50,30 @@ export async function POST(request: Request) {
   const communityAddress = body.communityAddress?.toString().trim() ?? "";
   const city = body.city?.toString().trim() ?? "";
   const state = body.state?.toString().trim() ?? "";
+  const domain = body.domain?.toString().trim() ?? "";
   const contactName = body.contactName?.toString().trim() ?? "";
   const contactEmail = body.contactEmail?.toString().trim().toLowerCase() ?? "";
+  const contactPhone = body.contactPhone?.toString().trim() ?? "";
+  const estimatedValue = Number(body.estimatedValue);
+  const monthlyRmr = Number(body.monthlyRmr);
+  const productInterest = body.productInterest?.toString().trim() ?? "";
+  const notes = body.notes?.toString().trim() ?? "";
 
-  if (!companyName || !communityAddress || !city || !state || !contactName || !contactEmail) {
+  if (
+    !companyName ||
+    !communityAddress ||
+    !city ||
+    !state ||
+    !domain ||
+    !contactName ||
+    !contactEmail ||
+    !contactPhone ||
+    !productInterest
+  ) {
     return NextResponse.json(
       {
         message:
-          "Community name, community address, city, state, contact name, and contact email are required.",
+          "Community, location, domain, contact, phone, and product interest are required.",
       },
       { status: 400 }
     );
@@ -61,20 +83,44 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Enter a valid contact email." }, { status: 400 });
   }
 
+  if (
+    !Number.isFinite(estimatedValue) ||
+    estimatedValue < 0 ||
+    !Number.isFinite(monthlyRmr) ||
+    monthlyRmr < 0
+  ) {
+    return NextResponse.json({ message: "Enter valid non-negative revenue estimates." }, { status: 400 });
+  }
+
+  if (
+    companyName.length > 160 ||
+    communityAddress.length > 300 ||
+    city.length > 100 ||
+    state.length > 100 ||
+    domain.length > 300 ||
+    contactName.length > 120 ||
+    contactEmail.length > 254 ||
+    contactPhone.length > 40 ||
+    productInterest.length > 160 ||
+    notes.length > 2000
+  ) {
+    return NextResponse.json({ message: "One or more fields are too long." }, { status: 400 });
+  }
+
   try {
     const deal = await submitDealForVendor(session.vendorId, {
       companyName,
       communityAddress,
       city,
       state,
-      domain: "",
+      domain,
       contactName,
       contactEmail,
-      contactPhone: "",
-      estimatedValue: 0,
-      monthlyRmr: 0,
-      productInterest: "",
-      notes: "",
+      contactPhone,
+      estimatedValue,
+      monthlyRmr,
+      productInterest,
+      notes,
     });
 
     return NextResponse.json({

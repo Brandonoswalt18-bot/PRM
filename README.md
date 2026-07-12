@@ -15,9 +15,9 @@ Next.js app-router app for GoAccess vendor onboarding, deal registration, HubSpo
 - `app/login/page.tsx`: shared portal login
 - `app/auth/login/route.ts`: password-backed login route
 - `app/auth/activate/route.ts`: vendor invite password setup
-- `app/auth/logout/route.ts`: clears mock session
+- `app/auth/logout/route.ts`: clears the signed portal session
 - `components/marketing/`: reusable landing-page sections
-- `components/product/`: product shell components for future app surfaces
+- `components/product/`: admin and vendor portal workflow components
 - `data/site-content.ts`: copy and section data
 - `lib/hubspot.ts`: HubSpot form submission and deal sync integration
 - `lib/goaccess-store.ts`: store abstraction for vendor applications, NDA/invite state, deals, sync events, and notifications
@@ -31,12 +31,20 @@ Next.js app-router app for GoAccess vendor onboarding, deal registration, HubSpo
 
 ## Run locally
 
-Install dependencies, then start the development server:
+Install dependencies with the pinned package manager, then start the development server:
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
+
+Run the complete local quality gate with:
+
+```bash
+pnpm check
+```
+
+This runs ESLint, a strict TypeScript check, and the verified Turbopack production build.
 
 ## HubSpot integration
 
@@ -158,10 +166,10 @@ Client events currently post to `/api/track` and also push into `window.dataLaye
 
 Tracked events:
 
-- `demo_request_field_focused`
-- `demo_request_submitted`
-- `demo_request_succeeded`
-- `demo_request_failed`
+- `vendor_application_field_focused`
+- `vendor_application_submitted`
+- `vendor_application_succeeded`
+- `vendor_application_failed`
 
 ## Auth
 
@@ -176,6 +184,8 @@ Current auth flow:
 - sign in with email + password
 - middleware redirects unauthorized role access back to login
 - when credentials are issued, the vendor invite route `/invite/[token]` is used to create the vendor password and activate portal access
+- invite links expire after seven days, work only once, and are replaced when an admin reissues access
+- public form and login endpoints use basic per-instance throttling; production should also use platform-level rate limiting
 
 Required auth env vars for production:
 
@@ -193,3 +203,9 @@ Optional HubSpot deal property env vars:
 - `HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY`
 - `HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY`
 - `HUBSPOT_DEAL_VENDOR_NAME_PROPERTY`
+
+## Remaining production integrations
+
+The portal supports outbound HubSpot inspection and deal creation/update. A production launch should also add an authenticated HubSpot webhook or scheduled reconciliation job so HubSpot deal-stage and recurring-revenue changes flow back into the portal automatically.
+
+Support requests, notification history, and training metadata still use the legacy store path. Move those entities to row-level Supabase mutations before relying on the portal for high-concurrency operations. Historical RMR statements should likewise become persisted, closed accounting records instead of being recomputed from the latest deal state.

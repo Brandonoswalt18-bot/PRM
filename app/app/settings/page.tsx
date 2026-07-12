@@ -1,16 +1,13 @@
 import { AdminSupportManager } from "@/components/product/admin-support-manager";
 import { MetricGrid } from "@/components/product/product-page-sections";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
+import { toClientApprovedVendors } from "@/lib/goaccess-client-data";
 import { getHubSpotDealSyncConfig, getHubSpotLeadRoutingConfig } from "@/lib/hubspot";
 import {
   listApprovedVendors,
   listSupportRequests,
   listVendorNotifications,
 } from "@/lib/goaccess-store";
-
-function titleCaseStatus(value: string) {
-  return value.replaceAll("_", " ");
-}
 
 function getEmailReadiness() {
   const missingEnvVars = ["RESEND_API_KEY", "EMAIL_FROM_ADDRESS"].filter(
@@ -101,7 +98,7 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
         <section className="dashboard-grid">
           <AdminSupportManager
             supportRequests={filteredRequests}
-            vendors={vendors}
+            vendors={toClientApprovedVendors(vendors)}
             activeQueue={activeQueue}
             selectedRequestId={selectedRequestId}
             queueCounts={{

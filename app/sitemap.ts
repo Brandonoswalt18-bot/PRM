@@ -1,21 +1,14 @@
 import type { MetadataRoute } from "next";
+import { getPortalBaseUrl } from "@/lib/email";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const portalBaseUrl = getPortalBaseUrl();
+
   return [
     {
-      url: "https://relayprm.com",
+      url: portalBaseUrl,
       changeFrequency: "weekly",
       priority: 1,
-    },
-    {
-      url: "https://relayprm.com/app",
-      changeFrequency: "monthly",
-      priority: 0.4,
-    },
-    {
-      url: "https://relayprm.com/portal",
-      changeFrequency: "monthly",
-      priority: 0.4,
     },
   ];
 }

@@ -13,10 +13,6 @@ import { formatDealAgreementStatusLabel, formatVendorDealStatusLabel } from "@/l
 import { buildDealTimeline } from "@/lib/goaccess-timeline";
 import { formatCurrency, getDealById, listSyncEvents } from "@/lib/goaccess-store";
 
-function titleCase(value: string) {
-  return value.replaceAll("_", " ");
-}
-
 function formatOptionalCurrency(value: number) {
   return value > 0 ? formatCurrency(value) : "Not provided";
 }
