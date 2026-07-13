@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireVendorRouteAccess } from "@/lib/auth-guards";
+import { requireVendorLegalRouteAccess } from "@/lib/auth-guards";
 import { listDeals, submitDealForVendor } from "@/lib/goaccess-store";
 
 type DealPayload = {
@@ -12,13 +12,12 @@ type DealPayload = {
   contactEmail?: string;
   contactPhone?: string;
   estimatedValue?: number | string;
-  monthlyRmr?: number | string;
   productInterest?: string;
   notes?: string;
 };
 
 export async function GET() {
-  const auth = await requireVendorRouteAccess();
+  const auth = await requireVendorLegalRouteAccess();
 
   if (auth.error) {
     return auth.error;
@@ -30,7 +29,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireVendorRouteAccess();
+  const auth = await requireVendorLegalRouteAccess();
 
   if (auth.error) {
     return auth.error;
@@ -55,7 +54,6 @@ export async function POST(request: Request) {
   const contactEmail = body.contactEmail?.toString().trim().toLowerCase() ?? "";
   const contactPhone = body.contactPhone?.toString().trim() ?? "";
   const estimatedValue = Number(body.estimatedValue);
-  const monthlyRmr = Number(body.monthlyRmr);
   const productInterest = body.productInterest?.toString().trim() ?? "";
   const notes = body.notes?.toString().trim() ?? "";
 
@@ -85,11 +83,9 @@ export async function POST(request: Request) {
 
   if (
     !Number.isFinite(estimatedValue) ||
-    estimatedValue < 0 ||
-    !Number.isFinite(monthlyRmr) ||
-    monthlyRmr < 0
+    estimatedValue < 0
   ) {
-    return NextResponse.json({ message: "Enter valid non-negative revenue estimates." }, { status: 400 });
+    return NextResponse.json({ message: "Enter a valid non-negative project estimate." }, { status: 400 });
   }
 
   if (
@@ -118,7 +114,6 @@ export async function POST(request: Request) {
       contactEmail,
       contactPhone,
       estimatedValue,
-      monthlyRmr,
       productInterest,
       notes,
     });

@@ -228,6 +228,9 @@ export function AdminDealManager({
   const [performanceRange, setPerformanceRange] = useState<PerformanceRange>("weekly");
   const [actionFilter, setActionFilter] = useState<ActionQueueFilter>(mapLegacyQueueToActionFilter(activeQueue));
   const [searchQuery, setSearchQuery] = useState("");
+  const [rmrValues, setRmrValues] = useState<Record<string, string>>(() =>
+    Object.fromEntries(deals.map((deal) => [deal.id, deal.monthlyRmr > 0 ? String(deal.monthlyRmr) : ""]))
+  );
   const deferredSearch = useDeferredValue(searchQuery.trim().toLowerCase());
 
   const performanceCards = useMemo(() => {
@@ -379,10 +382,14 @@ export function AdminDealManager({
     setMessage("");
 
     try {
+      const rmrValue = rmrValues[dealId]?.trim();
       const response = await fetch(`/api/deals/${dealId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({
+          status,
+          ...(rmrValue ? { monthlyRmr: Number(rmrValue) } : {}),
+        }),
       });
 
       const payload = (await response.json()) as { message?: string };
@@ -399,6 +406,39 @@ export function AdminDealManager({
       setMessage(payload.message ?? `Deal updated to ${formatDealStatusLabel(status)}.`);
     } catch {
       setMessage("Network error while updating deal.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function saveMonthlyRmr(dealId: string) {
+    const monthlyRmr = Number(rmrValues[dealId]);
+
+    if (!Number.isFinite(monthlyRmr) || monthlyRmr < 0) {
+      setMessage("Enter a valid non-negative monthly RMR amount.");
+      return;
+    }
+
+    setBusyId(dealId);
+    setMessage("");
+
+    try {
+      const response = await fetch(`/api/deals/${dealId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ monthlyRmr }),
+      });
+      const payload = (await response.json()) as { message?: string };
+
+      if (!response.ok) {
+        setMessage(payload.message ?? "Unable to save monthly RMR.");
+        return;
+      }
+
+      setMessage(payload.message ?? "Monthly RMR saved by GoAccess.");
+      startTransition(() => router.refresh());
+    } catch {
+      setMessage("Network error while saving monthly RMR.");
     } finally {
       setBusyId(null);
     }
@@ -569,6 +609,33 @@ export function AdminDealManager({
                               : latestSyncEvent.reference
                             : "No HubSpot sync event has been recorded yet."}
                         </p>
+                      </div>
+                    </div>
+                    <div className="admin-rmr-control">
+                      <label className="field-group">
+                        <span className="field-label">Monthly RMR (GoAccess admin)</span>
+                        <input
+                          aria-label={`Monthly RMR for ${deal.companyName}`}
+                          min="0"
+                          placeholder="Enter approved monthly RMR"
+                          step="1"
+                          type="number"
+                          value={rmrValues[deal.id] ?? ""}
+                          onChange={(event) =>
+                            setRmrValues((current) => ({ ...current, [deal.id]: event.target.value }))
+                          }
+                        />
+                      </label>
+                      <div>
+                        <button
+                          className="button button-secondary"
+                          disabled={busyId === deal.id}
+                          onClick={() => saveMonthlyRmr(deal.id)}
+                          type="button"
+                        >
+                          Save RMR
+                        </button>
+                        <p className="stack-note">Required before approval. Vendors cannot enter or change this amount.</p>
                       </div>
                     </div>
                     <div className="stage-pill-row" aria-label="Deal lifecycle">

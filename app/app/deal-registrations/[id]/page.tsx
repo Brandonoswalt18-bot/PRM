@@ -79,7 +79,7 @@ export default async function AdminDealDetailPage({
     {
       label: "Monthly RMR",
       value: formatOptionalCurrency(deal.monthlyRmr),
-      delta: deal.status === "closed_won" ? "Active recurring revenue" : "Forecasted recurring revenue",
+      delta: deal.status === "closed_won" ? "Active recurring revenue set by GoAccess" : "Set by GoAccess during review",
     },
     {
       label: "Dealer agreement",

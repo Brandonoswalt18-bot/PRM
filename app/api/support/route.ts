@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireVendorRouteAccess } from "@/lib/auth-guards";
+import { requireVendorLegalRouteAccess } from "@/lib/auth-guards";
 import { listSupportRequests, submitSupportRequest } from "@/lib/goaccess-store";
 import type { SupportRequestCategory } from "@/types/goaccess";
 
@@ -19,7 +19,7 @@ const allowedCategories: SupportRequestCategory[] = [
 ];
 
 export async function GET() {
-  const auth = await requireVendorRouteAccess();
+  const auth = await requireVendorLegalRouteAccess();
 
   if (auth.error) {
     return auth.error;
@@ -31,7 +31,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireVendorRouteAccess();
+  const auth = await requireVendorLegalRouteAccess();
 
   if (auth.error) {
     return auth.error;

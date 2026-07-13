@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireVendorRouteAccess } from "@/lib/auth-guards";
+import { requireVendorLegalRouteAccess } from "@/lib/auth-guards";
 import {
   getDealById,
   recordDealSyncEvent,
@@ -10,7 +10,7 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireVendorRouteAccess();
+  const auth = await requireVendorLegalRouteAccess();
 
   if (auth.error) {
     return auth.error;

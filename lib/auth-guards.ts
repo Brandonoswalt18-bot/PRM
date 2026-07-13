@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getWorkspaceRole, getWorkspaceSession } from "@/lib/auth";
+import { getVendorById } from "@/lib/goaccess-store";
 import type { WorkspaceSession } from "@/types/prm";
 
 type VendorWorkspaceSession = WorkspaceSession & { vendorId: string };
@@ -28,4 +29,37 @@ export async function requireVendorRouteAccess() {
     error: null,
     session: session as VendorWorkspaceSession,
   };
+}
+
+export async function requireVendorLegalRouteAccess() {
+  const auth = await requireVendorRouteAccess();
+
+  if (auth.error || !auth.session) {
+    return auth;
+  }
+
+  const vendor = await getVendorById(auth.session.vendorId);
+
+  if (!vendor) {
+    return {
+      error: NextResponse.json({ message: "Approved vendor not found." }, { status: 404 }),
+      session: null,
+    };
+  }
+
+  if (vendor.ndaStatus !== "signed" || !vendor.termsAcceptedAt) {
+    return {
+      error: NextResponse.json(
+        {
+          message:
+            "Complete the NDA and Partner Terms before using the vendor portal.",
+          code: "LEGAL_ONBOARDING_REQUIRED",
+        },
+        { status: 403 }
+      ),
+      session: null,
+    };
+  }
+
+  return auth;
 }

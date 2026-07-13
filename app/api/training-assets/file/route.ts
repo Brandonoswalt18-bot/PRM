@@ -1,6 +1,7 @@
 import { get as getBlob } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { getWorkspaceRole, getWorkspaceSession } from "@/lib/auth";
+import { requireVendorLegalRouteAccess } from "@/lib/auth-guards";
 import { getTrainingAssetById } from "@/lib/goaccess-store";
 
 function getBlobToken() {
@@ -14,6 +15,14 @@ export async function GET(request: Request) {
 
   if (!assetId || !role || !session) {
     return NextResponse.json({ message: "Portal session required." }, { status: 401 });
+  }
+
+  if (role === "vendor") {
+    const auth = await requireVendorLegalRouteAccess();
+
+    if (auth.error) {
+      return auth.error;
+    }
   }
 
   const asset = await getTrainingAssetById(assetId);

@@ -225,7 +225,6 @@ export type CreateDealInput = {
   contactEmail: string;
   contactPhone: string;
   estimatedValue: number;
-  monthlyRmr: number;
   productInterest: string;
   notes: string;
 };

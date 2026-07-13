@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { VendorNdaManager } from "@/components/product/vendor-nda-manager";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
+import { toClientApprovedVendor } from "@/lib/goaccess-client-data";
 import { formatVendorDealStatusLabel } from "@/lib/goaccess-copy";
 import {
   formatCurrency,
@@ -60,10 +62,14 @@ export default async function PartnerPortalPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
-        title={`Welcome back, ${firstName}`}
-        subtitle="Complete your agreements, register opportunities, and track recurring revenue."
-        primaryLabel="Register a deal"
-        primaryHref="/portal/links"
+        title={legalComplete ? `Welcome back, ${firstName}` : "Complete your vendor agreements"}
+        subtitle={
+          legalComplete
+            ? "Register opportunities and track recurring revenue."
+            : "Download, sign, and submit the NDA and accept the Partner Terms to unlock the portal."
+        }
+        primaryLabel={legalComplete ? "Register a deal" : "Complete agreements"}
+        primaryHref={legalComplete ? "/portal/links" : "/portal/onboarding"}
       />
       <div className="app-content simple-dashboard">
         <section
@@ -92,12 +98,28 @@ export default async function PartnerPortalPage() {
                 Partner Terms
               </span>
             </div>
+            {!legalComplete ? (
+              <div className="legal-document-links" aria-label="Required legal documents">
+                {vendor?.ndaDocumentUrl ? (
+                  <a className="button button-secondary" href={vendor.ndaDocumentUrl} target="_blank" rel="noreferrer">
+                    Download NDA
+                  </a>
+                ) : null}
+                {vendor?.termsDocumentUrl ? (
+                  <a className="button button-secondary" href={vendor.termsDocumentUrl} target="_blank" rel="noreferrer">
+                    View Partner Terms
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
             <Link className="button button-secondary" href="/portal/onboarding" prefetch={false}>
               {legalComplete ? "View agreements" : "Complete agreements"}
             </Link>
           </div>
         </section>
 
+        {legalComplete ? (
+          <>
         <section className="portal-summary-strip" aria-label="Vendor summary">
           <Link className="portal-summary-item" href="/portal/earnings" prefetch={false}>
             <span>Current monthly RMR</span>
@@ -196,6 +218,12 @@ export default async function PartnerPortalPage() {
             </ol>
           </aside>
         </section>
+          </>
+        ) : (
+          <section className="dashboard-grid dashboard-grid-single legal-onboarding-dashboard">
+            <VendorNdaManager vendor={vendor ? toClientApprovedVendor(vendor) : null} />
+          </section>
+        )}
       </div>
     </>
   );

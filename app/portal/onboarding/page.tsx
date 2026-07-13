@@ -21,12 +21,12 @@ export default async function VendorOnboardingStatusPage() {
         workspace="VENDOR PORTAL"
         title="Onboarding"
         subtitle="See exactly what is complete, what GoAccess is reviewing, and the one action that moves your account forward."
-        primaryLabel={legalComplete ? "Register a deal" : "View legal documents"}
-        primaryHref={legalComplete ? "/portal/links" : "/portal/assets"}
+        primaryLabel={legalComplete ? "Register a deal" : "Complete agreements below"}
+        primaryHref={legalComplete ? "/portal/links" : "#legal-agreements"}
       />
       <div className="app-content">
         <VendorNextStepCard alwaysShow dealCount={deals.length} vendor={clientVendor} />
-        <section className="dashboard-grid dashboard-grid-single">
+        <section className="dashboard-grid dashboard-grid-single" id="legal-agreements">
           <VendorNdaManager vendor={clientVendor} />
         </section>
       </div>

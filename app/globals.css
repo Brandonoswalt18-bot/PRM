@@ -4064,6 +4064,34 @@ li + li {
   flex: 0 0 auto;
 }
 
+.legal-document-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.legal-document-links .button {
+  min-height: 40px;
+  padding: 9px 13px;
+  font-size: 0.78rem;
+}
+
+.admin-rmr-control {
+  display: grid;
+  grid-template-columns: minmax(220px, 360px) minmax(0, 1fr);
+  align-items: end;
+  gap: 16px;
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid rgba(0, 74, 173, 0.16);
+  border-radius: 16px;
+  background: rgba(245, 248, 252, 0.8);
+}
+
+.admin-rmr-control .stack-note {
+  margin: 8px 0 0;
+}
+
 .legal-checklist {
   display: flex;
   gap: 10px;
@@ -4465,6 +4493,15 @@ li + li {
   .legal-status-actions .button {
     width: 100%;
     justify-content: center;
+  }
+
+  .legal-document-links,
+  .admin-rmr-control {
+    grid-template-columns: 1fr;
+  }
+
+  .legal-document-links {
+    display: grid;
   }
 
   .portal-summary-strip {

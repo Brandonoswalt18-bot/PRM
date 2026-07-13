@@ -13,7 +13,6 @@ type DealFormState = {
   contactEmail: string;
   contactPhone: string;
   estimatedValue: string;
-  monthlyRmr: string;
   productInterest: string;
   notes: string;
 };
@@ -28,7 +27,6 @@ const initialState: DealFormState = {
   contactEmail: "",
   contactPhone: "",
   estimatedValue: "",
-  monthlyRmr: "",
   productInterest: "",
   notes: "",
 };
@@ -195,32 +193,18 @@ export function DealRegistrationForm() {
               />
             </label>
           </div>
-          <div className="inline-form-grid">
-            <label className="field-group">
-              <span className="field-label">Estimated project value</span>
-              <input
-                min="0"
-                placeholder="25000"
-                step="1"
-                type="number"
-                value={form.estimatedValue}
-                onChange={(event) => update("estimatedValue", event.target.value)}
-                required
-              />
-            </label>
-            <label className="field-group">
-              <span className="field-label">Estimated monthly RMR</span>
-              <input
-                min="0"
-                placeholder="1200"
-                step="1"
-                type="number"
-                value={form.monthlyRmr}
-                onChange={(event) => update("monthlyRmr", event.target.value)}
-                required
-              />
-            </label>
-          </div>
+          <label className="field-group">
+            <span className="field-label">Estimated project value</span>
+            <input
+              min="0"
+              placeholder="25000"
+              step="1"
+              type="number"
+              value={form.estimatedValue}
+              onChange={(event) => update("estimatedValue", event.target.value)}
+              required
+            />
+          </label>
           <label className="field-group">
             <span className="field-label">Opportunity notes</span>
             <textarea
@@ -233,7 +217,7 @@ export function DealRegistrationForm() {
             />
           </label>
         </div>
-        <p className="field-hint">Use the real community, contact, scope, and revenue estimates so GoAccess can review duplicates and route the deal without follow-up.</p>
+        <p className="field-hint">Use the real community, contact, scope, and project estimate. GoAccess assigns monthly RMR during admin review.</p>
         <button className="button button-primary" type="submit" disabled={status === "submitting"}>
           {status === "submitting" ? "Submitting..." : "Submit deal for review"}
         </button>

@@ -259,6 +259,22 @@ const seedStore: PortalStore = {
       createdAt: "2026-02-20T12:00:00.000Z",
       updatedAt: "2026-02-27T13:20:00.000Z",
     },
+    {
+      id: "app-unsigned-demo",
+      companyName: "Unsigned Vendor Test",
+      website: "https://goaccess.com",
+      city: "San Diego",
+      state: "CA",
+      region: "San Diego, CA",
+      vendorType: "Test vendor",
+      primaryContactName: "Taylor Unsigned",
+      primaryContactEmail: "unsigned.vendor@goaccess.com",
+      notes: "Test account for verifying the required NDA and Partner Terms gate.",
+      status: "nda_sent",
+      ndaSentAt: "2026-07-12T12:00:00.000Z",
+      createdAt: "2026-07-12T12:00:00.000Z",
+      updatedAt: "2026-07-12T12:00:00.000Z",
+    },
   ],
   approvedVendors: [
     {
@@ -313,6 +329,37 @@ const seedStore: PortalStore = {
       hubspotPartnerId: "GA-VENDOR-021",
       createdAt: "2026-02-27T14:10:00.000Z",
       updatedAt: "2026-02-28T08:45:00.000Z",
+    },
+    {
+      id: "vendor-unsigned-demo",
+      applicationId: "app-unsigned-demo",
+      companyName: "Unsigned Vendor Test",
+      website: "https://goaccess.com",
+      city: "San Diego",
+      state: "CA",
+      region: "San Diego, CA",
+      vendorType: "Test vendor",
+      primaryContactName: "Taylor Unsigned",
+      primaryContactEmail: "unsigned.vendor@goaccess.com",
+      status: "active",
+      ndaStatus: "sent",
+      ndaSentAt: "2026-07-12T12:00:00.000Z",
+      ndaDocumentName: DEFAULT_NDA_DOCUMENT_NAME,
+      ndaDocumentUrl: DEFAULT_NDA_DOCUMENT_URL,
+      termsDocumentUrl: DEFAULT_TERMS_DOCUMENT_URL,
+      termsVersion: DEFAULT_TERMS_VERSION,
+      credentialsIssued: true,
+      credentialsIssuedAt: "2026-07-12T12:00:00.000Z",
+      portalAccess: "active",
+      inviteAcceptedAt: "2026-07-12T12:00:00.000Z",
+      // Seeded unsigned vendor test login: unsigned.vendor@goaccess.com / goaccess-unsigned-demo
+      passwordSalt: "goaccess-unsigned-demo-salt",
+      passwordHash:
+        "d9d3e2eeb75e5d0a7ba436aee09020a1e8454973c781832dc87b10f4445bfa901a23f7373843690c16004705c83d040dff1983cdeb4c665230472280934176aa",
+      passwordConfiguredAt: "2026-07-12T12:00:00.000Z",
+      hubspotPartnerId: "GA-VENDOR-TEST-001",
+      createdAt: "2026-07-12T12:00:00.000Z",
+      updatedAt: "2026-07-12T12:00:00.000Z",
     },
   ],
   deals: [
@@ -563,7 +610,7 @@ function cloneSeedStore(): PortalStore {
 }
 
 function normalizeApprovedVendor(vendor: ApprovedVendor): ApprovedVendor {
-  if (vendor.termsAcceptedAt || (vendor.ndaStatus !== "signed" && !vendor.credentialsIssued)) {
+  if (vendor.termsAcceptedAt || vendor.ndaStatus !== "signed" || !vendor.credentialsIssued) {
     return vendor;
   }
 
@@ -577,10 +624,22 @@ function normalizeApprovedVendor(vendor: ApprovedVendor): ApprovedVendor {
 
 function normalizeStore(store: PortalStore | Partial<PortalStore>): PortalStore {
   const seed = cloneSeedStore();
+  const vendorApplications = [...(store.vendorApplications ?? seed.vendorApplications)];
+  const approvedVendors = [...(store.approvedVendors ?? seed.approvedVendors)];
+  const unsignedApplication = seed.vendorApplications.find((item) => item.id === "app-unsigned-demo");
+  const unsignedVendor = seed.approvedVendors.find((item) => item.id === "vendor-unsigned-demo");
+
+  if (unsignedApplication && !vendorApplications.some((item) => item.id === unsignedApplication.id)) {
+    vendorApplications.push(unsignedApplication);
+  }
+
+  if (unsignedVendor && !approvedVendors.some((item) => item.id === unsignedVendor.id)) {
+    approvedVendors.push(unsignedVendor);
+  }
 
   return {
-    vendorApplications: store.vendorApplications ?? seed.vendorApplications,
-    approvedVendors: (store.approvedVendors ?? seed.approvedVendors).map(normalizeApprovedVendor),
+    vendorApplications,
+    approvedVendors: approvedVendors.map(normalizeApprovedVendor),
     deals: store.deals ?? seed.deals,
     syncEvents: store.syncEvents ?? seed.syncEvents,
     notifications: store.notifications ?? seed.notifications,
@@ -1101,6 +1160,29 @@ async function readSupabaseStore(): Promise<DatabasePortalStore | null> {
   const extendedSeed = getDatabaseSeedStore();
   let seededExtendedData = false;
 
+  const unsignedApplication = extendedSeed.vendorApplications.find(
+    (item) => item.id === "app-unsigned-demo"
+  );
+  const unsignedVendor = extendedSeed.approvedVendors.find(
+    (item) => item.id === "vendor-unsigned-demo"
+  );
+
+  if (
+    unsignedApplication &&
+    !databaseStore.vendorApplications.some((item) => item.id === unsignedApplication.id)
+  ) {
+    databaseStore.vendorApplications.push(unsignedApplication);
+    seededExtendedData = true;
+  }
+
+  if (
+    unsignedVendor &&
+    !databaseStore.approvedVendors.some((item) => item.id === unsignedVendor.id)
+  ) {
+    databaseStore.approvedVendors.push(unsignedVendor);
+    seededExtendedData = true;
+  }
+
   if (databaseStore.supportRequests.length === 0 && extendedSeed.supportRequests.length > 0) {
     databaseStore.supportRequests = extendedSeed.supportRequests;
     seededExtendedData = true;
@@ -1441,6 +1523,30 @@ export async function acceptVendorTermsFromOnboarding(
 
   if (!vendor) {
     throw new Error("Onboarding link is invalid or expired.");
+  }
+
+  if (!normalizedAcceptedBy) {
+    throw new Error("Enter the name of the person accepting the Terms & Conditions.");
+  }
+
+  if (!vendor.termsDocumentUrl || !vendor.termsVersion) {
+    throw new Error("The current Vendor Terms & Conditions are not configured.");
+  }
+
+  vendor.termsAcceptedAt = vendor.termsAcceptedAt ?? nowIso();
+  vendor.termsAcceptedBy = vendor.termsAcceptedBy ?? normalizedAcceptedBy;
+  vendor.updatedAt = nowIso();
+  await writeStore(store);
+  return vendor;
+}
+
+export async function acceptVendorTermsForVendor(vendorId: string, acceptedBy: string) {
+  const store = await readStore();
+  const vendor = store.approvedVendors.find((item) => item.id === vendorId);
+  const normalizedAcceptedBy = acceptedBy.trim();
+
+  if (!vendor) {
+    throw new Error("Approved vendor not found.");
   }
 
   if (!normalizedAcceptedBy) {
@@ -2169,7 +2275,7 @@ export async function submitDealForVendor(vendorId: string, input: CreateDealInp
     contactEmail: input.contactEmail,
     contactPhone: input.contactPhone,
     estimatedValue: input.estimatedValue,
-    monthlyRmr: input.monthlyRmr,
+    monthlyRmr: 0,
     productInterest: input.productInterest,
     notes: input.notes,
     status: "submitted",
@@ -2192,6 +2298,24 @@ export async function submitDealForVendor(vendorId: string, input: CreateDealInp
     createdAt: timestamp,
   });
 
+  await writeStore(store);
+  return deal;
+}
+
+export async function updateDealMonthlyRmr(dealId: string, monthlyRmr: number) {
+  if (!Number.isFinite(monthlyRmr) || monthlyRmr < 0) {
+    throw new Error("Monthly RMR must be zero or greater.");
+  }
+
+  const store = await readStore();
+  const deal = store.deals.find((item) => item.id === dealId);
+
+  if (!deal) {
+    throw new Error("Deal not found.");
+  }
+
+  deal.monthlyRmr = monthlyRmr;
+  deal.updatedAt = nowIso();
   await writeStore(store);
   return deal;
 }

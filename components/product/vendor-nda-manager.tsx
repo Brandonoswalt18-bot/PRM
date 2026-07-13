@@ -9,6 +9,10 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [acceptedBy, setAcceptedBy] = useState(vendor?.primaryContactName ?? "");
+  const [termsConfirmed, setTermsConfirmed] = useState(false);
+  const [termsStatus, setTermsStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const [termsMessage, setTermsMessage] = useState("");
 
   async function handleUpload(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -50,6 +54,34 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
     }
   }
 
+  async function handleTermsAcceptance(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setTermsStatus("saving");
+    setTermsMessage("");
+
+    try {
+      const response = await fetch("/api/vendor-terms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accepted: termsConfirmed, acceptedBy }),
+      });
+      const payload = (await response.json()) as { message?: string };
+
+      if (!response.ok) {
+        setTermsStatus("error");
+        setTermsMessage(payload.message ?? "Unable to record Partner Terms acceptance.");
+        return;
+      }
+
+      setTermsStatus("success");
+      setTermsMessage(payload.message ?? "Partner Terms accepted and recorded.");
+      startTransition(() => router.refresh());
+    } catch {
+      setTermsStatus("error");
+      setTermsMessage("Network error while recording Partner Terms acceptance.");
+    }
+  }
+
   return (
     <article className="workspace-card wide-card">
       <div className="card-header-row">
@@ -80,6 +112,9 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
         <div className="stack-card">
           <h3>2. Upload signed NDA</h3>
           <p className="stack-note">Upload a signed PDF, DOC, or DOCX file. Max size 10 MB.</p>
+          {vendor?.ndaStatus === "signed" ? (
+            <p className="onboarding-complete-note">The signed NDA has been reviewed and approved by GoAccess.</p>
+          ) : (
           <form className="login-form" onSubmit={handleUpload}>
             <label className="login-field">
               <span className="access-label">Signed file</span>
@@ -94,6 +129,7 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
               {status === "uploading" ? "Uploading..." : "Upload signed NDA"}
             </button>
           </form>
+          )}
           <p
             className={`form-message ${
               status === "success" ? "form-message-success" : ""
@@ -133,7 +169,37 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
               Accepted by {vendor.termsAcceptedBy ?? vendor.primaryContactName} on {new Date(vendor.termsAcceptedAt).toLocaleDateString()}.
             </p>
           ) : (
-            <p className="stack-note">Terms acceptance must be completed from the secure onboarding link.</p>
+            <form className="login-form terms-acceptance-form" onSubmit={handleTermsAcceptance}>
+              <label className="login-field">
+                <span className="access-label">Accepted by</span>
+                <input
+                  className="login-input"
+                  type="text"
+                  value={acceptedBy}
+                  onChange={(event) => setAcceptedBy(event.target.value)}
+                  maxLength={120}
+                  required
+                />
+              </label>
+              <label className="onboarding-checkbox">
+                <input
+                  type="checkbox"
+                  checked={termsConfirmed}
+                  onChange={(event) => setTermsConfirmed(event.target.checked)}
+                  required
+                />
+                <span>I have read and agree to the GoAccess Partner Terms &amp; Conditions.</span>
+              </label>
+              <button className="button button-primary login-submit" disabled={termsStatus === "saving"} type="submit">
+                {termsStatus === "saving" ? "Recording..." : "Accept Partner Terms"}
+              </button>
+              <p
+                className={`form-message ${termsStatus === "success" ? "form-message-success" : ""} ${termsStatus === "error" ? "form-message-error" : ""}`.trim()}
+                aria-live="polite"
+              >
+                {termsMessage || "Your acceptance is recorded against this vendor account."}
+              </p>
+            </form>
           )}
         </div>
       </div>

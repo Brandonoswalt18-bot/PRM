@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       ok: true,
       vendor: vendor ? toClientApprovedVendor(vendor) : null,
       result,
-      message: "Signed NDA uploaded. GoAccess can review it before issuing credentials.",
+      message: "Signed NDA uploaded. GoAccess will review it before unlocking full portal access.",
     });
   } catch (error) {
     return NextResponse.json(

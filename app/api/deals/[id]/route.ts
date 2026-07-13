@@ -10,6 +10,7 @@ import {
   getDealById,
   getVendorById,
   recordDealSyncEvent,
+  updateDealMonthlyRmr,
   updateDealStatus,
 } from "@/lib/goaccess-store";
 import type { DealStatus } from "@/types/goaccess";
@@ -143,30 +144,63 @@ export async function PATCH(
 
   const { id } = await context.params;
 
-  let body: { status?: DealStatus };
+  let body: { status?: DealStatus; monthlyRmr?: number | string };
 
   try {
-    body = (await request.json()) as { status?: DealStatus };
+    body = (await request.json()) as { status?: DealStatus; monthlyRmr?: number | string };
   } catch {
     return NextResponse.json({ message: "Invalid status payload." }, { status: 400 });
   }
 
-  if (!body.status || !allowedStatuses.includes(body.status)) {
+  if (body.status && !allowedStatuses.includes(body.status)) {
     return NextResponse.json({ message: "Unsupported deal status." }, { status: 400 });
   }
 
+  const hasMonthlyRmr = body.monthlyRmr !== undefined && body.monthlyRmr !== null && body.monthlyRmr !== "";
+  const monthlyRmr = hasMonthlyRmr ? Number(body.monthlyRmr) : null;
+
+  if (hasMonthlyRmr && (!Number.isFinite(monthlyRmr) || (monthlyRmr ?? 0) < 0)) {
+    return NextResponse.json({ message: "Enter a valid non-negative monthly RMR amount." }, { status: 400 });
+  }
+
+  if (!body.status && monthlyRmr === null) {
+    return NextResponse.json({ message: "Choose a status or enter monthly RMR." }, { status: 400 });
+  }
+
   try {
-    const existingDeal = await getDealById(id);
+    let existingDeal = await getDealById(id);
 
     if (!existingDeal) {
       return NextResponse.json({ message: "Deal not found." }, { status: 404 });
     }
 
-    if (!canTransitionDealStatus(existingDeal.status, body.status)) {
+    if (body.status && !canTransitionDealStatus(existingDeal.status, body.status)) {
       return NextResponse.json(
         { message: `Cannot move a deal from ${existingDeal.status.replaceAll("_", " ")} to ${body.status.replaceAll("_", " ")}.` },
         { status: 409 }
       );
+    }
+
+    if (
+      (body.status === "approved" || body.status === "synced_to_hubspot") &&
+      (monthlyRmr ?? existingDeal.monthlyRmr) <= 0
+    ) {
+      return NextResponse.json(
+        { message: "Enter the GoAccess monthly RMR amount before approving this deal." },
+        { status: 400 }
+      );
+    }
+
+    if (monthlyRmr !== null) {
+      existingDeal = await updateDealMonthlyRmr(id, monthlyRmr);
+    }
+
+    if (!body.status) {
+      return NextResponse.json({
+        ok: true,
+        deal: existingDeal,
+        message: "Monthly RMR saved by GoAccess.",
+      });
     }
 
     if (body.status === "approved") {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireVendorRouteAccess } from "@/lib/auth-guards";
+import { requireVendorLegalRouteAccess } from "@/lib/auth-guards";
 import { toClientApprovedVendor } from "@/lib/goaccess-client-data";
 import { getVendorById, updateVendorProfile } from "@/lib/goaccess-store";
 
@@ -13,7 +13,7 @@ type VendorProfilePayload = {
 };
 
 export async function GET() {
-  const auth = await requireVendorRouteAccess();
+  const auth = await requireVendorLegalRouteAccess();
 
   if (auth.error) {
     return auth.error;
@@ -31,7 +31,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const auth = await requireVendorRouteAccess();
+  const auth = await requireVendorLegalRouteAccess();
 
   if (auth.error) {
     return auth.error;
