@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { uploadSignedNdaFromOnboarding } from "@/lib/goaccess-store";
+import { acceptVendorNdaFromOnboarding } from "@/lib/goaccess-store";
+import { getLegalAcceptanceRequestEvidence } from "@/lib/legal-agreements";
 
 function buildRedirect(request: Request, token: string, params: Record<string, string>) {
   const url = new URL(`/onboarding/${encodeURIComponent(token)}`, request.url);
@@ -13,25 +14,29 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   const { token } = await params;
 
   if (!rateLimit.allowed) {
-    return NextResponse.redirect(buildRedirect(request, token, { error: "nda-upload-failed" }), 303);
+    return NextResponse.redirect(buildRedirect(request, token, { error: "nda-acceptance-failed" }), 303);
   }
 
   const formData = await request.formData();
-  const ndaFile = formData.get("signedNda");
+  const accepted = String(formData.get("accepted") ?? "");
+  const acceptedBy = String(formData.get("acceptedBy") ?? "");
+  const acceptedTitle = String(formData.get("acceptedTitle") ?? "");
 
-  if (!(ndaFile instanceof File)) {
-    return NextResponse.redirect(buildRedirect(request, token, { error: "nda-file-required" }), 303);
+  if (accepted !== "yes") {
+    return NextResponse.redirect(
+      buildRedirect(request, token, { error: "nda-confirmation-required" }),
+      303
+    );
   }
 
   try {
-    await uploadSignedNdaFromOnboarding(token, {
-      fileName: ndaFile.name,
-      contentType: ndaFile.type,
-      size: ndaFile.size,
-      bytes: new Uint8Array(await ndaFile.arrayBuffer()),
+    await acceptVendorNdaFromOnboarding(token, {
+      acceptedBy,
+      acceptedTitle,
+      ...getLegalAcceptanceRequestEvidence(request),
     });
-    return NextResponse.redirect(buildRedirect(request, token, { status: "nda-uploaded" }), 303);
+    return NextResponse.redirect(buildRedirect(request, token, { status: "nda-accepted" }), 303);
   } catch {
-    return NextResponse.redirect(buildRedirect(request, token, { error: "nda-upload-failed" }), 303);
+    return NextResponse.redirect(buildRedirect(request, token, { error: "nda-acceptance-failed" }), 303);
   }
 }

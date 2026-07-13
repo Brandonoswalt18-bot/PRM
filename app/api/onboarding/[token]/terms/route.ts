@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { acceptVendorTermsFromOnboarding } from "@/lib/goaccess-store";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { getLegalAcceptanceRequestEvidence } from "@/lib/legal-agreements";
 
 function buildRedirect(request: Request, token: string, params: Record<string, string>) {
   const url = new URL(`/onboarding/${encodeURIComponent(token)}`, request.url);
@@ -19,6 +20,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   const formData = await request.formData();
   const accepted = String(formData.get("accepted") ?? "");
   const acceptedBy = String(formData.get("acceptedBy") ?? "");
+  const acceptedTitle = String(formData.get("acceptedTitle") ?? "");
 
   if (accepted !== "yes") {
     return NextResponse.redirect(
@@ -28,7 +30,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   }
 
   try {
-    await acceptVendorTermsFromOnboarding(token, acceptedBy);
+    await acceptVendorTermsFromOnboarding(token, {
+      acceptedBy,
+      acceptedTitle,
+      ...getLegalAcceptanceRequestEvidence(request),
+    });
     return NextResponse.redirect(buildRedirect(request, token, { status: "terms-accepted" }), 303);
   } catch {
     return NextResponse.redirect(buildRedirect(request, token, { error: "terms-acceptance-failed" }), 303);

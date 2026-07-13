@@ -47,15 +47,24 @@ export function buildApplicationTimeline(
   if (application.ndaSentAt) {
     entries.push({
       title: "Legal onboarding sent",
-      detail: "The vendor received the secure NDA and Partner Terms checklist.",
+      detail: "The vendor received the secure NDA and Partner Agreement checklist.",
       timestamp: application.ndaSentAt,
       tone: "warning",
     });
   }
 
+  if (vendor?.ndaSignedAt) {
+    entries.push({
+      title: "Mutual NDA accepted",
+      detail: `${vendor.ndaAcceptedBy ?? vendor.primaryContactName} accepted version ${vendor.ndaVersion ?? "current"}.`,
+      timestamp: vendor.ndaSignedAt,
+      tone: "success",
+    });
+  }
+
   if (vendor?.termsAcceptedAt) {
     entries.push({
-      title: "Partner Terms accepted",
+      title: "Partner Agreement accepted",
       detail: `${vendor.termsAcceptedBy ?? vendor.primaryContactName} accepted version ${vendor.termsVersion ?? "current"}.`,
       timestamp: vendor.termsAcceptedAt,
       tone: "success",
@@ -64,8 +73,8 @@ export function buildApplicationTimeline(
 
   if (application.ndaSignedAt) {
     entries.push({
-      title: "NDA completed",
-      detail: "The signed NDA was confirmed and legal onboarding is complete.",
+      title: "Legal onboarding complete",
+      detail: "Both click-through agreements were accepted and recorded.",
       timestamp: application.ndaSignedAt,
       tone: "success",
     });

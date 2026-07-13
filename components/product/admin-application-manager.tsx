@@ -82,17 +82,13 @@ function getQueueReason(application: VendorApplication, vendor?: ClientApprovedV
   }
 
   if (vendor.ndaStatus !== "signed" || !vendor.termsAcceptedAt) {
-    if (vendor.signedNdaFileUrl && vendor.termsAcceptedAt) {
-      return "Legal steps complete and waiting on GoAccess NDA confirmation";
+    if (vendor.ndaStatus !== "signed" && !vendor.termsAcceptedAt) {
+      return "Waiting on NDA and Partner Agreement acceptance";
     }
 
-    if (!vendor.signedNdaFileUrl && !vendor.termsAcceptedAt) {
-      return "Waiting on NDA upload and Partner Terms acceptance";
-    }
-
-    return vendor.signedNdaFileUrl
-      ? "Waiting on Partner Terms acceptance"
-      : "Waiting on signed NDA upload";
+    return vendor.ndaStatus === "signed"
+      ? "Waiting on Partner Agreement acceptance"
+      : "Waiting on NDA acceptance";
   }
 
   if (!vendor.credentialsIssued) {
@@ -108,8 +104,7 @@ function getQueueReason(application: VendorApplication, vendor?: ClientApprovedV
 
 function getApplicationActionNote(
   application: VendorApplication,
-  vendor: ClientApprovedVendor | undefined,
-  hasSignedNdaUpload: boolean
+  vendor: ClientApprovedVendor | undefined
 ) {
   if (!vendor) {
     return application.status === "under_review"
@@ -118,15 +113,11 @@ function getApplicationActionNote(
   }
 
   if (vendor.ndaStatus !== "signed" || !vendor.termsAcceptedAt) {
-    if (hasSignedNdaUpload && vendor.termsAcceptedAt) {
-      return "The NDA is uploaded and Partner Terms are accepted. Confirm the NDA to continue.";
-    }
-
     if (vendor.ndaStatus === "sent") {
-      return "Wait for the vendor to upload the NDA and accept the Partner Terms from the secure onboarding link.";
+      return "The vendor can review and accept both agreements from the secure onboarding link.";
     }
 
-    return "Send the legal onboarding link to start the NDA and Partner Terms steps.";
+    return "Send the legal onboarding link to start the NDA and Partner Agreement steps.";
   }
 
   if (!vendor.credentialsIssued) {
@@ -152,17 +143,13 @@ function getApplicationStepSummary(application: VendorApplication, vendor?: Clie
   }
 
   if (vendor.ndaStatus !== "signed" || !vendor.termsAcceptedAt) {
-    if (vendor.signedNdaUploadedAt && vendor.termsAcceptedAt) {
-      return "The vendor completed both legal steps. Confirm the signed NDA to continue."
-    }
-
     return vendor.ndaStatus === "sent"
-      ? "Legal onboarding is open. The vendor must upload the NDA and accept the Partner Terms."
+      ? "Legal onboarding is open. The vendor must accept the NDA and Partner Agreement."
       : "Approval is complete. Send the legal onboarding link next.";
   }
 
   if (!vendor.credentialsIssued) {
-    return "The NDA and Partner Terms are confirmed. The next step is issuing portal access.";
+    return "The NDA and Partner Agreement are accepted. The next step is issuing portal access.";
   }
 
   if (vendor.portalAccess !== "active") {
@@ -362,10 +349,9 @@ export function AdminApplicationManager({
             const timeline = buildApplicationTimeline(resolvedApplication, vendor ?? null, appNotifications).slice(0, 4);
             const isRejected = resolvedApplication.status === "rejected";
             const allowedNextSteps = allowedTransitions[resolvedApplication.status];
-            const hasSignedNdaUpload = Boolean(vendor?.signedNdaFileUrl);
             const isSelected = selectedApplicationId === application.id;
             const createdLabel = new Date(resolvedApplication.createdAt).toLocaleDateString();
-            const actionNote = getApplicationActionNote(resolvedApplication, vendor, hasSignedNdaUpload);
+            const actionNote = getApplicationActionNote(resolvedApplication, vendor);
             const currentStepLabel = formatApplicationStatusLabel(resolvedApplication.status);
             const nextStepLabel =
               allowedNextSteps.length > 0
@@ -477,7 +463,7 @@ export function AdminApplicationManager({
                         <strong>{vendor ? formatNdaStatusLabel(vendor.ndaStatus) : "Not started"}</strong>
                       </div>
                       <div className="detail-fact">
-                        <span>Partner Terms</span>
+                        <span>Partner Agreement</span>
                         <strong>{vendor?.termsAcceptedAt ? "Accepted" : "Pending"}</strong>
                       </div>
                       <div className="detail-fact">
@@ -497,12 +483,12 @@ export function AdminApplicationManager({
                       ) : null}
                       {vendor?.signedNdaFileUrl ? (
                         <a className="detail-link-chip" href={vendor.signedNdaFileUrl} target="_blank" rel="noreferrer">
-                          View signed NDA
+                          View legacy signed NDA
                         </a>
                       ) : null}
                       {vendor?.termsDocumentUrl ? (
                         <a className="detail-link-chip" href={vendor.termsDocumentUrl} target="_blank" rel="noreferrer">
-                          Open Partner Terms
+                          Open Partner Agreement
                         </a>
                       ) : null}
                       {vendor && (vendor.ndaStatus === "sent" || vendor.credentialsIssued) ? (

@@ -5,6 +5,10 @@ export function toClientApprovedVendor(vendor: ApprovedVendor): ClientApprovedVe
   delete clientVendor.inviteToken;
   delete clientVendor.passwordSalt;
   delete clientVendor.passwordHash;
+  delete clientVendor.ndaAcceptanceIp;
+  delete clientVendor.ndaAcceptanceUserAgent;
+  delete clientVendor.termsAcceptanceIp;
+  delete clientVendor.termsAcceptanceUserAgent;
 
   return clientVendor;
 }

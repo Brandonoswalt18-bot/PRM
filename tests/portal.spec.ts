@@ -22,7 +22,7 @@ test("public vendor application is accepted and protected APIs reject anonymous 
   expect(deals.status()).toBe(401);
 });
 
-test("approved vendor completes NDA and Partner Terms before portal activation", async ({ page }) => {
+test("approved vendor accepts the NDA and Partner Agreement before portal activation", async ({ page }) => {
   const unique = Date.now();
   const email = `onboarding+${unique}@example.com`;
   const submission = await page.request.post("/api/vendor-applications", {
@@ -58,41 +58,56 @@ test("approved vendor completes NDA and Partner Terms before portal activation",
 
   await page.goto(legalPayload.onboardingUrl);
   await expect(
-    page.getByRole("heading", { name: "Complete the NDA and Terms & Conditions." }),
+    page.getByRole("heading", { name: "Review and accept both GoAccess agreements." }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: /Open NDA document/ })).toHaveAttribute(
-    "href",
-    /17mAo8aotjxbz7tT-Xs0SGI1614IdmgEp/,
+  await expect(page.getByRole("link", { name: /View NDA PDF/ })).toHaveAttribute(
+    "href", "/legal/goaccess-mutual-nda.pdf",
   );
-  await expect(page.getByRole("link", { name: /Read Terms & Conditions/ })).toHaveAttribute(
-    "href",
-    /1--W8AKJPwh6L2CzSi-eTxYycSUUdNP7pAakEDFfIbgQ/,
+  await expect(page.getByRole("link", { name: /View Partner Agreement PDF/ })).toHaveAttribute(
+    "href", "/legal/goaccess-partner-terms.pdf",
   );
 
-  await page.getByLabel("Signed NDA file").setInputFiles({
-    name: "signed-goaccess-nda.pdf",
-    mimeType: "application/pdf",
-    buffer: Buffer.from("%PDF-1.4\nGoAccess onboarding test\n%%EOF"),
-  });
-  await page.getByRole("button", { name: "Upload signed NDA" }).click();
-  await expect(page.getByText("Signed NDA uploaded. GoAccess will review it.")).toBeVisible();
+  const ndaCard = page.locator("article").filter({ hasText: "Accept the Mutual NDA" });
+  await ndaCard.getByLabel("Title").fill("President");
+  await ndaCard.getByRole("checkbox").check();
+  await ndaCard.getByRole("button", { name: "Accept Mutual NDA" }).click();
+  await expect(page.getByText("Mutual NDA accepted and recorded.")).toBeVisible();
 
-  await page.getByLabel(/I have read and agree/).check();
-  await page.getByRole("button", { name: "Accept Terms & Conditions" }).click();
-  await expect(page.getByText("Terms & Conditions accepted and recorded.")).toBeVisible();
+  const termsCard = page.locator("article").filter({ hasText: "Accept the Partner Agreement" });
+  await termsCard.getByLabel("Title").fill("President");
+  await termsCard.getByRole("checkbox").check();
+  await termsCard.getByRole("button", { name: "Accept Partner Agreement" }).click();
+  await expect(page.getByText("Partner Agreement accepted and recorded.")).toBeVisible();
   await expect(page.locator(".onboarding-progress-card strong")).toHaveText("2 of 2 complete");
 
-  const confirmLegal = await page.request.patch(
-    `/api/vendor-applications/${submissionPayload.application.id}`,
-    { data: { status: "nda_signed" } },
-  );
-  expect(confirmLegal.ok()).toBeTruthy();
   const issueAccess = await page.request.patch(
     `/api/vendor-applications/${submissionPayload.application.id}`,
     { data: { status: "credentials_issued" } },
   );
   expect(issueAccess.ok()).toBeTruthy();
-  const accessPayload = (await issueAccess.json()) as { inviteUrl: string };
+  const accessPayload = (await issueAccess.json()) as {
+    inviteUrl: string;
+    vendor: {
+      ndaAcceptedBy?: string;
+      ndaAcceptedTitle?: string;
+      ndaDocumentSha256?: string;
+      ndaVersion?: string;
+      termsAcceptedBy?: string;
+      termsAcceptedTitle?: string;
+      termsDocumentSha256?: string;
+      termsVersion?: string;
+    };
+  };
+  expect(accessPayload.vendor).toMatchObject({
+    ndaAcceptedBy: "Alex Onboarding",
+    ndaAcceptedTitle: "President",
+    ndaDocumentSha256: "05e43f5d80e8a93b4da1bafa779640c7e454fe4ca78d3d690c8cafa05aed8a7e",
+    ndaVersion: "2026-07",
+    termsAcceptedBy: "Alex Onboarding",
+    termsAcceptedTitle: "President",
+    termsDocumentSha256: "c6386ee3e3325ea2aa366055a750f64826eb00fca587fc2b03bd2431176922d1",
+    termsVersion: "2026-07",
+  });
 
   await page.goto(accessPayload.inviteUrl);
   await page.getByLabel("Create password").fill("goaccess-onboarding-test");
@@ -190,14 +205,12 @@ test("unsigned vendor is limited to required legal onboarding", async ({ page })
   await expect(page).toHaveURL(/\/portal$/);
 
   await expect(page.getByRole("heading", { name: "Complete your vendor agreements" })).toBeVisible();
-  const legalStatus = page.getByRole("region", { name: "Finish your NDA and Partner Terms" });
-  await expect(legalStatus.getByRole("link", { name: "Download NDA" })).toHaveAttribute(
-    "href",
-    /17mAo8aotjxbz7tT-Xs0SGI1614IdmgEp/,
+  const legalStatus = page.getByRole("region", { name: "Accept your NDA and Partner Agreement" });
+  await expect(legalStatus.getByRole("link", { name: "View NDA PDF" })).toHaveAttribute(
+    "href", "/legal/goaccess-mutual-nda.pdf",
   );
-  await expect(legalStatus.getByRole("link", { name: "View Partner Terms" })).toHaveAttribute(
-    "href",
-    /1--W8AKJPwh6L2CzSi-eTxYycSUUdNP7pAakEDFfIbgQ/,
+  await expect(legalStatus.getByRole("link", { name: "View Partner Agreement PDF" })).toHaveAttribute(
+    "href", "/legal/goaccess-partner-terms.pdf",
   );
   await expect(page.getByRole("link", { name: "Register deal" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Monthly RMR" })).toHaveCount(0);
@@ -223,7 +236,8 @@ test("unsigned vendor is limited to required legal onboarding", async ({ page })
   await page.goto("/portal/links");
   await expect(page).toHaveURL(/\/portal\/onboarding\?required=legal$/);
   await expect(page.getByRole("heading", { name: "Onboarding" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Accept Partner Terms" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Accept Mutual NDA" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Accept Partner Agreement" })).toBeVisible();
 });
 
 test("GoAccess admin owns monthly RMR before deal approval", async ({ page }) => {

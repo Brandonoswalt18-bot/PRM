@@ -52,9 +52,9 @@ export default async function InvitePage({ params, searchParams }: InvitePagePro
         <div className="login-layout login-layout-single">
           <section className="login-card">
             <span className="eyebrow">LEGAL ONBOARDING FIRST</span>
-            <h1>Complete your NDA and Vendor Terms.</h1>
+            <h1>Accept your NDA and Partner Agreement.</h1>
             <p>
-              {vendor.companyName} is approved to continue, but full portal access unlocks after the signed NDA and Partner Terms & Conditions are complete.
+              {vendor.companyName} is approved to continue, but full portal access unlocks after both click-through agreements are accepted.
             </p>
             <div className="login-actions">
               <Link className="button button-primary" href={`/onboarding/${encodeURIComponent(token)}`}>

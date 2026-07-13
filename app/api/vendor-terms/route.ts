@@ -2,13 +2,25 @@ import { NextResponse } from "next/server";
 import { requireVendorRouteAccess } from "@/lib/auth-guards";
 import { toClientApprovedVendor } from "@/lib/goaccess-client-data";
 import { acceptVendorTermsForVendor } from "@/lib/goaccess-store";
+import { getLegalAcceptanceRequestEvidence } from "@/lib/legal-agreements";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 type TermsPayload = {
   acceptedBy?: string;
+  acceptedTitle?: string;
   accepted?: boolean;
 };
 
 export async function POST(request: Request) {
+  const rateLimit = checkRateLimit(request, "vendor-terms-acceptance", 8, 15 * 60 * 1000);
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { message: "Too many Partner Agreement acceptance attempts. Try again shortly." },
+      { status: 429 }
+    );
+  }
+
   const auth = await requireVendorRouteAccess();
 
   if (auth.error || !auth.session) {
@@ -25,7 +37,7 @@ export async function POST(request: Request) {
 
   if (body.accepted !== true) {
     return NextResponse.json(
-      { message: "Confirm that you have read and agree to the Partner Terms." },
+      { message: "Confirm that you have read and agree to the Partner Agreement." },
       { status: 400 }
     );
   }
@@ -33,13 +45,17 @@ export async function POST(request: Request) {
   try {
     const vendor = await acceptVendorTermsForVendor(
       auth.session.vendorId,
-      body.acceptedBy ?? ""
+      {
+        acceptedBy: body.acceptedBy ?? "",
+        acceptedTitle: body.acceptedTitle ?? "",
+        ...getLegalAcceptanceRequestEvidence(request),
+      }
     );
 
     return NextResponse.json({
       ok: true,
       vendor: toClientApprovedVendor(vendor),
-      message: "Partner Terms accepted and recorded.",
+      message: "Partner Service Agreement accepted and recorded.",
     });
   } catch (error) {
     return NextResponse.json(

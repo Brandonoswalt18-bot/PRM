@@ -2,206 +2,198 @@
 
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
+import { LEGAL_AGREEMENTS } from "@/lib/legal-agreements";
 import type { ClientApprovedVendor } from "@/types/goaccess";
+
+type SubmissionStatus = "idle" | "saving" | "success" | "error";
 
 export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | null }) {
   const router = useRouter();
-  const [file, setFile] = useState<File | null>(null);
-  const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
-  const [message, setMessage] = useState("");
-  const [acceptedBy, setAcceptedBy] = useState(vendor?.primaryContactName ?? "");
+  const defaultName = vendor?.primaryContactName ?? "";
+  const [ndaAcceptedBy, setNdaAcceptedBy] = useState(defaultName);
+  const [ndaAcceptedTitle, setNdaAcceptedTitle] = useState("");
+  const [ndaConfirmed, setNdaConfirmed] = useState(false);
+  const [ndaStatus, setNdaStatus] = useState<SubmissionStatus>("idle");
+  const [ndaMessage, setNdaMessage] = useState("");
+  const [termsAcceptedBy, setTermsAcceptedBy] = useState(defaultName);
+  const [termsAcceptedTitle, setTermsAcceptedTitle] = useState("");
   const [termsConfirmed, setTermsConfirmed] = useState(false);
-  const [termsStatus, setTermsStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const [termsStatus, setTermsStatus] = useState<SubmissionStatus>("idle");
   const [termsMessage, setTermsMessage] = useState("");
 
-  async function handleUpload(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!file) {
-      setStatus("error");
-      setMessage("Choose the signed NDA file first.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.set("signedNda", file);
-    setStatus("uploading");
+  async function submitAcceptance(
+    endpoint: "/api/vendor-nda" | "/api/vendor-terms",
+    values: { acceptedBy: string; acceptedTitle: string; accepted: boolean },
+    setStatus: (status: SubmissionStatus) => void,
+    setMessage: (message: string) => void
+  ) {
+    setStatus("saving");
     setMessage("");
 
     try {
-      const response = await fetch("/api/vendor-nda", {
+      const response = await fetch(endpoint, {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
       });
-
       const payload = (await response.json()) as { message?: string };
 
       if (!response.ok) {
         setStatus("error");
-        setMessage(payload.message ?? "Unable to upload signed NDA.");
+        setMessage(payload.message ?? "Unable to record agreement acceptance.");
         return;
       }
 
       setStatus("success");
-      setMessage(payload.message ?? "Signed NDA uploaded.");
-      setFile(null);
-      startTransition(() => {
-        router.refresh();
-      });
-    } catch {
-      setStatus("error");
-      setMessage("Network error while uploading the signed NDA.");
-    }
-  }
-
-  async function handleTermsAcceptance(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setTermsStatus("saving");
-    setTermsMessage("");
-
-    try {
-      const response = await fetch("/api/vendor-terms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accepted: termsConfirmed, acceptedBy }),
-      });
-      const payload = (await response.json()) as { message?: string };
-
-      if (!response.ok) {
-        setTermsStatus("error");
-        setTermsMessage(payload.message ?? "Unable to record Partner Terms acceptance.");
-        return;
-      }
-
-      setTermsStatus("success");
-      setTermsMessage(payload.message ?? "Partner Terms accepted and recorded.");
+      setMessage(payload.message ?? "Agreement accepted and recorded.");
       startTransition(() => router.refresh());
     } catch {
-      setTermsStatus("error");
-      setTermsMessage("Network error while recording Partner Terms acceptance.");
+      setStatus("error");
+      setMessage("Network error while recording agreement acceptance.");
     }
   }
+
+  const ndaComplete = vendor?.ndaStatus === "signed";
+  const termsComplete = Boolean(vendor?.termsAcceptedAt);
 
   return (
     <article className="workspace-card wide-card">
       <div className="card-header-row">
         <div>
-          <span className="section-kicker">Legal onboarding</span>
-          <h3>NDA and Partner Terms</h3>
-          <p>Keep the legal documents and recorded acceptance tied to your approved vendor account.</p>
+          <span className="section-kicker">Required legal onboarding</span>
+          <h3>Review and accept both agreements</h3>
+          <p>Both PDFs are hosted by GoAccess. Your name, title, acceptance time, and document version are recorded with each acceptance.</p>
         </div>
       </div>
 
-      <div className="nda-grid">
-        <div className="stack-card">
-          <h3>1. Download NDA</h3>
-          <p className="stack-note">Use the current GoAccess NDA template before signing.</p>
-          <div className="stack-meta-grid">
-            <span>{vendor?.ndaDocumentName ?? "GoAccess Vendor NDA"}</span>
-            <span>{vendor?.ndaStatus === "signed" ? "Signed" : "Awaiting signed copy"}</span>
+      <div className="legal-acceptance-grid">
+        <section className={`stack-card legal-acceptance-card${ndaComplete ? " is-complete" : ""}`}>
+          <div className="onboarding-step-heading">
+            <span className="onboarding-step-number">1</span>
+            <div>
+              <span className="onboarding-step-status">{ndaComplete ? "Accepted" : "Required"}</span>
+              <h3>Mutual NDA</h3>
+            </div>
           </div>
-          {vendor?.ndaDocumentUrl ? (
-            <a className="button button-secondary" href={vendor.ndaDocumentUrl} target="_blank" rel="noreferrer">
-              Download NDA
+          <p className="stack-note">Review the complete Mutual Non-Disclosure Agreement before accepting it for your company.</p>
+          <div className="legal-document-actions">
+            <a className="button button-secondary" href={LEGAL_AGREEMENTS.nda.url} target="_blank" rel="noreferrer">
+              View NDA PDF
             </a>
-          ) : (
-            <p className="stack-note">The NDA template will appear here after GoAccess sends it.</p>
-          )}
-        </div>
-
-        <div className="stack-card">
-          <h3>2. Upload signed NDA</h3>
-          <p className="stack-note">Upload a signed PDF, DOC, or DOCX file. Max size 10 MB.</p>
-          {vendor?.ndaStatus === "signed" ? (
-            <p className="onboarding-complete-note">The signed NDA has been reviewed and approved by GoAccess.</p>
-          ) : (
-          <form className="login-form" onSubmit={handleUpload}>
-            <label className="login-field">
-              <span className="access-label">Signed file</span>
-              <input
-                className="login-input"
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-              />
-            </label>
-            <button className="button button-primary login-submit" disabled={status === "uploading"} type="submit">
-              {status === "uploading" ? "Uploading..." : "Upload signed NDA"}
-            </button>
-          </form>
-          )}
-          <p
-            className={`form-message ${
-              status === "success" ? "form-message-success" : ""
-            } ${status === "error" ? "form-message-error" : ""}`.trim()}
-          >
-            {message ||
-              (vendor?.signedNdaUploadedAt
-                ? `Last upload: ${new Date(vendor.signedNdaUploadedAt).toLocaleDateString()}`
-                : "GoAccess will review the signed upload before marking the NDA complete.")}
-          </p>
-          {vendor?.signedNdaFileUrl ? (
-            <p className="stack-note">
-              Signed copy:{" "}
-              <a href={vendor.signedNdaFileUrl} target="_blank" rel="noreferrer">
-                {vendor.signedNdaFileName ?? "Open uploaded NDA"}
-              </a>
-            </p>
-          ) : null}
-        </div>
-
-        <div className="stack-card">
-          <h3>3. Partner Terms & Conditions</h3>
-          <p className="stack-note">Review the current version accepted during legal onboarding.</p>
-          <div className="stack-meta-grid">
-            <span>Version {vendor?.termsVersion ?? "Current"}</span>
-            <span>{vendor?.termsAcceptedAt ? "Accepted" : "Acceptance required"}</span>
+            <a className="simple-text-link" download href={LEGAL_AGREEMENTS.nda.url}>
+              Download PDF <span aria-hidden="true">↓</span>
+            </a>
           </div>
-          {vendor?.termsDocumentUrl ? (
-            <a className="button button-secondary" href={vendor.termsDocumentUrl} target="_blank" rel="noreferrer">
-              Open Partner Terms
-            </a>
-          ) : (
-            <p className="stack-note">The current Partner Terms will appear here when configured.</p>
-          )}
-          {vendor?.termsAcceptedAt ? (
+          <div className="stack-meta-grid">
+            <span>Version {vendor?.ndaVersion ?? LEGAL_AGREEMENTS.nda.version}</span>
+            <span>{ndaComplete ? "Acceptance recorded" : "Awaiting acceptance"}</span>
+          </div>
+
+          {ndaComplete ? (
             <p className="onboarding-complete-note">
-              Accepted by {vendor.termsAcceptedBy ?? vendor.primaryContactName} on {new Date(vendor.termsAcceptedAt).toLocaleDateString()}.
+              Accepted by {vendor?.ndaAcceptedBy ?? vendor?.primaryContactName}
+              {vendor?.ndaAcceptedTitle ? `, ${vendor.ndaAcceptedTitle}` : ""} on {new Date(vendor!.ndaSignedAt!).toLocaleDateString()}.
             </p>
           ) : (
-            <form className="login-form terms-acceptance-form" onSubmit={handleTermsAcceptance}>
-              <label className="login-field">
-                <span className="access-label">Accepted by</span>
-                <input
-                  className="login-input"
-                  type="text"
-                  value={acceptedBy}
-                  onChange={(event) => setAcceptedBy(event.target.value)}
-                  maxLength={120}
-                  required
-                />
-              </label>
+            <form
+              className="onboarding-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void submitAcceptance(
+                  "/api/vendor-nda",
+                  { accepted: ndaConfirmed, acceptedBy: ndaAcceptedBy, acceptedTitle: ndaAcceptedTitle },
+                  setNdaStatus,
+                  setNdaMessage
+                );
+              }}
+            >
+              <div className="inline-form-grid">
+                <label className="login-field">
+                  <span>Full name</span>
+                  <input className="login-input" maxLength={120} required type="text" value={ndaAcceptedBy} onChange={(event) => setNdaAcceptedBy(event.target.value)} />
+                </label>
+                <label className="login-field">
+                  <span>Title</span>
+                  <input className="login-input" maxLength={120} placeholder="Owner, President, Director..." required type="text" value={ndaAcceptedTitle} onChange={(event) => setNdaAcceptedTitle(event.target.value)} />
+                </label>
+              </div>
               <label className="onboarding-checkbox">
-                <input
-                  type="checkbox"
-                  checked={termsConfirmed}
-                  onChange={(event) => setTermsConfirmed(event.target.checked)}
-                  required
-                />
-                <span>I have read and agree to the GoAccess Partner Terms &amp; Conditions.</span>
+                <input checked={ndaConfirmed} onChange={(event) => setNdaConfirmed(event.target.checked)} required type="checkbox" />
+                <span>{LEGAL_AGREEMENTS.nda.acceptanceText}</span>
               </label>
-              <button className="button button-primary login-submit" disabled={termsStatus === "saving"} type="submit">
-                {termsStatus === "saving" ? "Recording..." : "Accept Partner Terms"}
+              <button className="button button-primary" disabled={ndaStatus === "saving"} type="submit">
+                {ndaStatus === "saving" ? "Recording..." : "Accept Mutual NDA"}
               </button>
-              <p
-                className={`form-message ${termsStatus === "success" ? "form-message-success" : ""} ${termsStatus === "error" ? "form-message-error" : ""}`.trim()}
-                aria-live="polite"
-              >
-                {termsMessage || "Your acceptance is recorded against this vendor account."}
+              <p className={`form-message ${ndaStatus === "success" ? "form-message-success" : ""} ${ndaStatus === "error" ? "form-message-error" : ""}`.trim()} aria-live="polite">
+                {ndaMessage || "This acceptance is recorded as an electronic agreement for your company."}
               </p>
             </form>
           )}
-        </div>
+        </section>
+
+        <section className={`stack-card legal-acceptance-card${termsComplete ? " is-complete" : ""}`}>
+          <div className="onboarding-step-heading">
+            <span className="onboarding-step-number">2</span>
+            <div>
+              <span className="onboarding-step-status">{termsComplete ? "Accepted" : "Required"}</span>
+              <h3>Partner Service Agreement</h3>
+            </div>
+          </div>
+          <p className="stack-note">Review the complete Channel Partner Service Agreement before accepting it for your company.</p>
+          <div className="legal-document-actions">
+            <a className="button button-secondary" href={LEGAL_AGREEMENTS.terms.url} target="_blank" rel="noreferrer">
+              View Partner Agreement PDF
+            </a>
+            <a className="simple-text-link" download href={LEGAL_AGREEMENTS.terms.url}>
+              Download PDF <span aria-hidden="true">↓</span>
+            </a>
+          </div>
+          <div className="stack-meta-grid">
+            <span>Version {vendor?.termsVersion ?? LEGAL_AGREEMENTS.terms.version}</span>
+            <span>{termsComplete ? "Acceptance recorded" : "Awaiting acceptance"}</span>
+          </div>
+
+          {termsComplete ? (
+            <p className="onboarding-complete-note">
+              Accepted by {vendor?.termsAcceptedBy ?? vendor?.primaryContactName}
+              {vendor?.termsAcceptedTitle ? `, ${vendor.termsAcceptedTitle}` : ""} on {new Date(vendor!.termsAcceptedAt!).toLocaleDateString()}.
+            </p>
+          ) : (
+            <form
+              className="onboarding-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void submitAcceptance(
+                  "/api/vendor-terms",
+                  { accepted: termsConfirmed, acceptedBy: termsAcceptedBy, acceptedTitle: termsAcceptedTitle },
+                  setTermsStatus,
+                  setTermsMessage
+                );
+              }}
+            >
+              <div className="inline-form-grid">
+                <label className="login-field">
+                  <span>Full name</span>
+                  <input className="login-input" maxLength={120} required type="text" value={termsAcceptedBy} onChange={(event) => setTermsAcceptedBy(event.target.value)} />
+                </label>
+                <label className="login-field">
+                  <span>Title</span>
+                  <input className="login-input" maxLength={120} placeholder="Owner, President, Director..." required type="text" value={termsAcceptedTitle} onChange={(event) => setTermsAcceptedTitle(event.target.value)} />
+                </label>
+              </div>
+              <label className="onboarding-checkbox">
+                <input checked={termsConfirmed} onChange={(event) => setTermsConfirmed(event.target.checked)} required type="checkbox" />
+                <span>{LEGAL_AGREEMENTS.terms.acceptanceText}</span>
+              </label>
+              <button className="button button-primary" disabled={termsStatus === "saving"} type="submit">
+                {termsStatus === "saving" ? "Recording..." : "Accept Partner Agreement"}
+              </button>
+              <p className={`form-message ${termsStatus === "success" ? "form-message-success" : ""} ${termsStatus === "error" ? "form-message-error" : ""}`.trim()} aria-live="polite">
+                {termsMessage || "This acceptance is recorded as an electronic agreement for your company."}
+              </p>
+            </form>
+          )}
+        </section>
       </div>
     </article>
   );

@@ -154,17 +154,13 @@ export function getVendorNextStep(vendor: ApprovedVendor | null | undefined) {
   }
 
   if (vendor.ndaStatus !== "signed" || !vendor.termsAcceptedAt) {
-    if (vendor.signedNdaUploadedAt && vendor.termsAcceptedAt) {
-      return "Your legal steps are complete. GoAccess is reviewing the signed NDA now.";
-    }
-
     return vendor.ndaStatus === "sent"
-      ? "Use your secure onboarding link to upload the NDA and accept the Partner Terms & Conditions."
+      ? "Use your secure onboarding link to review and accept the NDA and Partner Agreement."
       : "GoAccess still needs to send your legal onboarding link before portal setup can continue.";
   }
 
   if (!vendor.credentialsIssued) {
-    return "GoAccess will issue your portal invite after the signed NDA is confirmed.";
+    return "Your agreements are accepted. GoAccess will issue your portal invite next.";
   }
 
   if (vendor.portalAccess !== "active") {

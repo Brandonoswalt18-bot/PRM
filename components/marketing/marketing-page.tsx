@@ -20,7 +20,7 @@ export function MarketingPage() {
           <span className="access-label">Vendor application</span>
           <h1>Apply to become a GoAccess vendor</h1>
           <p>
-            Tell us about your business. We&apos;ll review your application and follow up with the NDA and Partner Terms.
+            Tell us about your business. We&apos;ll review your application and follow up with the NDA and Partner Agreement.
           </p>
         </section>
 

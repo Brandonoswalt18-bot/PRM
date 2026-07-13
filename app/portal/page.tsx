@@ -66,7 +66,7 @@ export default async function PartnerPortalPage() {
         subtitle={
           legalComplete
             ? "Register opportunities and track recurring revenue."
-            : "Download, sign, and submit the NDA and accept the Partner Terms to unlock the portal."
+            : "Review and accept the NDA and Partner Agreement to unlock the portal."
         }
         primaryLabel={legalComplete ? "Register a deal" : "Complete agreements"}
         primaryHref={legalComplete ? "/portal/links" : "/portal/onboarding"}
@@ -79,7 +79,7 @@ export default async function PartnerPortalPage() {
           <div className="legal-status-copy">
             <span className="simple-eyebrow">Agreements</span>
             <h2 id="legal-status-title">
-              {legalComplete ? "Your agreements are complete" : "Finish your NDA and Partner Terms"}
+              {legalComplete ? "Your agreements are complete" : "Accept your NDA and Partner Agreement"}
             </h2>
             <p>
               {legalComplete
@@ -95,19 +95,19 @@ export default async function PartnerPortalPage() {
               </span>
               <span className={termsComplete ? "is-complete" : ""}>
                 <span aria-hidden="true">{termsComplete ? "✓" : "2"}</span>
-                Partner Terms
+                Partner Agreement
               </span>
             </div>
             {!legalComplete ? (
               <div className="legal-document-links" aria-label="Required legal documents">
                 {vendor?.ndaDocumentUrl ? (
                   <a className="button button-secondary" href={vendor.ndaDocumentUrl} target="_blank" rel="noreferrer">
-                    Download NDA
+                    View NDA PDF
                   </a>
                 ) : null}
                 {vendor?.termsDocumentUrl ? (
                   <a className="button button-secondary" href={vendor.termsDocumentUrl} target="_blank" rel="noreferrer">
-                    View Partner Terms
+                    View Partner Agreement PDF
                   </a>
                 ) : null}
               </div>
@@ -197,8 +197,8 @@ export default async function PartnerPortalPage() {
               <li className={legalComplete ? "is-complete" : "is-current"}>
                 <span aria-hidden="true">{legalComplete ? "✓" : "1"}</span>
                 <div>
-                  <strong>Sign agreements</strong>
-                  <p>Complete the NDA and Partner Terms.</p>
+                  <strong>Accept agreements</strong>
+                  <p>Review and accept the NDA and Partner Agreement.</p>
                 </div>
               </li>
               <li className={legalComplete ? "is-current" : ""}>

@@ -27,9 +27,9 @@ function getApplicationStatusMessage(status: VendorApplicationStatus) {
     case "approved":
       return "Application approved. Next step: send the legal onboarding link.";
     case "nda_sent":
-      return "Legal onboarding sent. The vendor must upload the NDA and accept the Partner Terms.";
+      return "Legal onboarding sent. The vendor must accept the NDA and Partner Agreement.";
     case "nda_signed":
-      return "Signed NDA confirmed and Partner Terms recorded. Next step: issue portal access.";
+      return "Both legal agreements accepted. Next step: issue portal access.";
     case "credentials_issued":
       return "Portal invite issued. The vendor can now set a password and activate access.";
     case "rejected":

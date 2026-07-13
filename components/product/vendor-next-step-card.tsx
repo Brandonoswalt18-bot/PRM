@@ -16,36 +16,27 @@ export function VendorNextStepCard({
     return null;
   }
 
-  const ndaUploaded = Boolean(vendor.signedNdaUploadedAt) || vendor.ndaStatus === "signed";
-  const ndaConfirmed = vendor.ndaStatus === "signed";
+  const ndaAccepted = vendor.ndaStatus === "signed";
   const termsAccepted = Boolean(vendor.termsAcceptedAt);
   const accessActive = vendor.portalAccess === "active" && vendor.credentialsIssued;
-  const legalComplete = ndaConfirmed && termsAccepted;
+  const legalComplete = ndaAccepted && termsAccepted;
   const onboardingComplete = legalComplete && accessActive && dealCount > 0;
 
   if (onboardingComplete && !alwaysShow) {
     return null;
   }
 
-  const nextStep = !ndaUploaded || !termsAccepted
+  const nextStep = !ndaAccepted || !termsAccepted
     ? {
         eyebrow: "Step 1 · Required",
-        title: "Complete your NDA and Partner Terms",
-        detail: "Finish both legal requirements before GoAccess can issue full portal access.",
+        title: "Accept your NDA and Partner Agreement",
+        detail: "Review both GoAccess-hosted PDFs and accept each agreement for your company.",
         href: "/portal/onboarding",
         label: "Open legal onboarding",
       }
-    : !ndaConfirmed
-      ? {
-          eyebrow: "Step 2 · GoAccess review",
-          title: "Your signed NDA is being reviewed",
-          detail: "Your legal steps are submitted. GoAccess will confirm the NDA and release your activation email next.",
-          href: "/portal/onboarding",
-          label: "View onboarding status",
-        }
-      : !accessActive
+    : !accessActive
         ? {
-            eyebrow: "Step 3 · Activate access",
+            eyebrow: "Step 2 · Activate access",
             title: "Activate your vendor portal",
             detail: "Use the one-time activation email from GoAccess to create your password and unlock the workspace.",
             href: "/portal/onboarding",
@@ -53,7 +44,7 @@ export function VendorNextStepCard({
           }
         : dealCount === 0
           ? {
-              eyebrow: "Step 4 · Start your pipeline",
+              eyebrow: "Step 3 · Start your pipeline",
               title: "Register your first deal",
               detail: "Your legal onboarding and portal access are complete. Add your first community opportunity next.",
               href: "/portal/links",
@@ -68,8 +59,8 @@ export function VendorNextStepCard({
             };
 
   const steps = [
-    { label: "NDA", complete: ndaConfirmed, current: !ndaConfirmed },
-    { label: "Partner Terms", complete: termsAccepted, current: ndaConfirmed && !termsAccepted },
+    { label: "NDA", complete: ndaAccepted, current: !ndaAccepted },
+    { label: "Partner Agreement", complete: termsAccepted, current: ndaAccepted && !termsAccepted },
     { label: "Portal access", complete: accessActive, current: legalComplete && !accessActive },
     { label: "First deal", complete: dealCount > 0, current: accessActive && dealCount === 0 },
   ];

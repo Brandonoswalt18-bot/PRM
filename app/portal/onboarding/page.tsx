@@ -20,7 +20,7 @@ export default async function VendorOnboardingStatusPage() {
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="Onboarding"
-        subtitle="See exactly what is complete, what GoAccess is reviewing, and the one action that moves your account forward."
+        subtitle="Review each agreement, see what is complete, and take the next action that moves your account forward."
         primaryLabel={legalComplete ? "Register a deal" : "Complete agreements below"}
         primaryHref={legalComplete ? "/portal/links" : "#legal-agreements"}
       />

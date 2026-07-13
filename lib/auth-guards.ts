@@ -52,7 +52,7 @@ export async function requireVendorLegalRouteAccess() {
       error: NextResponse.json(
         {
           message:
-            "Complete the NDA and Partner Terms before using the vendor portal.",
+            "Accept the NDA and Partner Agreement before using the vendor portal.",
           code: "LEGAL_ONBOARDING_REQUIRED",
         },
         { status: 403 }

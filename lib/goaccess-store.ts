@@ -8,6 +8,7 @@ import {
   sendVendorEmail,
 } from "@/lib/email";
 import { parseDealNotes } from "@/lib/deal-registration";
+import { LEGAL_AGREEMENTS, type LegalAcceptanceEvidence } from "@/lib/legal-agreements";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { getSupabaseAdminClient, getSupabaseServerConfig } from "@/lib/supabase-server";
 import type {
@@ -43,12 +44,11 @@ const STORE_FILENAME = "goaccess-vendor-portal.json";
 const BLOB_STORE_PATHNAME = `portal-store/${STORE_FILENAME}`;
 const SIGNED_NDA_MAX_BYTES = 10 * 1024 * 1024;
 const DEAL_AGREEMENT_MAX_BYTES = 15 * 1024 * 1024;
-const DEFAULT_NDA_DOCUMENT_NAME = "GoAccess Partner NDA";
-const DEFAULT_NDA_DOCUMENT_URL =
-  "https://docs.google.com/document/d/17mAo8aotjxbz7tT-Xs0SGI1614IdmgEp/edit";
-const DEFAULT_TERMS_DOCUMENT_URL =
-  "https://docs.google.com/document/d/1--W8AKJPwh6L2CzSi-eTxYycSUUdNP7pAakEDFfIbgQ/edit?tab=t.0";
-const DEFAULT_TERMS_VERSION = "2026-07";
+const DEFAULT_NDA_DOCUMENT_NAME = LEGAL_AGREEMENTS.nda.name;
+const DEFAULT_NDA_DOCUMENT_URL = LEGAL_AGREEMENTS.nda.url;
+const DEFAULT_NDA_VERSION = LEGAL_AGREEMENTS.nda.version;
+const DEFAULT_TERMS_DOCUMENT_URL = LEGAL_AGREEMENTS.terms.url;
+const DEFAULT_TERMS_VERSION = LEGAL_AGREEMENTS.terms.version;
 
 type DatabasePortalStore = PortalStore;
 
@@ -89,14 +89,26 @@ type ApprovedVendorRow = {
   nda_signed_at: string | null;
   nda_document_name: string | null;
   nda_document_url: string | null;
+  nda_version: string | null;
+  nda_document_sha256: string | null;
+  nda_accepted_by: string | null;
+  nda_accepted_title: string | null;
+  nda_acceptance_ip: string | null;
+  nda_acceptance_user_agent: string | null;
+  nda_acceptance_text: string | null;
   signed_nda_file_name: string | null;
   signed_nda_file_url: string | null;
   signed_nda_blob_path: string | null;
   signed_nda_uploaded_at: string | null;
   terms_document_url: string | null;
   terms_version: string | null;
+  terms_document_sha256: string | null;
   terms_accepted_at: string | null;
   terms_accepted_by: string | null;
+  terms_accepted_title: string | null;
+  terms_acceptance_ip: string | null;
+  terms_acceptance_user_agent: string | null;
+  terms_acceptance_text: string | null;
   credentials_issued: boolean;
   credentials_issued_at: string | null;
   portal_access: ApprovedVendor["portalAccess"];
@@ -269,7 +281,7 @@ const seedStore: PortalStore = {
       vendorType: "Test vendor",
       primaryContactName: "Taylor Unsigned",
       primaryContactEmail: "unsigned.vendor@goaccess.com",
-      notes: "Test account for verifying the required NDA and Partner Terms gate.",
+      notes: "Test account for verifying the required NDA and Partner Agreement gate.",
       status: "nda_sent",
       ndaSentAt: "2026-07-12T12:00:00.000Z",
       createdAt: "2026-07-12T12:00:00.000Z",
@@ -292,6 +304,8 @@ const seedStore: PortalStore = {
       ndaSignedAt: "2026-02-27T13:00:00.000Z",
       ndaDocumentName: DEFAULT_NDA_DOCUMENT_NAME,
       ndaDocumentUrl: DEFAULT_NDA_DOCUMENT_URL,
+      ndaVersion: "legacy-prelaunch",
+      ndaAcceptedBy: "Jordan Lee",
       termsVersion: "legacy-prelaunch",
       termsAcceptedAt: "2026-02-27T13:00:00.000Z",
       termsAcceptedBy: "Jordan Lee",
@@ -324,6 +338,11 @@ const seedStore: PortalStore = {
       ndaSentAt: "2026-02-28T08:45:00.000Z",
       ndaDocumentName: DEFAULT_NDA_DOCUMENT_NAME,
       ndaDocumentUrl: DEFAULT_NDA_DOCUMENT_URL,
+      ndaVersion: DEFAULT_NDA_VERSION,
+      ndaDocumentSha256: LEGAL_AGREEMENTS.nda.sha256,
+      termsDocumentUrl: DEFAULT_TERMS_DOCUMENT_URL,
+      termsVersion: DEFAULT_TERMS_VERSION,
+      termsDocumentSha256: LEGAL_AGREEMENTS.terms.sha256,
       credentialsIssued: false,
       portalAccess: "not_ready",
       hubspotPartnerId: "GA-VENDOR-021",
@@ -346,8 +365,11 @@ const seedStore: PortalStore = {
       ndaSentAt: "2026-07-12T12:00:00.000Z",
       ndaDocumentName: DEFAULT_NDA_DOCUMENT_NAME,
       ndaDocumentUrl: DEFAULT_NDA_DOCUMENT_URL,
+      ndaVersion: DEFAULT_NDA_VERSION,
+      ndaDocumentSha256: LEGAL_AGREEMENTS.nda.sha256,
       termsDocumentUrl: DEFAULT_TERMS_DOCUMENT_URL,
       termsVersion: DEFAULT_TERMS_VERSION,
+      termsDocumentSha256: LEGAL_AGREEMENTS.terms.sha256,
       credentialsIssued: true,
       credentialsIssuedAt: "2026-07-12T12:00:00.000Z",
       portalAccess: "active",
@@ -610,15 +632,65 @@ function cloneSeedStore(): PortalStore {
 }
 
 function normalizeApprovedVendor(vendor: ApprovedVendor): ApprovedVendor {
-  if (vendor.termsAcceptedAt || vendor.ndaStatus !== "signed" || !vendor.credentialsIssued) {
-    return vendor;
+  const ndaVersion =
+    vendor.ndaVersion ?? (vendor.ndaStatus === "signed" ? "legacy-prelaunch" : DEFAULT_NDA_VERSION);
+  const termsVersion = vendor.termsVersion ?? DEFAULT_TERMS_VERSION;
+  const normalized: ApprovedVendor = {
+    ...vendor,
+    ndaDocumentName: DEFAULT_NDA_DOCUMENT_NAME,
+    ndaDocumentUrl: DEFAULT_NDA_DOCUMENT_URL,
+    ndaVersion,
+    ndaDocumentSha256:
+      vendor.ndaDocumentSha256 ??
+      (ndaVersion === DEFAULT_NDA_VERSION ? LEGAL_AGREEMENTS.nda.sha256 : undefined),
+    ndaAcceptedBy:
+      vendor.ndaAcceptedBy ??
+      (vendor.ndaStatus === "signed" ? vendor.primaryContactName : undefined),
+    termsDocumentUrl: DEFAULT_TERMS_DOCUMENT_URL,
+    termsVersion,
+    termsDocumentSha256:
+      vendor.termsDocumentSha256 ??
+      (termsVersion === DEFAULT_TERMS_VERSION ? LEGAL_AGREEMENTS.terms.sha256 : undefined),
+  };
+
+  if (vendor.id === "vendor-unsigned-demo" && vendor.ndaVersion !== DEFAULT_NDA_VERSION) {
+    return {
+      ...normalized,
+      ndaStatus: "sent",
+      ndaSignedAt: undefined,
+      ndaVersion: DEFAULT_NDA_VERSION,
+      ndaDocumentSha256: LEGAL_AGREEMENTS.nda.sha256,
+      ndaAcceptedBy: undefined,
+      ndaAcceptedTitle: undefined,
+      ndaAcceptanceIp: undefined,
+      ndaAcceptanceUserAgent: undefined,
+      ndaAcceptanceText: undefined,
+      termsVersion: DEFAULT_TERMS_VERSION,
+      termsDocumentSha256: LEGAL_AGREEMENTS.terms.sha256,
+      termsAcceptedAt: undefined,
+      termsAcceptedBy: undefined,
+      termsAcceptedTitle: undefined,
+      termsAcceptanceIp: undefined,
+      termsAcceptanceUserAgent: undefined,
+      termsAcceptanceText: undefined,
+    };
+  }
+
+  if (
+    normalized.termsAcceptedAt ||
+    normalized.ndaStatus !== "signed" ||
+    !normalized.credentialsIssued
+  ) {
+    return normalized;
   }
 
   return {
-    ...vendor,
-    termsVersion: vendor.termsVersion ?? "legacy-prelaunch",
-    termsAcceptedAt: vendor.ndaSignedAt ?? vendor.credentialsIssuedAt ?? vendor.updatedAt,
-    termsAcceptedBy: vendor.termsAcceptedBy ?? vendor.primaryContactName,
+    ...normalized,
+    termsVersion: "legacy-prelaunch",
+    termsDocumentSha256: undefined,
+    termsAcceptedAt:
+      normalized.ndaSignedAt ?? normalized.credentialsIssuedAt ?? normalized.updatedAt,
+    termsAcceptedBy: normalized.termsAcceptedBy ?? normalized.primaryContactName,
   };
 }
 
@@ -628,6 +700,9 @@ function normalizeStore(store: PortalStore | Partial<PortalStore>): PortalStore 
   const approvedVendors = [...(store.approvedVendors ?? seed.approvedVendors)];
   const unsignedApplication = seed.vendorApplications.find((item) => item.id === "app-unsigned-demo");
   const unsignedVendor = seed.approvedVendors.find((item) => item.id === "vendor-unsigned-demo");
+  const shouldResetUnsignedLegal = approvedVendors.some(
+    (item) => item.id === "vendor-unsigned-demo" && item.ndaVersion !== DEFAULT_NDA_VERSION
+  );
 
   if (unsignedApplication && !vendorApplications.some((item) => item.id === unsignedApplication.id)) {
     vendorApplications.push(unsignedApplication);
@@ -638,7 +713,16 @@ function normalizeStore(store: PortalStore | Partial<PortalStore>): PortalStore 
   }
 
   return {
-    vendorApplications,
+    vendorApplications: vendorApplications.map((application) =>
+      shouldResetUnsignedLegal && application.id === "app-unsigned-demo"
+        ? {
+            ...application,
+            status: "nda_sent",
+            ndaSignedAt: undefined,
+            updatedAt: nowIso(),
+          }
+        : application
+    ),
     approvedVendors: approvedVendors.map(normalizeApprovedVendor),
     deals: store.deals ?? seed.deals,
     syncEvents: store.syncEvents ?? seed.syncEvents,
@@ -715,14 +799,26 @@ function approvedVendorToRow(vendor: ApprovedVendor): ApprovedVendorRow {
     nda_signed_at: vendor.ndaSignedAt ?? null,
     nda_document_name: vendor.ndaDocumentName ?? null,
     nda_document_url: vendor.ndaDocumentUrl ?? null,
+    nda_version: vendor.ndaVersion ?? null,
+    nda_document_sha256: vendor.ndaDocumentSha256 ?? null,
+    nda_accepted_by: vendor.ndaAcceptedBy ?? null,
+    nda_accepted_title: vendor.ndaAcceptedTitle ?? null,
+    nda_acceptance_ip: vendor.ndaAcceptanceIp ?? null,
+    nda_acceptance_user_agent: vendor.ndaAcceptanceUserAgent ?? null,
+    nda_acceptance_text: vendor.ndaAcceptanceText ?? null,
     signed_nda_file_name: vendor.signedNdaFileName ?? null,
     signed_nda_file_url: vendor.signedNdaFileUrl ?? null,
     signed_nda_blob_path: vendor.signedNdaBlobPath ?? null,
     signed_nda_uploaded_at: vendor.signedNdaUploadedAt ?? null,
     terms_document_url: vendor.termsDocumentUrl ?? null,
     terms_version: vendor.termsVersion ?? null,
+    terms_document_sha256: vendor.termsDocumentSha256 ?? null,
     terms_accepted_at: vendor.termsAcceptedAt ?? null,
     terms_accepted_by: vendor.termsAcceptedBy ?? null,
+    terms_accepted_title: vendor.termsAcceptedTitle ?? null,
+    terms_acceptance_ip: vendor.termsAcceptanceIp ?? null,
+    terms_acceptance_user_agent: vendor.termsAcceptanceUserAgent ?? null,
+    terms_acceptance_text: vendor.termsAcceptanceText ?? null,
     credentials_issued: vendor.credentialsIssued,
     credentials_issued_at: vendor.credentialsIssuedAt ?? null,
     portal_access: vendor.portalAccess,
@@ -739,7 +835,7 @@ function approvedVendorToRow(vendor: ApprovedVendor): ApprovedVendorRow {
 }
 
 function rowToApprovedVendor(row: ApprovedVendorRow): ApprovedVendor {
-  return {
+  return normalizeApprovedVendor({
     id: row.id,
     applicationId: row.application_id,
     companyName: row.company_name,
@@ -756,14 +852,26 @@ function rowToApprovedVendor(row: ApprovedVendorRow): ApprovedVendor {
     ndaSignedAt: row.nda_signed_at ?? undefined,
     ndaDocumentName: row.nda_document_name ?? undefined,
     ndaDocumentUrl: row.nda_document_url ?? undefined,
+    ndaVersion: row.nda_version ?? undefined,
+    ndaDocumentSha256: row.nda_document_sha256 ?? undefined,
+    ndaAcceptedBy: row.nda_accepted_by ?? undefined,
+    ndaAcceptedTitle: row.nda_accepted_title ?? undefined,
+    ndaAcceptanceIp: row.nda_acceptance_ip ?? undefined,
+    ndaAcceptanceUserAgent: row.nda_acceptance_user_agent ?? undefined,
+    ndaAcceptanceText: row.nda_acceptance_text ?? undefined,
     signedNdaFileName: row.signed_nda_file_name ?? undefined,
     signedNdaFileUrl: row.signed_nda_file_url ?? undefined,
     signedNdaBlobPath: row.signed_nda_blob_path ?? undefined,
     signedNdaUploadedAt: row.signed_nda_uploaded_at ?? undefined,
     termsDocumentUrl: row.terms_document_url ?? undefined,
     termsVersion: row.terms_version ?? undefined,
+    termsDocumentSha256: row.terms_document_sha256 ?? undefined,
     termsAcceptedAt: row.terms_accepted_at ?? undefined,
     termsAcceptedBy: row.terms_accepted_by ?? undefined,
+    termsAcceptedTitle: row.terms_accepted_title ?? undefined,
+    termsAcceptanceIp: row.terms_acceptance_ip ?? undefined,
+    termsAcceptanceUserAgent: row.terms_acceptance_user_agent ?? undefined,
+    termsAcceptanceText: row.terms_acceptance_text ?? undefined,
     credentialsIssued: row.credentials_issued,
     credentialsIssuedAt: row.credentials_issued_at ?? undefined,
     portalAccess: row.portal_access,
@@ -776,7 +884,7 @@ function rowToApprovedVendor(row: ApprovedVendorRow): ApprovedVendor {
     hubspotPartnerId: row.hubspot_partner_id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-  };
+  });
 }
 
 function dealRegistrationToRow(deal: DealRegistration): DealRegistrationRow {
@@ -1513,72 +1621,155 @@ export async function getVendorByInviteToken(inviteToken: string) {
   return store.approvedVendors.find((item) => isActiveVendorInvite(item, inviteToken)) ?? null;
 }
 
-export async function acceptVendorTermsFromOnboarding(
+function normalizeLegalAcceptanceEvidence(evidence: LegalAcceptanceEvidence) {
+  const acceptedBy = evidence.acceptedBy.trim();
+  const acceptedTitle = evidence.acceptedTitle.trim();
+
+  if (!acceptedBy) {
+    throw new Error("Enter the full name of the person accepting the agreement.");
+  }
+
+  if (!acceptedTitle) {
+    throw new Error("Enter the title of the person accepting the agreement.");
+  }
+
+  if (acceptedBy.length > 120 || acceptedTitle.length > 120) {
+    throw new Error("Signer name and title must each be 120 characters or fewer.");
+  }
+
+  return {
+    acceptedBy,
+    acceptedTitle,
+    ipAddress: evidence.ipAddress.slice(0, 200),
+    userAgent: evidence.userAgent.slice(0, 1000),
+  };
+}
+
+function finalizeVendorLegalStatus(store: PortalStore, vendor: ApprovedVendor) {
+  if (vendor.ndaStatus !== "signed" || !vendor.termsAcceptedAt) {
+    return;
+  }
+
+  const application = store.vendorApplications.find((item) => item.id === vendor.applicationId);
+
+  if (application) {
+    application.status = vendor.credentialsIssued ? "credentials_issued" : "nda_signed";
+    application.ndaSignedAt = vendor.ndaSignedAt ?? application.ndaSignedAt ?? nowIso();
+    application.updatedAt = nowIso();
+  }
+
+  vendor.status = vendor.credentialsIssued ? "active" : "onboarding";
+}
+
+function recordVendorNdaAcceptance(
+  store: PortalStore,
+  vendor: ApprovedVendor,
+  evidence: LegalAcceptanceEvidence
+) {
+  const normalized = normalizeLegalAcceptanceEvidence(evidence);
+  const acceptedAt = vendor.ndaSignedAt ?? nowIso();
+
+  vendor.ndaStatus = "signed";
+  vendor.ndaSignedAt = acceptedAt;
+  vendor.ndaDocumentName = LEGAL_AGREEMENTS.nda.name;
+  vendor.ndaDocumentUrl = LEGAL_AGREEMENTS.nda.url;
+  vendor.ndaVersion = LEGAL_AGREEMENTS.nda.version;
+  vendor.ndaDocumentSha256 = LEGAL_AGREEMENTS.nda.sha256;
+  vendor.ndaAcceptedBy = vendor.ndaAcceptedBy ?? normalized.acceptedBy;
+  vendor.ndaAcceptedTitle = vendor.ndaAcceptedTitle ?? normalized.acceptedTitle;
+  vendor.ndaAcceptanceIp = vendor.ndaAcceptanceIp ?? normalized.ipAddress;
+  vendor.ndaAcceptanceUserAgent = vendor.ndaAcceptanceUserAgent ?? normalized.userAgent;
+  vendor.ndaAcceptanceText =
+    vendor.ndaAcceptanceText ?? LEGAL_AGREEMENTS.nda.acceptanceText;
+  vendor.updatedAt = nowIso();
+  finalizeVendorLegalStatus(store, vendor);
+  return vendor;
+}
+
+function recordVendorTermsAcceptance(
+  store: PortalStore,
+  vendor: ApprovedVendor,
+  evidence: LegalAcceptanceEvidence
+) {
+  const normalized = normalizeLegalAcceptanceEvidence(evidence);
+
+  vendor.termsDocumentUrl = LEGAL_AGREEMENTS.terms.url;
+  vendor.termsVersion = LEGAL_AGREEMENTS.terms.version;
+  vendor.termsDocumentSha256 = LEGAL_AGREEMENTS.terms.sha256;
+  vendor.termsAcceptedAt = vendor.termsAcceptedAt ?? nowIso();
+  vendor.termsAcceptedBy = vendor.termsAcceptedBy ?? normalized.acceptedBy;
+  vendor.termsAcceptedTitle = vendor.termsAcceptedTitle ?? normalized.acceptedTitle;
+  vendor.termsAcceptanceIp = vendor.termsAcceptanceIp ?? normalized.ipAddress;
+  vendor.termsAcceptanceUserAgent = vendor.termsAcceptanceUserAgent ?? normalized.userAgent;
+  vendor.termsAcceptanceText =
+    vendor.termsAcceptanceText ?? LEGAL_AGREEMENTS.terms.acceptanceText;
+  vendor.updatedAt = nowIso();
+  finalizeVendorLegalStatus(store, vendor);
+  return vendor;
+}
+
+export async function acceptVendorNdaFromOnboarding(
   inviteToken: string,
-  acceptedBy: string
+  evidence: LegalAcceptanceEvidence
 ) {
   const store = await readStore();
   const vendor = store.approvedVendors.find((item) => isActiveVendorInvite(item, inviteToken));
-  const normalizedAcceptedBy = acceptedBy.trim();
 
   if (!vendor) {
     throw new Error("Onboarding link is invalid or expired.");
   }
 
-  if (!normalizedAcceptedBy) {
-    throw new Error("Enter the name of the person accepting the Terms & Conditions.");
-  }
-
-  if (!vendor.termsDocumentUrl || !vendor.termsVersion) {
-    throw new Error("The current Vendor Terms & Conditions are not configured.");
-  }
-
-  vendor.termsAcceptedAt = vendor.termsAcceptedAt ?? nowIso();
-  vendor.termsAcceptedBy = vendor.termsAcceptedBy ?? normalizedAcceptedBy;
-  vendor.updatedAt = nowIso();
+  recordVendorNdaAcceptance(store, vendor, evidence);
   await writeStore(store);
   return vendor;
 }
 
-export async function acceptVendorTermsForVendor(vendorId: string, acceptedBy: string) {
+export async function acceptVendorNdaForVendor(
+  vendorId: string,
+  evidence: LegalAcceptanceEvidence
+) {
   const store = await readStore();
   const vendor = store.approvedVendors.find((item) => item.id === vendorId);
-  const normalizedAcceptedBy = acceptedBy.trim();
 
   if (!vendor) {
     throw new Error("Approved vendor not found.");
   }
 
-  if (!normalizedAcceptedBy) {
-    throw new Error("Enter the name of the person accepting the Terms & Conditions.");
-  }
-
-  if (!vendor.termsDocumentUrl || !vendor.termsVersion) {
-    throw new Error("The current Vendor Terms & Conditions are not configured.");
-  }
-
-  vendor.termsAcceptedAt = vendor.termsAcceptedAt ?? nowIso();
-  vendor.termsAcceptedBy = vendor.termsAcceptedBy ?? normalizedAcceptedBy;
-  vendor.updatedAt = nowIso();
+  recordVendorNdaAcceptance(store, vendor, evidence);
   await writeStore(store);
   return vendor;
 }
 
-export async function uploadSignedNdaFromOnboarding(
+export async function acceptVendorTermsFromOnboarding(
   inviteToken: string,
-  file: SignedNdaUploadInput
+  evidence: LegalAcceptanceEvidence
 ) {
-  const vendor = await getVendorByInviteToken(inviteToken);
+  const store = await readStore();
+  const vendor = store.approvedVendors.find((item) => isActiveVendorInvite(item, inviteToken));
 
   if (!vendor) {
     throw new Error("Onboarding link is invalid or expired.");
   }
 
-  if (vendor.ndaStatus !== "sent") {
-    throw new Error("The NDA is not currently awaiting a signed upload.");
+  recordVendorTermsAcceptance(store, vendor, evidence);
+  await writeStore(store);
+  return vendor;
+}
+
+export async function acceptVendorTermsForVendor(
+  vendorId: string,
+  evidence: LegalAcceptanceEvidence
+) {
+  const store = await readStore();
+  const vendor = store.approvedVendors.find((item) => item.id === vendorId);
+
+  if (!vendor) {
+    throw new Error("Approved vendor not found.");
   }
 
-  return uploadSignedNdaForVendor(vendor.id, file);
+  recordVendorTermsAcceptance(store, vendor, evidence);
+  await writeStore(store);
+  return vendor;
 }
 
 export async function getVendorByEmail(email: string) {
@@ -1626,15 +1817,24 @@ export function buildApplicationTimeline(
   if (application.ndaSentAt) {
     entries.push({
       title: "Legal onboarding sent",
-      detail: "The vendor received the secure NDA and Partner Terms checklist.",
+      detail: "The vendor received the secure NDA and Partner Agreement checklist.",
       timestamp: application.ndaSentAt,
       tone: "warning",
     });
   }
 
+  if (vendor?.ndaSignedAt) {
+    entries.push({
+      title: "Mutual NDA accepted",
+      detail: `${vendor.ndaAcceptedBy ?? vendor.primaryContactName} accepted version ${vendor.ndaVersion ?? "current"}.`,
+      timestamp: vendor.ndaSignedAt,
+      tone: "success",
+    });
+  }
+
   if (vendor?.termsAcceptedAt) {
     entries.push({
-      title: "Partner Terms accepted",
+      title: "Partner Agreement accepted",
       detail: `${vendor.termsAcceptedBy ?? vendor.primaryContactName} accepted version ${vendor.termsVersion ?? "current"}.`,
       timestamp: vendor.termsAcceptedAt,
       tone: "success",
@@ -1643,8 +1843,8 @@ export function buildApplicationTimeline(
 
   if (application.ndaSignedAt) {
     entries.push({
-      title: "NDA completed",
-      detail: "The signed NDA was confirmed and legal onboarding is complete.",
+      title: "Legal onboarding complete",
+      detail: "Both click-through agreements were accepted and recorded.",
       timestamp: application.ndaSignedAt,
       tone: "success",
     });
@@ -1754,14 +1954,13 @@ function buildInviteToken(companyName: string) {
 }
 
 function getNdaDocumentUrl() {
-  return process.env.GOACCESS_NDA_DOCUMENT_URL?.trim() || DEFAULT_NDA_DOCUMENT_URL;
+  return DEFAULT_NDA_DOCUMENT_URL;
 }
 
 export function getVendorTermsConfig() {
   return {
-    documentUrl:
-      process.env.GOACCESS_TERMS_DOCUMENT_URL?.trim() || DEFAULT_TERMS_DOCUMENT_URL,
-    version: process.env.GOACCESS_TERMS_VERSION?.trim() || DEFAULT_TERMS_VERSION,
+    documentUrl: DEFAULT_TERMS_DOCUMENT_URL,
+    version: DEFAULT_TERMS_VERSION,
   };
 }
 
@@ -1930,22 +2129,22 @@ export async function updateVendorApplicationStatus(
   }
 
   if (nextStatus === "nda_signed") {
-    if (!vendor?.signedNdaUploadedAt) {
-      throw new Error("The vendor must upload the signed NDA before it can be confirmed.");
+    if (vendor?.ndaStatus !== "signed" && !vendor?.signedNdaUploadedAt) {
+      throw new Error("The vendor must accept the NDA before legal onboarding can continue.");
     }
 
     if (!vendor.termsAcceptedAt) {
-      throw new Error("The vendor must accept the Terms & Conditions before onboarding can continue.");
+      throw new Error("The vendor must accept the Partner Agreement before onboarding can continue.");
     }
   }
 
   if (nextStatus === "credentials_issued") {
     if (vendor?.ndaStatus !== "signed") {
-      throw new Error("Confirm the signed NDA before issuing portal access.");
+      throw new Error("NDA acceptance is required before issuing portal access.");
     }
 
     if (!vendor.termsAcceptedAt) {
-      throw new Error("Terms & Conditions acceptance is required before issuing portal access.");
+      throw new Error("Partner Agreement acceptance is required before issuing portal access.");
     }
   }
 
@@ -1987,8 +2186,8 @@ export async function updateVendorApplicationStatus(
           subject: "Your GoAccess vendor application has been approved",
           category: "application_approved",
           reference: vendor.hubspotPartnerId,
-          text: `Hi ${application.primaryContactName},\n\nYour company ${application.companyName} has been approved as a GoAccess vendor candidate. The next step is NDA review.\n\nVendor ID: ${vendor.hubspotPartnerId}\n\nGoAccess`,
-          html: `<p>Hi ${escapeHtml(application.primaryContactName)},</p><p>Your company <strong>${escapeHtml(application.companyName)}</strong> has been approved as a GoAccess vendor candidate. The next step is NDA review.</p><p><strong>Vendor ID:</strong> ${escapeHtml(vendor.hubspotPartnerId)}</p><p>GoAccess</p>`,
+          text: `Hi ${application.primaryContactName},\n\nYour company ${application.companyName} has been approved as a GoAccess vendor candidate. The next step is to review and accept the legal agreements.\n\nVendor ID: ${vendor.hubspotPartnerId}\n\nGoAccess`,
+          html: `<p>Hi ${escapeHtml(application.primaryContactName)},</p><p>Your company <strong>${escapeHtml(application.companyName)}</strong> has been approved as a GoAccess vendor candidate. The next step is to review and accept the legal agreements.</p><p><strong>Vendor ID:</strong> ${escapeHtml(vendor.hubspotPartnerId)}</p><p>GoAccess</p>`,
         })
       );
     }
@@ -2002,8 +2201,11 @@ export async function updateVendorApplicationStatus(
       vendor.ndaSentAt = nowIso();
       vendor.ndaDocumentName = DEFAULT_NDA_DOCUMENT_NAME;
       vendor.ndaDocumentUrl = getNdaDocumentUrl();
+      vendor.ndaVersion = DEFAULT_NDA_VERSION;
+      vendor.ndaDocumentSha256 = LEGAL_AGREEMENTS.nda.sha256;
       vendor.termsDocumentUrl = termsConfig.documentUrl;
       vendor.termsVersion = termsConfig.version;
+      vendor.termsDocumentSha256 = LEGAL_AGREEMENTS.terms.sha256;
       vendor.inviteToken = onboardingToken;
       vendor.inviteSentAt = vendor.ndaSentAt;
       application.ndaSentAt = vendor.ndaSentAt;
@@ -2012,21 +2214,21 @@ export async function updateVendorApplicationStatus(
           applicationId: application.id,
           vendorId: vendor.id,
           recipientEmail: application.primaryContactEmail,
-          subject: "Complete your GoAccess NDA and Vendor Terms",
+          subject: "Complete your GoAccess NDA and Partner Agreement",
           category: "nda_sent",
           reference: onboardingUrl,
           replyTo: "support@goaccess.com",
           text:
             `Hi ${application.primaryContactName},\n\n` +
             "Thank you for your interest in partnering with GoAccess.\n\n" +
-            "Your next step is to complete the NDA and accept the current Vendor Terms & Conditions.\n\n" +
+            "Your next step is to review and accept the Mutual NDA and Partner Agreement.\n\n" +
             "Open your secure onboarding checklist here:\n" +
             `${onboardingUrl}\n\n` +
             "GoAccess",
           html:
             `<p>Hi ${escapeHtml(application.primaryContactName)},</p>` +
             "<p>Thank you for your interest in partnering with GoAccess.</p>" +
-            "<p>Your next step is to complete the NDA and accept the current Vendor Terms &amp; Conditions.</p>" +
+            "<p>Your next step is to review and accept the Mutual NDA and Partner Agreement.</p>" +
             `<p><a href="${escapeHtml(onboardingUrl)}">Open your secure onboarding checklist</a></p>` +
             "<p>GoAccess</p>",
         })
@@ -2036,7 +2238,7 @@ export async function updateVendorApplicationStatus(
     if (nextStatus === "nda_signed") {
       vendor.status = "onboarding";
       vendor.ndaStatus = "signed";
-      vendor.ndaSignedAt = nowIso();
+      vendor.ndaSignedAt = vendor.ndaSignedAt ?? nowIso();
       application.ndaSignedAt = vendor.ndaSignedAt;
     }
 
@@ -2102,8 +2304,13 @@ export async function reissueVendorInvite(applicationId: string) {
 
     vendor.inviteToken = inviteToken;
     vendor.inviteSentAt = sentAt;
+    vendor.ndaDocumentName = LEGAL_AGREEMENTS.nda.name;
+    vendor.ndaDocumentUrl = LEGAL_AGREEMENTS.nda.url;
+    vendor.ndaVersion = LEGAL_AGREEMENTS.nda.version;
+    vendor.ndaDocumentSha256 = LEGAL_AGREEMENTS.nda.sha256;
     vendor.termsDocumentUrl = termsConfig.documentUrl;
     vendor.termsVersion = termsConfig.version;
+    vendor.termsDocumentSha256 = LEGAL_AGREEMENTS.terms.sha256;
     vendor.updatedAt = sentAt;
 
     store.notifications.unshift(
@@ -2114,8 +2321,8 @@ export async function reissueVendorInvite(applicationId: string) {
         subject: "Your GoAccess legal onboarding link",
         category: "nda_sent",
         reference: onboardingUrl,
-        text: `Hi ${application.primaryContactName},\n\nContinue your GoAccess NDA and Partner Terms onboarding here:\n${onboardingUrl}\n\nThis secure link expires after seven days.\n\nGoAccess`,
-        html: `<p>Hi ${escapeHtml(application.primaryContactName)},</p><p>Continue your GoAccess NDA and Partner Terms onboarding here:</p><p><a href="${escapeHtml(onboardingUrl)}">Open legal onboarding</a></p><p>This secure link expires after seven days.</p><p>GoAccess</p>`,
+        text: `Hi ${application.primaryContactName},\n\nContinue your GoAccess NDA and Partner Agreement onboarding here:\n${onboardingUrl}\n\nThis secure link expires after seven days.\n\nGoAccess`,
+        html: `<p>Hi ${escapeHtml(application.primaryContactName)},</p><p>Continue your GoAccess NDA and Partner Agreement onboarding here:</p><p><a href="${escapeHtml(onboardingUrl)}">Open legal onboarding</a></p><p>This secure link expires after seven days.</p><p>GoAccess</p>`,
       })
     );
 
@@ -2258,7 +2465,7 @@ export async function submitDealForVendor(vendorId: string, input: CreateDealInp
     !vendor.termsAcceptedAt
   ) {
     throw new Error(
-      "Complete the NDA and Terms & Conditions before registering a deal."
+      "Accept the NDA and Partner Agreement before registering a deal."
     );
   }
 

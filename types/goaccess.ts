@@ -82,14 +82,26 @@ export type ApprovedVendor = {
   ndaSignedAt?: string;
   ndaDocumentName?: string;
   ndaDocumentUrl?: string;
+  ndaVersion?: string;
+  ndaDocumentSha256?: string;
+  ndaAcceptedBy?: string;
+  ndaAcceptedTitle?: string;
+  ndaAcceptanceIp?: string;
+  ndaAcceptanceUserAgent?: string;
+  ndaAcceptanceText?: string;
   signedNdaFileName?: string;
   signedNdaFileUrl?: string;
   signedNdaBlobPath?: string;
   signedNdaUploadedAt?: string;
   termsDocumentUrl?: string;
   termsVersion?: string;
+  termsDocumentSha256?: string;
   termsAcceptedAt?: string;
   termsAcceptedBy?: string;
+  termsAcceptedTitle?: string;
+  termsAcceptanceIp?: string;
+  termsAcceptanceUserAgent?: string;
+  termsAcceptanceText?: string;
   credentialsIssued: boolean;
   credentialsIssuedAt?: string;
   portalAccess: "not_ready" | "invited" | "active";
@@ -106,7 +118,13 @@ export type ApprovedVendor = {
 
 export type ClientApprovedVendor = Omit<
   ApprovedVendor,
-  "inviteToken" | "passwordSalt" | "passwordHash"
+  | "inviteToken"
+  | "passwordSalt"
+  | "passwordHash"
+  | "ndaAcceptanceIp"
+  | "ndaAcceptanceUserAgent"
+  | "termsAcceptanceIp"
+  | "termsAcceptanceUserAgent"
 >;
 
 export type DealRegistration = {

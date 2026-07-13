@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
 import { requireVendorRouteAccess } from "@/lib/auth-guards";
 import { toClientApprovedVendor } from "@/lib/goaccess-client-data";
-import { getVendorById, uploadSignedNdaForVendor } from "@/lib/goaccess-store";
+import { getVendorById, acceptVendorNdaForVendor } from "@/lib/goaccess-store";
+import { getLegalAcceptanceRequestEvidence } from "@/lib/legal-agreements";
+import { checkRateLimit } from "@/lib/rate-limit";
+
+type NdaAcceptancePayload = {
+  accepted?: boolean;
+  acceptedBy?: string;
+  acceptedTitle?: string;
+};
 
 export async function GET() {
   const auth = await requireVendorRouteAccess();
@@ -22,6 +30,12 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const rateLimit = checkRateLimit(request, "vendor-nda-acceptance", 8, 15 * 60 * 1000);
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json({ message: "Too many NDA acceptance attempts. Try again shortly." }, { status: 429 });
+  }
+
   const auth = await requireVendorRouteAccess();
 
   if (auth.error) {
@@ -30,31 +44,36 @@ export async function POST(request: Request) {
 
   const session = auth.session;
 
-  const formData = await request.formData();
-  const ndaFile = formData.get("signedNda");
+  let body: NdaAcceptancePayload;
 
-  if (!(ndaFile instanceof File)) {
-    return NextResponse.json({ message: "Choose the signed NDA file to upload." }, { status: 400 });
+  try {
+    body = (await request.json()) as NdaAcceptancePayload;
+  } catch {
+    return NextResponse.json({ message: "Invalid NDA acceptance payload." }, { status: 400 });
+  }
+
+  if (body.accepted !== true) {
+    return NextResponse.json(
+      { message: "Confirm that you have read and agree to the GoAccess Mutual NDA." },
+      { status: 400 }
+    );
   }
 
   try {
-    const result = await uploadSignedNdaForVendor(session.vendorId, {
-      fileName: ndaFile.name,
-      contentType: ndaFile.type,
-      size: ndaFile.size,
-      bytes: new Uint8Array(await ndaFile.arrayBuffer()),
+    const vendor = await acceptVendorNdaForVendor(session.vendorId, {
+      acceptedBy: body.acceptedBy ?? "",
+      acceptedTitle: body.acceptedTitle ?? "",
+      ...getLegalAcceptanceRequestEvidence(request),
     });
-    const vendor = await getVendorById(session.vendorId);
 
     return NextResponse.json({
       ok: true,
-      vendor: vendor ? toClientApprovedVendor(vendor) : null,
-      result,
-      message: "Signed NDA uploaded. GoAccess will review it before unlocking full portal access.",
+      vendor: toClientApprovedVendor(vendor),
+      message: "Mutual NDA accepted and recorded.",
     });
   } catch (error) {
     return NextResponse.json(
-      { message: error instanceof Error ? error.message : "Unable to upload signed NDA." },
+      { message: error instanceof Error ? error.message : "Unable to record NDA acceptance." },
       { status: 400 }
     );
   }
