@@ -114,6 +114,10 @@ export type ApprovedVendor = {
   passwordHash?: string;
   passwordConfiguredAt?: string;
   hubspotPartnerId: string;
+  hubspotCompanyId?: string;
+  hubspotCompanySyncStatus: "not_started" | "synced" | "held" | "failed";
+  hubspotCompanySyncReference?: string;
+  hubspotCompanySyncedAt?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -127,7 +131,14 @@ export type ClientApprovedVendor = Omit<
   | "ndaAcceptanceUserAgent"
   | "termsAcceptanceIp"
   | "termsAcceptanceUserAgent"
->;
+  | "hubspotPartnerId"
+  | "hubspotCompanyId"
+  | "hubspotCompanySyncStatus"
+  | "hubspotCompanySyncReference"
+  | "hubspotCompanySyncedAt"
+> & {
+  vendorCode: string;
+};
 
 export type DealRegistration = {
   id: string;

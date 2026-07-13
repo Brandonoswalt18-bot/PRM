@@ -6,9 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint app components data lib types tests middleware.ts next.config.ts playwright.config.ts --ext .js,.jsx,.ts,.tsx --max-warnings=0",
+    "lint": "eslint app components data lib types tests middleware.ts next.config.ts playwright.config.ts playwright.email.config.ts playwright.hubspot.config.ts --ext .js,.jsx,.ts,.tsx --max-warnings=0",
     "typecheck": "tsc --noEmit --incremental false --pretty false",
     "check": "pnpm run lint && pnpm run typecheck && pnpm run build",
+    "test:email": "playwright test --config=playwright.email.config.ts",
+    "test:hubspot": "playwright test --config=playwright.hubspot.config.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

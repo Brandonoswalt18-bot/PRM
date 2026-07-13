@@ -31,6 +31,7 @@ export default defineConfig({
       GOACCESS_ADMIN_PASSWORD: "goaccess-admin-demo",
       GOACCESS_STORE_PATH: isolatedStorePath,
       GOACCESS_PORTAL_BASE_URL: `http://127.0.0.1:${port}`,
+      GOACCESS_APPLICATION_NOTIFICATION_EMAIL: "internal-privacy-sentinel@goaccess.example",
       SUPABASE_URL: "",
       SUPABASE_SERVICE_ROLE_KEY: "",
       BLOB_READ_WRITE_TOKEN: "",

@@ -7,7 +7,10 @@ import type {
 } from "@/types/goaccess";
 
 export function toClientApprovedVendor(vendor: ApprovedVendor): ClientApprovedVendor {
-  const clientVendor = { ...vendor };
+  const clientVendor = {
+    ...vendor,
+    vendorCode: vendor.hubspotPartnerId,
+  } as Partial<ApprovedVendor> & { vendorCode: string };
   delete clientVendor.inviteToken;
   delete clientVendor.passwordSalt;
   delete clientVendor.passwordHash;
@@ -15,8 +18,13 @@ export function toClientApprovedVendor(vendor: ApprovedVendor): ClientApprovedVe
   delete clientVendor.ndaAcceptanceUserAgent;
   delete clientVendor.termsAcceptanceIp;
   delete clientVendor.termsAcceptanceUserAgent;
+  delete clientVendor.hubspotPartnerId;
+  delete clientVendor.hubspotCompanyId;
+  delete clientVendor.hubspotCompanySyncStatus;
+  delete clientVendor.hubspotCompanySyncReference;
+  delete clientVendor.hubspotCompanySyncedAt;
 
-  return clientVendor;
+  return clientVendor as ClientApprovedVendor;
 }
 
 export function toClientApprovedVendors(

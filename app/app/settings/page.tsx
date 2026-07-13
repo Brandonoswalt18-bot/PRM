@@ -2,31 +2,13 @@ import { AdminSupportManager } from "@/components/product/admin-support-manager"
 import { MetricGrid } from "@/components/product/product-page-sections";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { toClientApprovedVendors } from "@/lib/goaccess-client-data";
+import { getVendorEmailReadiness } from "@/lib/email";
 import { getHubSpotDealSyncConfig, getHubSpotLeadRoutingConfig } from "@/lib/hubspot";
 import {
   listApprovedVendors,
   listSupportRequests,
   listVendorNotifications,
 } from "@/lib/goaccess-store";
-
-function getEmailReadiness() {
-  const missingEnvVars = ["RESEND_API_KEY", "EMAIL_FROM_ADDRESS"].filter(
-    (key) => !process.env[key]?.trim()
-  );
-
-  return {
-    enabled: missingEnvVars.length === 0,
-    missingEnvVars,
-    fromAddress: process.env.EMAIL_FROM_ADDRESS?.trim() || null,
-    portalNotifications:
-      process.env.GOACCESS_APPLICATION_NOTIFICATION_EMAIL?.trim() || null,
-    dealNotifications:
-      process.env.GOACCESS_DEAL_NOTIFICATION_EMAIL?.trim() ||
-      process.env.GOACCESS_APPLICATION_NOTIFICATION_EMAIL?.trim() ||
-      process.env.GOACCESS_ADMIN_EMAIL?.trim() ||
-      "maya@goaccess.com",
-  };
-}
 
 type VendorSettingsPageProps = {
   searchParams?: Promise<{
@@ -44,7 +26,7 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
   ]);
   const hubspotDealSyncConfig = getHubSpotDealSyncConfig();
   const hubspotLeadRoutingConfig = getHubSpotLeadRoutingConfig();
-  const emailReadiness = getEmailReadiness();
+  const emailReadiness = getVendorEmailReadiness();
   const activeQueue =
     params.queue === "open" || params.queue === "in_progress" || params.queue === "resolved"
       ? params.queue
@@ -83,9 +65,9 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
       delta: "Email delivery failures still visible in the queue",
     },
     {
-      label: "Sent emails",
+      label: "Provider-accepted emails",
       value: String(notifications.filter((item) => item.status === "sent").length),
-      delta: "Workflow messages successfully delivered",
+      delta: "Workflow messages accepted by Resend",
     },
   ];
 
@@ -118,9 +100,9 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
             <ul>
               <li>
                 Delivery:{" "}
-                {emailReadiness.enabled
-                  ? "env configured"
-                  : `missing ${emailReadiness.missingEnvVars.join(", ")}`}
+                {emailReadiness.ready
+                  ? "sender configuration valid"
+                  : emailReadiness.issues.join(" ")}
               </li>
               <li>
                 Sender:{" "}
@@ -131,11 +113,15 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
                 {emailReadiness.portalNotifications ??
                   "GOACCESS_APPLICATION_NOTIFICATION_EMAIL not set"}
               </li>
-              <li>Deal submission alerts: {emailReadiness.dealNotifications}</li>
+              <li>
+                Deal submission alerts:{" "}
+                {emailReadiness.dealNotifications ??
+                  "GOACCESS_DEAL_NOTIFICATION_EMAIL and fallback recipients not set"}
+              </li>
               <li>Workflow emails still require the GoAccess sender domain to be verified in Resend before real external delivery will work.</li>
-              <li>Resend test-mode senders only deliver to the account owner until domain verification is complete.</li>
+              <li>Production refuses Resend test-mode senders; use a verified custom-domain mailbox.</li>
               <li>{notifications.filter((item) => item.status === "failed").length} delivery failures are still visible.</li>
-              <li>{notifications.filter((item) => item.status === "sent").length} workflow emails have been sent successfully.</li>
+              <li>{notifications.filter((item) => item.status === "sent").length} workflow emails were accepted by Resend.</li>
             </ul>
           </article>
           <article className="workspace-card">

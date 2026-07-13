@@ -122,6 +122,10 @@ type ApprovedVendorRow = {
   password_hash: string | null;
   password_configured_at: string | null;
   hubspot_partner_id: string;
+  hubspot_company_id: string | null;
+  hubspot_company_sync_status: ApprovedVendor["hubspotCompanySyncStatus"];
+  hubspot_company_sync_reference: string | null;
+  hubspot_company_synced_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -338,6 +342,7 @@ const seedStore: PortalStore = {
         "d54a2fa06254bb3b1d9558981f518939c8cf9d56d848a48bebe46f4f7015c6673cfd33d2fce60cd267694d038f36a3673fb1e51b50839cacae9192f49ee05dcb",
       passwordConfiguredAt: "2026-02-27T15:05:00.000Z",
       hubspotPartnerId: "GA-VENDOR-018",
+      hubspotCompanySyncStatus: "not_started",
       createdAt: "2026-02-20T12:00:00.000Z",
       updatedAt: "2026-02-27T13:20:00.000Z",
     },
@@ -363,6 +368,7 @@ const seedStore: PortalStore = {
       credentialsIssued: false,
       portalAccess: "not_ready",
       hubspotPartnerId: "GA-VENDOR-021",
+      hubspotCompanySyncStatus: "not_started",
       createdAt: "2026-02-27T14:10:00.000Z",
       updatedAt: "2026-02-28T08:45:00.000Z",
     },
@@ -397,6 +403,7 @@ const seedStore: PortalStore = {
         "d9d3e2eeb75e5d0a7ba436aee09020a1e8454973c781832dc87b10f4445bfa901a23f7373843690c16004705c83d040dff1983cdeb4c665230472280934176aa",
       passwordConfiguredAt: "2026-07-12T12:00:00.000Z",
       hubspotPartnerId: "GA-VENDOR-TEST-001",
+      hubspotCompanySyncStatus: "not_started",
       createdAt: "2026-07-12T12:00:00.000Z",
       updatedAt: "2026-07-12T12:00:00.000Z",
     },
@@ -655,6 +662,8 @@ function normalizeApprovedVendor(vendor: ApprovedVendor): ApprovedVendor {
   const termsVersion = vendor.termsVersion ?? DEFAULT_TERMS_VERSION;
   const normalized: ApprovedVendor = {
     ...vendor,
+    hubspotCompanySyncStatus:
+      vendor.hubspotCompanySyncStatus ?? (vendor.hubspotCompanyId ? "synced" : "not_started"),
     ndaDocumentName: DEFAULT_NDA_DOCUMENT_NAME,
     ndaDocumentUrl: DEFAULT_NDA_DOCUMENT_URL,
     ndaVersion,
@@ -851,6 +860,10 @@ function approvedVendorToRow(vendor: ApprovedVendor): ApprovedVendorRow {
     password_hash: vendor.passwordHash ?? null,
     password_configured_at: vendor.passwordConfiguredAt ?? null,
     hubspot_partner_id: vendor.hubspotPartnerId,
+    hubspot_company_id: vendor.hubspotCompanyId ?? null,
+    hubspot_company_sync_status: vendor.hubspotCompanySyncStatus,
+    hubspot_company_sync_reference: vendor.hubspotCompanySyncReference ?? null,
+    hubspot_company_synced_at: vendor.hubspotCompanySyncedAt ?? null,
     created_at: vendor.createdAt,
     updated_at: vendor.updatedAt,
   };
@@ -904,6 +917,10 @@ function rowToApprovedVendor(row: ApprovedVendorRow): ApprovedVendor {
     passwordHash: row.password_hash ?? undefined,
     passwordConfiguredAt: row.password_configured_at ?? undefined,
     hubspotPartnerId: row.hubspot_partner_id,
+    hubspotCompanyId: row.hubspot_company_id ?? undefined,
+    hubspotCompanySyncStatus: row.hubspot_company_sync_status ?? "not_started",
+    hubspotCompanySyncReference: row.hubspot_company_sync_reference ?? undefined,
+    hubspotCompanySyncedAt: row.hubspot_company_synced_at ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   });
@@ -1651,6 +1668,46 @@ export async function listApprovedVendors() {
   return [...store.approvedVendors].sort((a, b) => a.companyName.localeCompare(b.companyName));
 }
 
+export async function recordVendorHubSpotCompanySync(
+  vendorId: string,
+  input: {
+    status: "synced" | "held" | "failed";
+    companyId?: string;
+    reference: string;
+  }
+) {
+  const store = await readStore();
+  const vendor = store.approvedVendors.find((item) => item.id === vendorId);
+
+  if (!vendor) {
+    throw new Error("Approved vendor not found.");
+  }
+
+  if (
+    input.companyId &&
+    vendor.hubspotCompanyId &&
+    vendor.hubspotCompanyId !== input.companyId
+  ) {
+    throw new Error(
+      `Vendor ${vendor.id} is already linked to HubSpot company ${vendor.hubspotCompanyId}.`
+    );
+  }
+
+  if (input.status === "synced" && !(input.companyId || vendor.hubspotCompanyId)) {
+    throw new Error("A HubSpot company ID is required to record a successful vendor sync.");
+  }
+
+  const timestamp = nowIso();
+  vendor.hubspotCompanyId = input.companyId ?? vendor.hubspotCompanyId;
+  vendor.hubspotCompanySyncStatus = input.status;
+  vendor.hubspotCompanySyncReference = input.reference;
+  vendor.hubspotCompanySyncedAt = input.status === "synced" ? timestamp : vendor.hubspotCompanySyncedAt;
+  vendor.updatedAt = timestamp;
+
+  await writeStore(store);
+  return vendor;
+}
+
 export async function listDeals(vendorId?: string) {
   const store = await readStore();
   const deals = vendorId ? store.deals.filter((deal) => deal.vendorId === vendorId) : store.deals;
@@ -2083,6 +2140,7 @@ async function recordWorkflowEmail(input: {
   text: string;
   html: string;
   replyTo?: string;
+  idempotencyKey: string;
 }) {
   const result = await sendVendorEmail({
     to: input.recipientEmail,
@@ -2090,6 +2148,7 @@ async function recordWorkflowEmail(input: {
     text: input.text,
     html: input.html,
     replyTo: input.replyTo,
+    idempotencyKey: input.idempotencyKey,
   });
 
   return buildNotification({
@@ -2148,6 +2207,7 @@ export async function submitVendorApplication(input: CreateVendorApplicationInpu
     recipientEmail: application.primaryContactEmail,
     subject: "We received your GoAccess vendor application",
     category: "application_received",
+    idempotencyKey: `application-${application.id}-received`,
     reference: application.companyName,
     text: `Hi ${application.primaryContactName},\n\nWe received your GoAccess vendor application for ${application.companyName}. Our team will review it and follow up with next steps.\n\nGoAccess`,
     html: `<p>Hi ${escapeHtml(application.primaryContactName)},</p><p>We received your GoAccess vendor application for <strong>${escapeHtml(application.companyName)}</strong>. Our team will review it and follow up with next steps.</p><p>GoAccess</p>`,
@@ -2164,6 +2224,7 @@ export async function submitVendorApplication(input: CreateVendorApplicationInpu
       recipientEmail: internalRecipients,
       subject: `New GoAccess vendor application: ${application.companyName}`,
       category: "application_internal_alert",
+      idempotencyKey: `application-${application.id}-internal-alert`,
       reference: application.primaryContactEmail,
       text: [
         "A new GoAccess vendor application was submitted.",
@@ -2268,6 +2329,7 @@ export async function updateVendorApplicationStatus(
       credentialsIssued: false,
       portalAccess: "not_ready",
       hubspotPartnerId: `GA-VENDOR-${String(store.approvedVendors.length + 19).padStart(3, "0")}`,
+      hubspotCompanySyncStatus: "not_started",
       createdAt: nowIso(),
       updatedAt: nowIso(),
     };
@@ -2284,6 +2346,7 @@ export async function updateVendorApplicationStatus(
           recipientEmail: application.primaryContactEmail,
           subject: "Your GoAccess vendor application has been approved",
           category: "application_approved",
+          idempotencyKey: `application-${application.id}-approved`,
           reference: vendor.hubspotPartnerId,
           text: `Hi ${application.primaryContactName},\n\nYour company ${application.companyName} has been approved as a GoAccess vendor candidate. The next step is to review and accept the legal agreements.\n\nVendor ID: ${vendor.hubspotPartnerId}\n\nGoAccess`,
           html: `<p>Hi ${escapeHtml(application.primaryContactName)},</p><p>Your company <strong>${escapeHtml(application.companyName)}</strong> has been approved as a GoAccess vendor candidate. The next step is to review and accept the legal agreements.</p><p><strong>Vendor ID:</strong> ${escapeHtml(vendor.hubspotPartnerId)}</p><p>GoAccess</p>`,
@@ -2315,6 +2378,7 @@ export async function updateVendorApplicationStatus(
           recipientEmail: application.primaryContactEmail,
           subject: "Complete your GoAccess NDA and Partner Agreement",
           category: "nda_sent",
+          idempotencyKey: `application-${application.id}-nda-${onboardingToken}`,
           reference: onboardingUrl,
           replyTo: "support@goaccess.com",
           text:
@@ -2358,6 +2422,7 @@ export async function updateVendorApplicationStatus(
           recipientEmail: application.primaryContactEmail,
           subject: "Your GoAccess vendor portal credentials are ready",
           category: "credentials_issued",
+          idempotencyKey: `application-${application.id}-credentials-${vendor.inviteToken}`,
           reference: inviteUrl,
           text: `Hi ${application.primaryContactName},\n\nYour GoAccess vendor portal access is ready.\n\nActivate your account here:\n${inviteUrl}\n\nAfter logging in, you can complete your vendor profile and register deals.\n\nGoAccess`,
           html: `<p>Hi ${escapeHtml(application.primaryContactName)},</p><p>Your GoAccess vendor portal access is ready.</p><p><a href="${escapeHtml(inviteUrl)}">Activate your account</a></p><p>After logging in, you can complete your vendor profile and register deals.</p><p>GoAccess</p>`,
@@ -2419,6 +2484,7 @@ export async function reissueVendorInvite(applicationId: string) {
         recipientEmail: application.primaryContactEmail,
         subject: "Your GoAccess legal onboarding link",
         category: "nda_sent",
+        idempotencyKey: `application-${application.id}-nda-${inviteToken}`,
         reference: onboardingUrl,
         text: `Hi ${application.primaryContactName},\n\nContinue your GoAccess NDA and Partner Agreement onboarding here:\n${onboardingUrl}\n\nThis secure link expires after seven days.\n\nGoAccess`,
         html: `<p>Hi ${escapeHtml(application.primaryContactName)},</p><p>Continue your GoAccess NDA and Partner Agreement onboarding here:</p><p><a href="${escapeHtml(onboardingUrl)}">Open legal onboarding</a></p><p>This secure link expires after seven days.</p><p>GoAccess</p>`,
@@ -2454,6 +2520,7 @@ export async function reissueVendorInvite(applicationId: string) {
       recipientEmail: application.primaryContactEmail,
       subject: "Your GoAccess vendor portal credentials are ready",
       category: "credentials_issued",
+      idempotencyKey: `application-${application.id}-credentials-${inviteToken}`,
       reference: inviteUrl,
       text: `Hi ${application.primaryContactName},\n\nYour GoAccess vendor portal access has been reissued.\n\nActivate your account here:\n${inviteUrl}\n\nAfter logging in, you can complete your vendor profile and register deals.\n\nGoAccess`,
       html: `<p>Hi ${escapeHtml(application.primaryContactName)},</p><p>Your GoAccess vendor portal access has been reissued.</p><p><a href="${escapeHtml(inviteUrl)}">Activate your account</a></p><p>After logging in, you can complete your vendor profile and register deals.</p><p>GoAccess</p>`,
@@ -2615,9 +2682,11 @@ export async function submitDealForVendor(vendorId: string, input: CreateDealInp
     try {
       notification = await recordWorkflowEmail({
         vendorId: vendor.id,
+        dealId: deal.id,
         recipientEmail: internalRecipients,
         subject: `New deal registration: ${deal.companyName}`,
         category: "deal_internal_alert",
+        idempotencyKey: `deal-${deal.id}-internal-alert`,
         reference: reviewUrl,
         replyTo: vendor.primaryContactEmail,
         text: [
@@ -2840,6 +2909,7 @@ export async function recordDealDecision(
       recipientEmail: vendor.primaryContactEmail,
       subject,
       category: isApproved ? "deal_approved" : "deal_declined",
+      idempotencyKey: `deal-${deal.id}-${input.decision}`,
       text: isApproved
         ? [
             `Hi ${vendor.primaryContactName},`,
@@ -3212,9 +3282,11 @@ export async function markDealerAgreementSent(
     const portalDealUrl = `${getPortalBaseUrl()}/portal/deals/${encodeURIComponent(deal.id)}`;
     notification = await recordWorkflowEmail({
       vendorId: vendor.id,
+      dealId: deal.id,
       recipientEmail: vendor.primaryContactEmail,
       subject: "Your GoAccess dealer agreement is ready",
       category: "dealer_agreement_sent",
+      idempotencyKey: `dealer-agreement-${deal.id}-${deal.agreementUploadedAt ?? sentAt}`,
       reference: portalDealUrl,
       text:
         `Hi ${vendor.primaryContactName},\n\n` +

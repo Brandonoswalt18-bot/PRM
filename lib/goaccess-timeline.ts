@@ -1,5 +1,5 @@
 import type {
-  ApprovedVendor,
+  ClientApprovedVendor,
   DealRegistration,
   DealSyncEvent,
   SupportRequest,
@@ -14,7 +14,7 @@ function titleCaseStatus(value: string) {
 
 export function buildApplicationTimeline(
   application: VendorApplication,
-  vendor: ApprovedVendor | null,
+  vendor: ClientApprovedVendor | null,
   notifications: VendorNotification[]
 ): TimelineEntry[] {
   const entries: TimelineEntry[] = [
@@ -38,7 +38,7 @@ export function buildApplicationTimeline(
   if (application.approvalEmailSentAt) {
     entries.push({
       title: "Approved for onboarding",
-      detail: `Vendor ID ${vendor?.hubspotPartnerId ?? "pending"} assigned and onboarding approved.`,
+      detail: `Vendor ID ${vendor?.vendorCode ?? "pending"} assigned and onboarding approved.`,
       timestamp: application.approvalEmailSentAt,
       tone: "success",
     });

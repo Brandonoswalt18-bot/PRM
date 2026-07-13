@@ -105,6 +105,44 @@ Portal workflow env vars:
 - `RESEND_API_KEY`
 - `EMAIL_FROM_ADDRESS`
 
+## Production email delivery
+
+Vendor lifecycle and deal-workflow emails use the server-side Resend REST API through
+`lib/email.ts`. No Resend credential is exposed to the browser.
+
+Required Production environment variables in Vercel:
+
+- `RESEND_API_KEY` - a server-only Resend API key
+- `EMAIL_FROM_ADDRESS` - a mailbox on a verified custom domain, for example
+  `GoAccess <vendors@goaccess.com>`
+- `GOACCESS_PORTAL_BASE_URL` - the stable production portal origin used in email links
+- `GOACCESS_APPLICATION_NOTIFICATION_EMAIL` - comma-separated internal application recipients
+- `GOACCESS_DEAL_NOTIFICATION_EMAIL` - optional comma-separated deal recipients; falls back to
+  the application recipients and then the admin email
+
+Production safeguards:
+
+- Production refuses to send from Resend's `resend.dev` test domain.
+- Missing production configuration and invalid sender, recipient, or reply-to mailboxes are
+  recorded as failed notifications. Local development without Resend remains log-only.
+- Provider and network failures do not roll back the underlying application or deal workflow.
+- Resend requests time out after 10 seconds, redact provider errors before persistence, and use
+  deterministic idempotency keys for workflow sends.
+- A notification marked `sent` means Resend accepted the request. Final delivery, bounce, and
+  complaint status remains available in the Resend dashboard until a signed webhook workflow is
+  added.
+
+Before enabling customer delivery:
+
+1. Add the GoAccess sending domain in Resend.
+2. Publish and verify all Resend-provided SPF, DKIM, and MX DNS records.
+3. Change `EMAIL_FROM_ADDRESS` from the Resend test sender to the verified GoAccess mailbox.
+4. Set `GOACCESS_PORTAL_BASE_URL` to a stable production alias or custom domain, not an individual
+   deployment URL.
+5. Redeploy Production so the updated environment variables are loaded.
+6. Send a controlled smoke test to an approved internal GoAccess recipient before enabling vendor
+   sends, then confirm acceptance and delivery in Resend.
+
 Typical production follow-up:
 
 - finalize HubSpot pipeline, stage, and custom property mappings

@@ -14,8 +14,31 @@ test("public vendor application is accepted and protected APIs reject anonymous 
   await page.getByLabel("State").fill("CA");
   await page.getByLabel("Primary contact").fill("Taylor Test");
   await page.getByLabel("Work email").fill(`taylor+${unique}@example.com`);
+  const submissionResponsePromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      new URL(response.url()).pathname === "/api/vendor-applications",
+  );
   await page.getByRole("button", { name: "Submit application" }).click();
-  await expect(page.getByText(/application was submitted/i)).toBeVisible();
+  const submissionResponse = await submissionResponsePromise;
+  const submissionPayload = (await submissionResponse.json()) as Record<string, unknown>;
+  const serializedSubmission = JSON.stringify(submissionPayload).toLowerCase();
+
+  expect(Object.keys(submissionPayload).sort()).toEqual(["application", "message", "ok"]);
+  expect(submissionPayload.application).toEqual(
+    expect.objectContaining({ status: "submitted" }),
+  );
+  expect(Object.keys(submissionPayload.application as Record<string, unknown>).sort()).toEqual([
+    "createdAt",
+    "id",
+    "status",
+  ]);
+  expect(serializedSubmission).not.toContain("internal-privacy-sentinel@goaccess.example");
+  expect(serializedSubmission).not.toContain("notification");
+  expect(serializedSubmission).not.toContain("reference");
+  expect(serializedSubmission).not.toContain("resend");
+  expect(serializedSubmission).not.toContain("email provider");
+  await expect(page.getByText(/application has been submitted/i)).toBeVisible();
 
   const applications = await request.get("/api/vendor-applications");
   expect(applications.status()).toBe(401);
@@ -50,6 +73,24 @@ test("approved vendor accepts the NDA and Partner Agreement before portal activa
     { data: { status: "approved" } },
   );
   expect(approve.ok()).toBeTruthy();
+  const approvalPayload = (await approve.json()) as {
+    hubspotCompanyHandoff: { status: string; action: string };
+  };
+  expect(approvalPayload.hubspotCompanyHandoff).toMatchObject({
+    status: "failed",
+    action: "failed",
+  });
+
+  const retryHubSpotCompanySync = await page.request.patch(
+    `/api/vendor-applications/${submissionPayload.application.id}`,
+    { data: { action: "retry_hubspot_company_sync" } },
+  );
+  expect(retryHubSpotCompanySync.status()).toBe(502);
+  expect(await retryHubSpotCompanySync.json()).toMatchObject({
+    ok: false,
+    hubspotCompanyHandoff: { status: "failed", action: "failed" },
+  });
+
   const startLegal = await page.request.patch(
     `/api/vendor-applications/${submissionPayload.application.id}`,
     { data: { status: "nda_sent" } },
@@ -166,6 +207,10 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
   await page.getByLabel("Password").fill("goaccess-vendor-demo");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/portal$/);
+
+  const vendorProfileResponse = await page.request.get("/api/vendor-profile");
+  expect(vendorProfileResponse.ok()).toBeTruthy();
+  expect(JSON.stringify(await vendorProfileResponse.json()).toLowerCase()).not.toContain("hubspot");
 
   await page.goto("/portal/links");
   await page.getByLabel("Community name").fill(`Playwright Community ${unique}`);
