@@ -82,9 +82,6 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <span>Need vendor access?</span>
             <Link href="/#application">Apply here</Link>
           </div>
-          <Link className="login-reset-link" href="/auth/logout" prefetch={false}>
-            Clear this browser session
-          </Link>
         </section>
       </div>
     </main>

@@ -3627,17 +3627,10 @@ li + li {
   font-size: 0.82rem;
 }
 
-.login-footer a,
-.login-reset-link {
+.login-footer a {
   color: var(--signal);
   font-weight: 700;
   text-decoration: none;
-}
-
-.login-reset-link {
-  justify-self: start;
-  margin-top: 16px;
-  font-size: 0.76rem;
 }
 
 .auth-login-shell {
@@ -3710,12 +3703,6 @@ li + li {
 .auth-login-card .login-footer {
   padding-top: 18px;
   border-top: 1px solid var(--line);
-}
-
-.auth-login-card .login-reset-link {
-  margin-top: 12px;
-  color: var(--muted);
-  font-weight: 600;
 }
 
 @media (max-width: 960px) {

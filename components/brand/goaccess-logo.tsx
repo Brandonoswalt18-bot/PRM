@@ -12,7 +12,7 @@ export function GoAccessLogo({ className, priority = false }: GoAccessLogoProps)
       className={className}
       height={58}
       priority={priority}
-      src="/brand/goaccess-approved-logo.png"
+      src="/brand/goaccess-approved-logo-transparent.png"
       unoptimized
       width={280}
     />
