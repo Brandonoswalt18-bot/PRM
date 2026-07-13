@@ -1,12 +1,17 @@
 import { expect, test } from "@playwright/test";
 import { toClientApprovedVendor } from "../lib/goaccess-client-data";
 import {
+  buildHubSpotDealReconciliationSnapshot,
   buildHubSpotDealProperties,
+  buildHubSpotLinkedDealInvariantProperties,
   buildSafeVendorCompanyPatch,
   getHubSpotDealSyncConfig,
+  HUBSPOT_DEAL_BUSINESS_NAME_PROPERTY,
   HUBSPOT_DEAL_BUSINESS_TYPE,
+  HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY,
   normalizeHubSpotCompanyDomain,
   planApprovedVendorCompanySync,
+  resolveHubSpotBusinessNameOption,
   type HubSpotCompanyMatch,
 } from "../lib/hubspot";
 import type { ApprovedVendor, DealRegistration } from "../types/goaccess";
@@ -37,7 +42,7 @@ function buildVendor(overrides: Partial<ApprovedVendor> = {}): ApprovedVendor {
   };
 }
 
-function buildDeal(): DealRegistration {
+function buildDeal(overrides: Partial<DealRegistration> = {}): DealRegistration {
   return {
     id: "deal-1",
     vendorId: "vendor-acme",
@@ -60,6 +65,7 @@ function buildDeal(): DealRegistration {
     expectedVendorMonthlyRevenue: 100,
     createdAt: timestamp,
     updatedAt: timestamp,
+    ...overrides,
   };
 }
 
@@ -68,6 +74,26 @@ function company(
   properties: HubSpotCompanyMatch["properties"]
 ): HubSpotCompanyMatch {
   return { id, properties };
+}
+
+function withEnvironment(values: Record<string, string>, callback: () => void) {
+  const original = Object.fromEntries(
+    Object.keys(values).map((key) => [key, process.env[key]])
+  );
+
+  Object.assign(process.env, values);
+
+  try {
+    callback();
+  } finally {
+    for (const [key, value] of Object.entries(original)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
 }
 
 test("vendor company sync normalizes a canonical domain and creates only after no safe match", () => {
@@ -144,18 +170,20 @@ test("vendor company sync fills only blank fields on an existing company", () =>
   expect(patch).toEqual({ name: "Acme Access", city: "San Diego" });
 });
 
-test("every HubSpot deal payload uses the Channel Partner business type", () => {
+test("every HubSpot deal payload uses Channel Partner and the free-text vendor business name", () => {
   const originalEnvironment = {
     stage: process.env.HUBSPOT_DEAL_STAGE_ID,
     submission: process.env.HUBSPOT_DEAL_SUBMISSION_ID_PROPERTY,
     registration: process.env.HUBSPOT_DEAL_REGISTRATION_STATUS_PROPERTY,
     registeredAt: process.env.HUBSPOT_DEAL_REGISTERED_AT_PROPERTY,
+    communityName: process.env.HUBSPOT_DEAL_COMMUNITY_NAME_PROPERTY,
   };
 
   process.env.HUBSPOT_DEAL_STAGE_ID = "appointmentscheduled";
   process.env.HUBSPOT_DEAL_SUBMISSION_ID_PROPERTY = "partner_portal_submission_id";
   process.env.HUBSPOT_DEAL_REGISTRATION_STATUS_PROPERTY = "partner_registration_status";
   process.env.HUBSPOT_DEAL_REGISTERED_AT_PROPERTY = "partner_registered_at";
+  process.env.HUBSPOT_DEAL_COMMUNITY_NAME_PROPERTY = "partner_community_name";
 
   try {
     const properties = buildHubSpotDealProperties({
@@ -164,11 +192,74 @@ test("every HubSpot deal payload uses the Channel Partner business type", () => 
     });
     expect(HUBSPOT_DEAL_BUSINESS_TYPE).toBe("Channel Partner");
     expect(properties.business).toBe(HUBSPOT_DEAL_BUSINESS_TYPE);
+    expect(properties[HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY]).toBe("Acme Access");
+    expect(properties.partner_community_name).toBe("Example Community");
+    expect(properties).not.toHaveProperty(HUBSPOT_DEAL_BUSINESS_NAME_PROPERTY);
     expect(getHubSpotDealSyncConfig().requiredFields).toContainEqual({
       portalField: "Business type",
       hubspotProperty: "business",
     });
+    expect(getHubSpotDealSyncConfig().requiredFields).toContainEqual({
+      portalField: "Vendor business name",
+      hubspotProperty: HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY,
+    });
     expect(getHubSpotDealSyncConfig().mappedFields).toContain("business");
+    expect(getHubSpotDealSyncConfig().mappedFields).toContain(HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY);
+  } finally {
+    for (const [key, value] of Object.entries({
+      HUBSPOT_DEAL_STAGE_ID: originalEnvironment.stage,
+      HUBSPOT_DEAL_SUBMISSION_ID_PROPERTY: originalEnvironment.submission,
+      HUBSPOT_DEAL_REGISTRATION_STATUS_PROPERTY: originalEnvironment.registration,
+      HUBSPOT_DEAL_REGISTERED_AT_PROPERTY: originalEnvironment.registeredAt,
+      HUBSPOT_DEAL_COMMUNITY_NAME_PROPERTY: originalEnvironment.communityName,
+    })) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
+});
+
+test("the legacy Business Name dropdown is written only for an existing exact option", () => {
+  const originalEnvironment = {
+    stage: process.env.HUBSPOT_DEAL_STAGE_ID,
+    submission: process.env.HUBSPOT_DEAL_SUBMISSION_ID_PROPERTY,
+    registration: process.env.HUBSPOT_DEAL_REGISTRATION_STATUS_PROPERTY,
+    registeredAt: process.env.HUBSPOT_DEAL_REGISTERED_AT_PROPERTY,
+  };
+  process.env.HUBSPOT_DEAL_STAGE_ID = "appointmentscheduled";
+  process.env.HUBSPOT_DEAL_SUBMISSION_ID_PROPERTY = "partner_portal_submission_id";
+  process.env.HUBSPOT_DEAL_REGISTRATION_STATUS_PROPERTY = "partner_registration_status";
+  process.env.HUBSPOT_DEAL_REGISTERED_AT_PROPERTY = "partner_registered_at";
+
+  const options = [
+    { label: "Acme Access", value: "Acme Access" },
+    { label: "Legacy Display Name", value: "legacy_vendor" },
+  ];
+
+  try {
+    const allowedValue = resolveHubSpotBusinessNameOption("  ACME access ", options);
+    const allowedProperties = buildHubSpotDealProperties(
+      { vendor: buildVendor(), deal: buildDeal() },
+      allowedValue
+    );
+
+    expect(allowedValue).toBe("Acme Access");
+    expect(allowedProperties[HUBSPOT_DEAL_BUSINESS_NAME_PROPERTY]).toBe("Acme Access");
+
+    const unknownValue = resolveHubSpotBusinessNameOption("New Portal Vendor", options);
+    const unknownProperties = buildHubSpotDealProperties(
+      { vendor: buildVendor({ companyName: "New Portal Vendor" }), deal: buildDeal() },
+      unknownValue
+    );
+
+    expect(unknownValue).toBeNull();
+    expect(unknownProperties).not.toHaveProperty(HUBSPOT_DEAL_BUSINESS_NAME_PROPERTY);
+    expect(unknownProperties[HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY]).toBe(
+      "New Portal Vendor"
+    );
   } finally {
     for (const [key, value] of Object.entries({
       HUBSPOT_DEAL_STAGE_ID: originalEnvironment.stage,
@@ -183,6 +274,163 @@ test("every HubSpot deal payload uses the Channel Partner business type", () => 
       }
     }
   }
+});
+
+test("HubSpot reconciliation maps only validated portal-visible deal fields", () => {
+  withEnvironment(
+    {
+      HUBSPOT_DEAL_SUBMISSION_ID_PROPERTY: "partner_portal_submission_id",
+      HUBSPOT_DEAL_REGISTRATION_STATUS_PROPERTY: "partner_registration_status",
+      HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY: "partner_monthly_rmr",
+      HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY: "partner_product_interest",
+      HUBSPOT_DEAL_COMMUNITY_NAME_PROPERTY: "partner_community_name",
+    },
+    () => {
+      const deal = buildDeal({ hubspotDealId: "hubspot-deal-1" });
+      const snapshot = buildHubSpotDealReconciliationSnapshot(deal, {
+        id: "hubspot-deal-1",
+        updatedAt: "2026-07-14T08:00:00.000Z",
+        properties: {
+          partner_portal_submission_id: deal.id,
+          partner_registration_status: "synced_to_hubspot",
+          partner_monthly_rmr: "1250.50",
+          partner_product_interest: "Video intercom",
+          partner_community_name: "Updated Community",
+          amount: "32000",
+          city: "Irvine",
+          state: "CA",
+          dealstage: "closedwon",
+          hs_is_closed: "true",
+          hs_is_closed_won: "true",
+        },
+      });
+
+      expect(snapshot).toEqual({
+        hubspotDealId: "hubspot-deal-1",
+        status: "closed_won",
+        monthlyRmr: 1250.5,
+        estimatedValue: 32000,
+        productInterest: "Video intercom",
+        companyName: "Updated Community",
+        city: "Irvine",
+        state: "CA",
+        stageId: "closedwon",
+        hubspotUpdatedAt: "2026-07-14T08:00:00.000Z",
+      });
+    }
+  );
+});
+
+test("HubSpot reconciliation rejects unsafe values and mismatched linkage", () => {
+  withEnvironment(
+    {
+      HUBSPOT_DEAL_SUBMISSION_ID_PROPERTY: "partner_portal_submission_id",
+      HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY: "partner_monthly_rmr",
+      HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY: "partner_product_interest",
+      HUBSPOT_DEAL_COMMUNITY_NAME_PROPERTY: "partner_community_name",
+    },
+    () => {
+      const deal = buildDeal({ hubspotDealId: "hubspot-deal-1" });
+      const snapshot = buildHubSpotDealReconciliationSnapshot(deal, {
+        id: "hubspot-deal-1",
+        properties: {
+          partner_portal_submission_id: deal.id,
+          partner_monthly_rmr: "not-a-number",
+          partner_product_interest: "x".repeat(161),
+          partner_community_name: " ",
+          amount: "-1",
+          city: "x".repeat(101),
+          state: " ",
+        },
+      });
+
+      expect(snapshot).toMatchObject({
+        monthlyRmr: null,
+        estimatedValue: null,
+        productInterest: null,
+        companyName: null,
+        city: null,
+        state: null,
+      });
+      expect(() =>
+        buildHubSpotDealReconciliationSnapshot(deal, {
+          id: "different-hubspot-deal",
+          properties: { partner_portal_submission_id: deal.id },
+        })
+      ).toThrow(/does not match portal-linked deal/);
+      expect(() =>
+        buildHubSpotDealReconciliationSnapshot(deal, {
+          id: "hubspot-deal-1",
+          properties: { partner_portal_submission_id: "different-submission" },
+        })
+      ).toThrow(/not linked to portal submission/);
+    }
+  );
+
+  withEnvironment(
+    { HUBSPOT_DEAL_COMMUNITY_NAME_PROPERTY: "Invalid Property!" },
+    () => {
+      expect(() =>
+        buildHubSpotDealReconciliationSnapshot(
+          buildDeal({ hubspotDealId: "hubspot-deal-1" }),
+          { id: "hubspot-deal-1", properties: {} }
+        )
+      ).toThrow(/must use a HubSpot internal property name/);
+    }
+  );
+});
+
+test("linked-deal retry properties preserve HubSpot-owned sales edits", () => {
+  withEnvironment(
+    {
+      HUBSPOT_DEAL_STAGE_ID: "appointmentscheduled",
+      HUBSPOT_DEAL_PIPELINE_ID: "default",
+      HUBSPOT_DEAL_OWNER_ID: "owner-1",
+      HUBSPOT_DEAL_SUBMISSION_ID_PROPERTY: "partner_portal_submission_id",
+      HUBSPOT_DEAL_REGISTRATION_STATUS_PROPERTY: "partner_registration_status",
+      HUBSPOT_DEAL_REGISTERED_AT_PROPERTY: "partner_registered_at",
+      HUBSPOT_VENDOR_ID_PROPERTY: "partner_vendor_id",
+      HUBSPOT_VENDOR_EMAIL_PROPERTY: "partner_vendor_email",
+      HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY: "partner_monthly_rmr",
+      HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY: "partner_product_interest",
+      HUBSPOT_DEAL_COMMUNITY_NAME_PROPERTY: "partner_community_name",
+      HUBSPOT_DEAL_VENDOR_NAME_PROPERTY: "partner_vendor_name_extra",
+    },
+    () => {
+      const properties = buildHubSpotLinkedDealInvariantProperties(
+        { vendor: buildVendor(), deal: buildDeal({ hubspotDealId: "hubspot-deal-1" }) },
+        "Acme Access"
+      );
+
+      expect(properties).toMatchObject({
+        business: HUBSPOT_DEAL_BUSINESS_TYPE,
+        [HUBSPOT_DEAL_BUSINESS_NAME_PROPERTY]: "Acme Access",
+        [HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY]: "Acme Access",
+        partner_portal_submission_id: "deal-1",
+        partner_registration_status: "synced_to_hubspot",
+        partner_registered_at: timestamp,
+        partner_vendor_id: "GA-VENDOR-019",
+        partner_vendor_email: "alex@acme.example",
+        partner_vendor_name_extra: "Acme Access",
+      });
+
+      for (const hubSpotOwnedProperty of [
+        "dealname",
+        "dealstage",
+        "amount",
+        "pipeline",
+        "hubspot_owner_id",
+        "description",
+        "partner_monthly_rmr",
+        "partner_product_interest",
+        "partner_community_name",
+        "city",
+        "state",
+      ]) {
+        expect(properties).not.toHaveProperty(hubSpotOwnedProperty);
+      }
+    }
+  );
 });
 
 test("vendor-facing payloads redact HubSpot company mapping internals", () => {

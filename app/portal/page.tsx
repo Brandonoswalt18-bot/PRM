@@ -10,6 +10,7 @@ import {
   getForecastMonthlyRmrForVendor,
   getVendorById,
   listDeals,
+  listTrainingAssets,
 } from "@/lib/goaccess-store";
 import type { DealStatus } from "@/types/goaccess";
 
@@ -40,11 +41,12 @@ function getStatusTone(status: DealStatus) {
 export default async function PartnerPortalPage() {
   const session = await getWorkspaceSession();
   const vendorId = session?.vendorId;
-  const [vendor, deals, currentRmr, forecastRmr] = await Promise.all([
+  const [vendor, deals, currentRmr, forecastRmr, trainingAssets] = await Promise.all([
     vendorId ? getVendorById(vendorId) : Promise.resolve(null),
     listDeals(vendorId),
     vendorId ? getCurrentMonthlyRmrForVendor(vendorId) : Promise.resolve(0),
     vendorId ? getForecastMonthlyRmrForVendor(vendorId) : Promise.resolve(0),
+    listTrainingAssets(),
   ]);
 
   const firstName = session?.fullName.split(" ")[0] || "Partner";
@@ -57,6 +59,7 @@ export default async function PartnerPortalPage() {
   const recentDeals = [...deals]
     .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
     .slice(0, 5);
+  const trainingPreview = trainingAssets.slice(0, 4);
 
   return (
     <>
@@ -217,6 +220,58 @@ export default async function PartnerPortalPage() {
               </li>
             </ol>
           </aside>
+        </section>
+
+        <section className="simple-panel simple-training-panel" aria-labelledby="training-preview-title">
+          <div className="simple-panel-header">
+            <div>
+              <span className="simple-eyebrow">Training</span>
+              <h2 id="training-preview-title">Learn at your own pace</h2>
+              <p>Open GoAccess training videos and downloadable guides for your team.</p>
+            </div>
+            <Link href="/portal/learning" className="simple-text-link" prefetch={false}>
+              View library
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+
+          {trainingPreview.length > 0 ? (
+            <div className="training-preview-grid">
+              {trainingPreview.map((asset) => {
+                const href =
+                  asset.source === "external" && asset.externalUrl
+                    ? asset.externalUrl
+                    : `/api/training-assets/file?id=${asset.id}`;
+
+                return (
+                  <a
+                    className="training-preview-card"
+                    href={href}
+                    key={asset.id}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    <span className={`training-preview-icon is-${asset.type}`} aria-hidden="true">
+                      {asset.type === "video" ? "▶" : "PDF"}
+                    </span>
+                    <span className="training-preview-copy">
+                      <strong>{asset.title}</strong>
+                      <span>{asset.description || (asset.type === "video" ? "Training video" : "Training document")}</span>
+                    </span>
+                    <span className="training-preview-meta">
+                      {asset.type === "video" ? "Watch video" : "Open document"}
+                      <span aria-hidden="true">↗</span>
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="training-preview-empty">
+              <strong>Training is being prepared</strong>
+              <span>Videos and PDFs published by GoAccess will appear here.</span>
+            </div>
+          )}
         </section>
           </>
         ) : (

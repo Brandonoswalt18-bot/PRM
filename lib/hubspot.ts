@@ -48,6 +48,11 @@ type HubSpotObjectResponse = {
   properties?: Record<string, string | null | undefined>;
 };
 
+type HubSpotPropertyDefinitionResponse = {
+  type?: string;
+  options?: HubSpotEnumerationOption[];
+};
+
 type HubSpotAssociationResponse = {
   results?: Array<{ id: string; type?: string }>;
 };
@@ -99,6 +104,11 @@ export type HubSpotDealReconciliationSnapshot = {
   hubspotDealId: string;
   status: DealStatus;
   monthlyRmr: number | null;
+  estimatedValue: number | null;
+  productInterest: string | null;
+  companyName: string | null;
+  city: string | null;
+  state: string | null;
   stageId: string | null;
   hubspotUpdatedAt: string | null;
 };
@@ -117,7 +127,6 @@ const DEAL_SYNC_RECOMMENDED_ENV_VARS = [
   "HUBSPOT_VENDOR_EMAIL_PROPERTY",
   "HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY",
   "HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY",
-  "HUBSPOT_DEAL_VENDOR_NAME_PROPERTY",
 ] as const;
 const LEAD_ROUTING_REQUIRED_ENV_VARS = [
   "HUBSPOT_ACCESS_TOKEN",
@@ -126,6 +135,34 @@ const LEAD_ROUTING_REQUIRED_ENV_VARS = [
 ] as const;
 const NOTE_TO_DEAL_ASSOCIATION_TYPE_ID = 214;
 export const HUBSPOT_DEAL_BUSINESS_TYPE = "Channel Partner" as const;
+export const HUBSPOT_DEAL_BUSINESS_NAME_PROPERTY = "business_name" as const;
+export const HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY = "partner_vendor_name" as const;
+
+export type HubSpotEnumerationOption = {
+  label?: string | null;
+  value?: string | null;
+};
+
+export function resolveHubSpotBusinessNameOption(
+  vendorName: string,
+  options: readonly HubSpotEnumerationOption[]
+) {
+  const normalizedVendorName = vendorName.trim().toLocaleLowerCase("en-US");
+
+  if (!normalizedVendorName) {
+    return null;
+  }
+
+  const match = options.find((option) => {
+    const value = option.value?.trim() ?? "";
+    const label = option.label?.trim() ?? "";
+    return [value, label].some(
+      (candidate) => candidate.toLocaleLowerCase("en-US") === normalizedVendorName
+    );
+  });
+
+  return match?.value?.trim() || null;
+}
 
 export function getHubSpotDealSyncConfig() {
   const missingEnvVars = DEAL_SYNC_REQUIRED_ENV_VARS.filter((key) => !process.env[key]?.trim());
@@ -137,7 +174,8 @@ export function getHubSpotDealSyncConfig() {
     { envVar: "HUBSPOT_VENDOR_EMAIL_PROPERTY", hubspotProperty: process.env.HUBSPOT_VENDOR_EMAIL_PROPERTY?.trim() || null, source: "Vendor primary contact email" },
     { envVar: "HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY", hubspotProperty: process.env.HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY?.trim() || null, source: "Deal monthly RMR" },
     { envVar: "HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY", hubspotProperty: process.env.HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY?.trim() || null, source: "Deal product interest" },
-    { envVar: "HUBSPOT_DEAL_VENDOR_NAME_PROPERTY", hubspotProperty: process.env.HUBSPOT_DEAL_VENDOR_NAME_PROPERTY?.trim() || null, source: "Vendor company name" },
+    { envVar: "HUBSPOT_DEAL_COMMUNITY_NAME_PROPERTY", hubspotProperty: process.env.HUBSPOT_DEAL_COMMUNITY_NAME_PROPERTY?.trim() || null, source: "Portal community name" },
+    { envVar: "HUBSPOT_DEAL_VENDOR_NAME_PROPERTY", hubspotProperty: process.env.HUBSPOT_DEAL_VENDOR_NAME_PROPERTY?.trim() || null, source: "Additional vendor company name property" },
   ] as const;
 
   return {
@@ -150,6 +188,7 @@ export function getHubSpotDealSyncConfig() {
       { portalField: "Deal stage", hubspotProperty: "dealstage" },
       { portalField: "Estimated value", hubspotProperty: "amount" },
       { portalField: "Business type", hubspotProperty: "business" },
+      { portalField: "Vendor business name", hubspotProperty: HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY },
       { portalField: "Submission detail", hubspotProperty: "description" },
     ],
     requiredCustomMappings: HUBSPOT_CUSTOM_DEAL_PROPERTY_ENV_VARS.map((envVar) => ({
@@ -173,6 +212,7 @@ export function getHubSpotDealSyncConfig() {
       "dealstage",
       "amount",
       "business",
+      HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY,
       "description",
       process.env.HUBSPOT_DEAL_PIPELINE_ID?.trim() ? "pipeline" : null,
       process.env.HUBSPOT_DEAL_OWNER_ID?.trim() ? "hubspot_owner_id" : null,
@@ -183,6 +223,7 @@ export function getHubSpotDealSyncConfig() {
       customDealProperties.registeredAt,
       process.env.HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY?.trim() || null,
       process.env.HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY?.trim() || null,
+      process.env.HUBSPOT_DEAL_COMMUNITY_NAME_PROPERTY?.trim() || null,
       process.env.HUBSPOT_DEAL_VENDOR_NAME_PROPERTY?.trim() || null,
     ].filter(Boolean) as string[],
   };
@@ -242,6 +283,35 @@ function isValidHubSpotPropertyName(value: string) {
 function normalizeHubSpotPropertyName(value: string | undefined) {
   const normalized = value?.trim() || null;
   return normalized ? normalized : null;
+}
+
+function getOptionalHubSpotPropertyName(envVar: string) {
+  const propertyName = normalizeHubSpotPropertyName(process.env[envVar]);
+
+  if (propertyName && !isValidHubSpotPropertyName(propertyName)) {
+    throw new Error(
+      `${envVar} must use a HubSpot internal property name like partner_community_name.`
+    );
+  }
+
+  return propertyName;
+}
+
+function normalizeHubSpotReconciliationText(
+  value: string | null | undefined,
+  maxLength: number
+) {
+  const normalized = value?.trim() ?? "";
+  return normalized && normalized.length <= maxLength ? normalized : null;
+}
+
+function normalizeHubSpotReconciliationAmount(value: string | null | undefined) {
+  if (value === null || value === undefined || value.trim() === "") {
+    return null;
+  }
+
+  const amount = Number(value);
+  return Number.isFinite(amount) && amount >= 0 ? amount : null;
 }
 
 function getHubSpotCustomDealPropertyConfig(): HubSpotCustomDealPropertyConfig {
@@ -339,43 +409,60 @@ async function hubSpotRequest<T>(pathname: string, init: RequestInit = {}) {
   return (await response.json()) as T;
 }
 
+async function readAllowedHubSpotBusinessNameOption(vendorName: string) {
+  try {
+    const property = await hubSpotRequest<HubSpotPropertyDefinitionResponse>(
+      `/crm/v3/properties/deals/${HUBSPOT_DEAL_BUSINESS_NAME_PROPERTY}`
+    );
+
+    if (property.type !== "enumeration") {
+      return null;
+    }
+
+    return resolveHubSpotBusinessNameOption(vendorName, property.options ?? []);
+  } catch {
+    // Business Name is a legacy dropdown. A missing option must never block the
+    // canonical free-text Partner Vendor Name mapping or the core deal sync.
+    return null;
+  }
+}
+
 function isTruthyHubSpotBoolean(value: string | null | undefined) {
   return value?.toLowerCase() === "true";
 }
 
-export async function readHubSpotDealForReconciliation(
-  deal: DealRegistration
-): Promise<HubSpotDealReconciliationSnapshot> {
+export function buildHubSpotDealReconciliationSnapshot(
+  deal: DealRegistration,
+  remote: HubSpotObjectResponse & { updatedAt?: string }
+): HubSpotDealReconciliationSnapshot {
   if (!deal.hubspotDealId) {
     throw new Error("Deal is not linked to HubSpot.");
   }
 
-  const statusProperty = normalizeHubSpotPropertyName(
-    process.env.HUBSPOT_DEAL_REGISTRATION_STATUS_PROPERTY
+  if (remote.id !== deal.hubspotDealId) {
+    throw new Error(
+      `HubSpot deal ${remote.id} does not match portal-linked deal ${deal.hubspotDealId}.`
+    );
+  }
+
+  const statusProperty = getOptionalHubSpotPropertyName(
+    "HUBSPOT_DEAL_REGISTRATION_STATUS_PROPERTY"
   );
-  const submissionIdProperty = normalizeHubSpotPropertyName(
-    process.env.HUBSPOT_DEAL_SUBMISSION_ID_PROPERTY
+  const submissionIdProperty = getOptionalHubSpotPropertyName(
+    "HUBSPOT_DEAL_SUBMISSION_ID_PROPERTY"
   );
-  const monthlyRmrProperty = normalizeHubSpotPropertyName(
-    process.env.HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY
+  const monthlyRmrProperty = getOptionalHubSpotPropertyName(
+    "HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY"
   );
-  const properties = [
-    "dealstage",
-    "hs_is_closed",
-    "hs_is_closed_won",
-    submissionIdProperty,
-    statusProperty,
-    monthlyRmrProperty,
-  ].filter(Boolean) as string[];
-  const remote = await hubSpotRequest<HubSpotObjectResponse & { updatedAt?: string }>(
-    `/crm/v3/objects/deals/${encodeURIComponent(deal.hubspotDealId)}?properties=${encodeURIComponent(properties.join(","))}`
+  const productInterestProperty = getOptionalHubSpotPropertyName(
+    "HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY"
+  );
+  const communityNameProperty = getOptionalHubSpotPropertyName(
+    "HUBSPOT_DEAL_COMMUNITY_NAME_PROPERTY"
   );
   const remoteProperties = remote.properties ?? {};
 
-  if (
-    submissionIdProperty &&
-    remoteProperties[submissionIdProperty] !== deal.id
-  ) {
+  if (submissionIdProperty && remoteProperties[submissionIdProperty] !== deal.id) {
     throw new Error(
       `HubSpot deal ${deal.hubspotDealId} is not linked to portal submission ${deal.id}.`
     );
@@ -392,18 +479,65 @@ export async function readHubSpotDealForReconciliation(
     status = customStatus;
   }
 
-  const parsedMonthlyRmr = monthlyRmrProperty
-    ? Number(remoteProperties[monthlyRmrProperty])
-    : Number.NaN;
-
   return {
     hubspotDealId: deal.hubspotDealId,
     status,
-    monthlyRmr:
-      Number.isFinite(parsedMonthlyRmr) && parsedMonthlyRmr >= 0 ? parsedMonthlyRmr : null,
+    monthlyRmr: monthlyRmrProperty
+      ? normalizeHubSpotReconciliationAmount(remoteProperties[monthlyRmrProperty])
+      : null,
+    estimatedValue: normalizeHubSpotReconciliationAmount(remoteProperties.amount),
+    productInterest: productInterestProperty
+      ? normalizeHubSpotReconciliationText(remoteProperties[productInterestProperty], 160)
+      : null,
+    companyName: communityNameProperty
+      ? normalizeHubSpotReconciliationText(remoteProperties[communityNameProperty], 160)
+      : null,
+    city: normalizeHubSpotReconciliationText(remoteProperties.city, 100),
+    state: normalizeHubSpotReconciliationText(remoteProperties.state, 100),
     stageId: remoteProperties.dealstage ?? null,
     hubspotUpdatedAt: remote.updatedAt ?? null,
   };
+}
+
+export async function readHubSpotDealForReconciliation(
+  deal: DealRegistration
+): Promise<HubSpotDealReconciliationSnapshot> {
+  if (!deal.hubspotDealId) {
+    throw new Error("Deal is not linked to HubSpot.");
+  }
+
+  const statusProperty = getOptionalHubSpotPropertyName(
+    "HUBSPOT_DEAL_REGISTRATION_STATUS_PROPERTY"
+  );
+  const submissionIdProperty = getOptionalHubSpotPropertyName(
+    "HUBSPOT_DEAL_SUBMISSION_ID_PROPERTY"
+  );
+  const monthlyRmrProperty = getOptionalHubSpotPropertyName(
+    "HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY"
+  );
+  const productInterestProperty = getOptionalHubSpotPropertyName(
+    "HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY"
+  );
+  const communityNameProperty = getOptionalHubSpotPropertyName(
+    "HUBSPOT_DEAL_COMMUNITY_NAME_PROPERTY"
+  );
+  const properties = [
+    "dealstage",
+    "hs_is_closed",
+    "hs_is_closed_won",
+    "amount",
+    "city",
+    "state",
+    submissionIdProperty,
+    statusProperty,
+    monthlyRmrProperty,
+    productInterestProperty,
+    communityNameProperty,
+  ].filter(Boolean) as string[];
+  const remote = await hubSpotRequest<HubSpotObjectResponse & { updatedAt?: string }>(
+    `/crm/v3/objects/deals/${encodeURIComponent(deal.hubspotDealId)}?properties=${encodeURIComponent(properties.join(","))}`
+  );
+  return buildHubSpotDealReconciliationSnapshot(deal, remote);
 }
 
 async function searchCompanyIdsByName(name: string) {
@@ -986,16 +1120,28 @@ export async function inspectDealRegistrationForHubSpot(
   };
 }
 
-export function buildHubSpotDealProperties(payload: HubSpotDealSyncPayload) {
+export function buildHubSpotDealProperties(
+  payload: HubSpotDealSyncPayload,
+  allowedBusinessName: string | null = null
+) {
   const customDealProperties = getHubSpotCustomDealPropertyConfig();
   const stageId = process.env.HUBSPOT_DEAL_STAGE_ID;
   const pipelineId = process.env.HUBSPOT_DEAL_PIPELINE_ID;
   const ownerId = process.env.HUBSPOT_DEAL_OWNER_ID;
-  const vendorIdProperty = process.env.HUBSPOT_VENDOR_ID_PROPERTY;
-  const vendorEmailProperty = process.env.HUBSPOT_VENDOR_EMAIL_PROPERTY;
-  const monthlyRmrProperty = process.env.HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY;
-  const productInterestProperty = process.env.HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY;
-  const vendorNameProperty = process.env.HUBSPOT_DEAL_VENDOR_NAME_PROPERTY;
+  const vendorIdProperty = getOptionalHubSpotPropertyName("HUBSPOT_VENDOR_ID_PROPERTY");
+  const vendorEmailProperty = getOptionalHubSpotPropertyName("HUBSPOT_VENDOR_EMAIL_PROPERTY");
+  const monthlyRmrProperty = getOptionalHubSpotPropertyName(
+    "HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY"
+  );
+  const productInterestProperty = getOptionalHubSpotPropertyName(
+    "HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY"
+  );
+  const communityNameProperty = getOptionalHubSpotPropertyName(
+    "HUBSPOT_DEAL_COMMUNITY_NAME_PROPERTY"
+  );
+  const vendorNameProperty = getOptionalHubSpotPropertyName(
+    "HUBSPOT_DEAL_VENDOR_NAME_PROPERTY"
+  );
 
   if (!stageId) {
     throw new Error("HubSpot deal stage is not configured.");
@@ -1010,6 +1156,7 @@ export function buildHubSpotDealProperties(payload: HubSpotDealSyncPayload) {
     dealstage: stageId,
     amount: String(payload.deal.estimatedValue),
     business: HUBSPOT_DEAL_BUSINESS_TYPE,
+    [HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY]: payload.vendor.companyName,
     description: [
       "GoAccess vendor submission",
       `Community: ${payload.deal.companyName}`,
@@ -1026,6 +1173,10 @@ export function buildHubSpotDealProperties(payload: HubSpotDealSyncPayload) {
       .filter(Boolean)
       .join("\n"),
   };
+
+  if (allowedBusinessName) {
+    properties[HUBSPOT_DEAL_BUSINESS_NAME_PROPERTY] = allowedBusinessName;
+  }
 
   if (pipelineId) {
     properties.pipeline = pipelineId;
@@ -1055,7 +1206,11 @@ export function buildHubSpotDealProperties(payload: HubSpotDealSyncPayload) {
     properties[productInterestProperty] = payload.deal.productInterest;
   }
 
-  if (vendorNameProperty) {
+  if (communityNameProperty) {
+    properties[communityNameProperty] = payload.deal.companyName;
+  }
+
+  if (vendorNameProperty && vendorNameProperty !== HUBSPOT_DEAL_BUSINESS_NAME_PROPERTY) {
     properties[vendorNameProperty] = payload.vendor.companyName;
   }
 
@@ -1065,6 +1220,50 @@ export function buildHubSpotDealProperties(payload: HubSpotDealSyncPayload) {
 
   if (payload.deal.state?.trim()) {
     properties.state = payload.deal.state.trim();
+  }
+
+  return properties;
+}
+
+export function buildHubSpotLinkedDealInvariantProperties(
+  payload: HubSpotDealSyncPayload,
+  allowedBusinessName: string | null = null
+) {
+  const customDealProperties = getHubSpotCustomDealPropertyConfig();
+
+  if (!customDealProperties.ready) {
+    throw new Error(
+      customDealProperties.issues[0] ?? "HubSpot custom deal property env vars are not ready."
+    );
+  }
+
+  const properties: Record<string, string> = {
+    business: HUBSPOT_DEAL_BUSINESS_TYPE,
+    [HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY]: payload.vendor.companyName,
+    [customDealProperties.submissionId as string]: payload.deal.id,
+    [customDealProperties.registrationStatus as string]: "synced_to_hubspot",
+    [customDealProperties.registeredAt as string]: payload.deal.createdAt,
+  };
+  const vendorIdProperty = getOptionalHubSpotPropertyName("HUBSPOT_VENDOR_ID_PROPERTY");
+  const vendorEmailProperty = getOptionalHubSpotPropertyName("HUBSPOT_VENDOR_EMAIL_PROPERTY");
+  const vendorNameProperty = getOptionalHubSpotPropertyName(
+    "HUBSPOT_DEAL_VENDOR_NAME_PROPERTY"
+  );
+
+  if (allowedBusinessName) {
+    properties[HUBSPOT_DEAL_BUSINESS_NAME_PROPERTY] = allowedBusinessName;
+  }
+
+  if (vendorIdProperty) {
+    properties[vendorIdProperty] = payload.vendor.hubspotPartnerId;
+  }
+
+  if (vendorEmailProperty) {
+    properties[vendorEmailProperty] = payload.vendor.primaryContactEmail;
+  }
+
+  if (vendorNameProperty && vendorNameProperty !== HUBSPOT_DEAL_BUSINESS_NAME_PROPERTY) {
+    properties[vendorNameProperty] = payload.vendor.companyName;
   }
 
   return properties;
@@ -1110,7 +1309,9 @@ async function logDealSyncActivity(dealId: string, payload: HubSpotDealSyncPaylo
 }
 
 async function createOrUpdateDeal(payload: HubSpotDealSyncPayload) {
-  const properties = buildHubSpotDealProperties(payload);
+  const allowedBusinessName = await readAllowedHubSpotBusinessNameOption(
+    payload.vendor.companyName
+  );
   const customDealProperties = getHubSpotCustomDealPropertyConfig();
   const existingSubmissionDealIds =
     !payload.deal.hubspotDealId && customDealProperties.ready
@@ -1119,6 +1320,10 @@ async function createOrUpdateDeal(payload: HubSpotDealSyncPayload) {
   const dealIdToUpdate = payload.deal.hubspotDealId || existingSubmissionDealIds[0];
 
   if (dealIdToUpdate) {
+    const properties = buildHubSpotLinkedDealInvariantProperties(
+      payload,
+      allowedBusinessName
+    );
     await hubSpotRequest<HubSpotObjectResponse>(`/crm/v3/objects/deals/${dealIdToUpdate}`, {
       method: "PATCH",
       body: JSON.stringify({ properties }),
@@ -1126,6 +1331,7 @@ async function createOrUpdateDeal(payload: HubSpotDealSyncPayload) {
     return dealIdToUpdate;
   }
 
+  const properties = buildHubSpotDealProperties(payload, allowedBusinessName);
   const created = await hubSpotRequest<HubSpotObjectResponse>("/crm/v3/objects/deals", {
     method: "POST",
     body: JSON.stringify({ properties }),

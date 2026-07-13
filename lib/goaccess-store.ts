@@ -592,8 +592,8 @@ const seedStore: PortalStore = {
   trainingAssets: [
     {
       id: "training-loom-1",
-      title: "Portal training video 1",
-      description: "Loom walkthrough for vendor portal training.",
+      title: "Portico — Security Check-in SOP",
+      description: "Security check-in procedures for Portico.",
       type: "video",
       source: "external",
       externalUrl: "https://www.loom.com/share/c98a580663c442049fa2bf12ab77b8d9",
@@ -603,8 +603,8 @@ const seedStore: PortalStore = {
     },
     {
       id: "training-loom-2",
-      title: "Portal training video 2",
-      description: "Loom walkthrough for vendor portal training.",
+      title: "Vaidio Edge — LPR Training",
+      description: "License plate recognition training for Vaidio Edge.",
       type: "video",
       source: "external",
       externalUrl: "https://www.loom.com/share/e09a985b9e824f50aeb19d585ed527c6",
@@ -614,8 +614,8 @@ const seedStore: PortalStore = {
     },
     {
       id: "training-loom-3",
-      title: "Portal training video 3",
-      description: "Loom walkthrough for vendor portal training.",
+      title: "GoAccess Resident Training Demonstration",
+      description: "Resident training demonstration for GoAccess.",
       type: "video",
       source: "external",
       externalUrl: "https://www.loom.com/share/b1e117a531d944c586478c9ee28ee21d",
@@ -625,8 +625,8 @@ const seedStore: PortalStore = {
     },
     {
       id: "training-loom-4",
-      title: "Portal training video 4",
-      description: "Loom walkthrough for vendor portal training.",
+      title: "Guard Tablet — Visitor Check-in",
+      description: "Visitor check-in training for the Guard Tablet.",
       type: "video",
       source: "external",
       externalUrl: "https://www.loom.com/share/c7fcce606d2b4185946945fe1af496a4",
@@ -2969,10 +2969,35 @@ export async function applyHubSpotDealReconciliation(
   input: {
     status: DealStatus;
     monthlyRmr: number | null;
+    estimatedValue: number | null;
+    productInterest: string | null;
+    companyName: string | null;
+    city: string | null;
+    state: string | null;
     stageId: string | null;
     hubspotUpdatedAt: string | null;
   }
 ) {
+  if (
+    (input.monthlyRmr !== null &&
+      (!Number.isFinite(input.monthlyRmr) || input.monthlyRmr < 0)) ||
+    (input.estimatedValue !== null &&
+      (!Number.isFinite(input.estimatedValue) || input.estimatedValue < 0))
+  ) {
+    throw new Error("HubSpot reconciliation amounts must be finite and zero or greater.");
+  }
+
+  for (const [label, value, maxLength] of [
+    ["product interest", input.productInterest, 160],
+    ["community name", input.companyName, 160],
+    ["city", input.city, 100],
+    ["state", input.state, 100],
+  ] as const) {
+    if (value !== null && (!value.trim() || value.length > maxLength)) {
+      throw new Error(`HubSpot reconciliation ${label} is invalid.`);
+    }
+  }
+
   const store = await readStore();
   const deal = store.deals.find((item) => item.id === dealId);
 
@@ -2982,10 +3007,31 @@ export async function applyHubSpotDealReconciliation(
 
   const previousStatus = deal.status;
   const previousMonthlyRmr = deal.monthlyRmr;
+  const previousEstimatedValue = deal.estimatedValue;
+  const previousProductInterest = deal.productInterest;
+  const previousCompanyName = deal.companyName;
+  const previousCity = deal.city ?? "";
+  const previousState = deal.state ?? "";
   const statusChanged = input.status !== previousStatus;
   const rmrChanged = input.monthlyRmr !== null && input.monthlyRmr !== previousMonthlyRmr;
+  const estimatedValueChanged =
+    input.estimatedValue !== null && input.estimatedValue !== previousEstimatedValue;
+  const productInterestChanged =
+    input.productInterest !== null && input.productInterest !== previousProductInterest;
+  const companyNameChanged =
+    input.companyName !== null && input.companyName !== previousCompanyName;
+  const cityChanged = input.city !== null && input.city !== previousCity;
+  const stateChanged = input.state !== null && input.state !== previousState;
 
-  if (!statusChanged && !rmrChanged) {
+  if (
+    !statusChanged &&
+    !rmrChanged &&
+    !estimatedValueChanged &&
+    !productInterestChanged &&
+    !companyNameChanged &&
+    !cityChanged &&
+    !stateChanged
+  ) {
     return { deal, changed: false };
   }
 
@@ -2993,6 +3039,26 @@ export async function applyHubSpotDealReconciliation(
 
   if (input.monthlyRmr !== null) {
     deal.monthlyRmr = input.monthlyRmr;
+  }
+
+  if (input.estimatedValue !== null) {
+    deal.estimatedValue = input.estimatedValue;
+  }
+
+  if (input.productInterest !== null) {
+    deal.productInterest = input.productInterest;
+  }
+
+  if (input.companyName !== null) {
+    deal.companyName = input.companyName;
+  }
+
+  if (input.city !== null) {
+    deal.city = input.city;
+  }
+
+  if (input.state !== null) {
+    deal.state = input.state;
   }
 
   deal.updatedAt = input.hubspotUpdatedAt ?? nowIso();
@@ -3005,6 +3071,15 @@ export async function applyHubSpotDealReconciliation(
     reference: [
       statusChanged ? `${previousStatus.replaceAll("_", " ")} → ${deal.status.replaceAll("_", " ")}` : "",
       rmrChanged ? `${formatCurrency(previousMonthlyRmr)} → ${formatCurrency(deal.monthlyRmr)} RMR` : "",
+      estimatedValueChanged
+        ? `${formatCurrency(previousEstimatedValue)} → ${formatCurrency(deal.estimatedValue)} estimated value`
+        : "",
+      productInterestChanged
+        ? `${previousProductInterest} → ${deal.productInterest} product interest`
+        : "",
+      companyNameChanged ? `${previousCompanyName} → ${deal.companyName} community` : "",
+      cityChanged ? `${previousCity} → ${deal.city} city` : "",
+      stateChanged ? `${previousState} → ${deal.state} state` : "",
       input.stageId ? `stage ${input.stageId}` : "",
     ]
       .filter(Boolean)

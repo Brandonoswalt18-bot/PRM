@@ -207,6 +207,17 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
   await page.getByLabel("Password").fill("goaccess-vendor-demo");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/portal$/);
+  await expect(page.getByRole("link", { name: "Training library" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Learn at your own pace" })).toBeVisible();
+  await expect(page.locator(".training-preview-card")).toHaveCount(4);
+  for (const title of [
+    "Portico — Security Check-in SOP",
+    "Vaidio Edge — LPR Training",
+    "GoAccess Resident Training Demonstration",
+    "Guard Tablet — Visitor Check-in",
+  ]) {
+    await expect(page.getByText(title, { exact: true })).toBeVisible();
+  }
 
   const vendorProfileResponse = await page.request.get("/api/vendor-profile");
   expect(vendorProfileResponse.ok()).toBeTruthy();

@@ -80,6 +80,7 @@ Optional env vars for HubSpot deal sync:
 - `HUBSPOT_DEAL_SUBMISSION_ID_PROPERTY` - HubSpot internal deal property name that stores the portal deal ID, for example `partner_portal_submission_id`
 - `HUBSPOT_DEAL_REGISTRATION_STATUS_PROPERTY` - HubSpot internal deal property name that stores the portal deal status, for example `partner_registration_status`
 - `HUBSPOT_DEAL_REGISTERED_AT_PROPERTY` - HubSpot internal deal property name that stores the portal submission timestamp, for example `partner_registered_at`
+- `HUBSPOT_DEAL_COMMUNITY_NAME_PROPERTY` - optional dedicated HubSpot deal property for the portal community name; reconciliation never parses the composite HubSpot deal name
 
 Operational notes:
 
@@ -88,6 +89,7 @@ Operational notes:
 - if any of those three env vars are missing, invalid, or point to the same HubSpot property, admin readiness will hold sync instead of silently degrading
 - sync creates a new HubSpot deal only when no submission-linked deal exists and no duplicate-risk conflict is found on the matched company
 - sync updates an existing HubSpot deal when the configured submission ID property already matches the portal submission
+- retrying an already-linked deal writes only portal-owned linkage, vendor identity, and `Channel Partner` invariants; it does not overwrite HubSpot-owned sales fields
 - sync holds for review when the matched company already has open deal(s), when multiple submission-linked deals are found, or when submission-link signals conflict
 - website URLs are normalized to a bare company domain before matching, and ambiguous exact-name company matches are held for review
 - existing HubSpot company and contact records are linked without overwriting CRM-curated identity fields
@@ -245,8 +247,9 @@ Optional HubSpot deal property env vars:
 
 - `HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY`
 - `HUBSPOT_DEAL_PRODUCT_INTEREST_PROPERTY`
+- `HUBSPOT_DEAL_COMMUNITY_NAME_PROPERTY`
 - `HUBSPOT_DEAL_VENDOR_NAME_PROPERTY`
 
 ## Scheduled reconciliation
 
-Vercel invokes the authenticated `/api/hubspot/reconcile` route daily. The route reads linked HubSpot deals and applies guarded status and recurring-revenue changes back into the durable portal store.
+Vercel invokes the authenticated `/api/hubspot/reconcile` route daily. The route reads linked HubSpot deals and applies guarded status, monthly RMR, estimated value, product interest, city, state, and optional dedicated community-name changes back into the durable portal store. Portal-owned vendor/legal identity and the `Channel Partner` business type are never imported from HubSpot.

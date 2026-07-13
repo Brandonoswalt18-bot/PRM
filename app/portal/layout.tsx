@@ -13,6 +13,7 @@ const partnerNavigation: WorkspaceNavItem[] = [
   { label: "Register deal", href: "/portal/links", group: "Deal pipeline", icon: "applications" },
   { label: "My deals", href: "/portal/deals", group: "Deal pipeline", icon: "deals" },
   { label: "Monthly RMR", href: "/portal/earnings", group: "Earnings", icon: "revenue" },
+  { label: "Training library", href: "/portal/learning", group: "Training", icon: "learning" },
 ];
 
 const legalOnboardingNavigation: WorkspaceNavItem[] = [
