@@ -36,7 +36,8 @@ export function toClientApprovedVendors(
 export function toClientVendorDealRegistration(
   deal: DealRegistration
 ): ClientVendorDealRegistration {
-  const clientDeal = { ...deal };
+  const clientDeal: Partial<DealRegistration> = { ...deal };
+  delete clientDeal.estimatedValue;
   delete clientDeal.hubspotCompanyId;
   delete clientDeal.hubspotContactId;
   delete clientDeal.hubspotDealId;
@@ -44,7 +45,7 @@ export function toClientVendorDealRegistration(
   return {
     ...clientDeal,
     status: deal.status === "synced_to_hubspot" ? "approved" : deal.status,
-  };
+  } as ClientVendorDealRegistration;
 }
 
 export function toClientVendorDealRegistrations(

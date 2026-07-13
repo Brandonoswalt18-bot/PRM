@@ -12,7 +12,6 @@ type DealFormState = {
   contactName: string;
   contactEmail: string;
   contactPhone: string;
-  estimatedValue: string;
   productInterest: string;
   notes: string;
 };
@@ -29,7 +28,6 @@ const initialState: DealFormState = {
   contactName: "",
   contactEmail: "",
   contactPhone: "",
-  estimatedValue: "",
   productInterest: "",
   notes: "",
 };
@@ -44,7 +42,6 @@ const requiredFieldOrder: DealFormField[] = [
   "contactEmail",
   "contactPhone",
   "productInterest",
-  "estimatedValue",
 ];
 
 const fieldLabels: Record<DealFormField, string> = {
@@ -57,7 +54,6 @@ const fieldLabels: Record<DealFormField, string> = {
   contactEmail: "Contact email",
   contactPhone: "Contact phone",
   productInterest: "Product interest",
-  estimatedValue: "Estimated project value",
   notes: "Opportunity notes",
 };
 
@@ -75,14 +71,6 @@ function validateDealForm(form: DealFormState) {
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.contactEmail.trim())
   ) {
     nextErrors.contactEmail = "Enter a valid contact email.";
-  }
-
-  if (form.estimatedValue.trim()) {
-    const estimatedValue = Number(form.estimatedValue);
-
-    if (!Number.isFinite(estimatedValue) || estimatedValue < 0) {
-      nextErrors.estimatedValue = "Enter a valid project value of 0 or more.";
-    }
   }
 
   return nextErrors;
@@ -384,37 +372,20 @@ export function DealRegistrationForm() {
         <fieldset className="deal-form-section">
           <legend>Opportunity details</legend>
           <div className="field-grid">
-            <div className="inline-form-grid">
-              <label className={`field-group ${errors.productInterest ? "has-error" : ""}`.trim()}>
-                <FieldLabel>Product interest</FieldLabel>
-                <input
-                  {...getErrorProps("productInterest", errors)}
-                  maxLength={160}
-                  name="productInterest"
-                  onChange={(event) => update("productInterest", event.target.value)}
-                  placeholder="Access control and video intercom"
-                  required
-                  type="text"
-                  value={form.productInterest}
-                />
-                <FieldError errors={errors} field="productInterest" />
-              </label>
-              <label className={`field-group ${errors.estimatedValue ? "has-error" : ""}`.trim()}>
-                <FieldLabel>Estimated project value</FieldLabel>
-                <input
-                  {...getErrorProps("estimatedValue", errors)}
-                  min="0"
-                  name="estimatedValue"
-                  onChange={(event) => update("estimatedValue", event.target.value)}
-                  placeholder="25000"
-                  required
-                  step="1"
-                  type="number"
-                  value={form.estimatedValue}
-                />
-                <FieldError errors={errors} field="estimatedValue" />
-              </label>
-            </div>
+            <label className={`field-group ${errors.productInterest ? "has-error" : ""}`.trim()}>
+              <FieldLabel>Product interest</FieldLabel>
+              <input
+                {...getErrorProps("productInterest", errors)}
+                maxLength={160}
+                name="productInterest"
+                onChange={(event) => update("productInterest", event.target.value)}
+                placeholder="Access control and video intercom"
+                required
+                type="text"
+                value={form.productInterest}
+              />
+              <FieldError errors={errors} field="productInterest" />
+            </label>
             <label className="field-group">
               <FieldLabel optional>Opportunity notes</FieldLabel>
               <textarea
@@ -430,7 +401,7 @@ export function DealRegistrationForm() {
           </div>
         </fieldset>
 
-        <p className="field-hint">Use the real community, contact, scope, and project estimate. GoAccess assigns monthly RMR during admin review.</p>
+        <p className="field-hint">Use the real community, contact, and scope. GoAccess handles financial values during internal review.</p>
         <button className="button button-primary deal-form-submit" type="submit" disabled={status === "submitting"}>
           {status === "submitting" ? "Submitting..." : "Submit deal for review"}
         </button>

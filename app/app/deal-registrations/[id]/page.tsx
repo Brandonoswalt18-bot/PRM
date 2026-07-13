@@ -79,7 +79,9 @@ export default async function AdminDealDetailPage({
     {
       label: "Estimated value",
       value: formatOptionalCurrency(deal.estimatedValue),
-      delta: "Submitted vendor opportunity value",
+      delta: deal.estimatedValue > 0
+        ? "Current HubSpot opportunity value"
+        : "Available after an amount is added in HubSpot",
     },
     {
       label: "Monthly RMR",

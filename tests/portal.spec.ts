@@ -232,11 +232,11 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
 
   await page.goto("/portal/links");
   const dealForm = page.locator("form.deal-registration-form");
-  await expect(dealForm.getByText("Required", { exact: true })).toHaveCount(10);
+  await expect(dealForm.getByText("Required", { exact: true })).toHaveCount(9);
   await expect(dealForm.getByText("Optional", { exact: true })).toHaveCount(1);
   await page.getByRole("button", { name: "Submit deal for review" }).click();
   await expect(dealForm.getByRole("alert")).toContainText("Check the highlighted fields");
-  await expect(dealForm.locator(".field-error-text")).toHaveCount(10);
+  await expect(dealForm.locator(".field-error-text")).toHaveCount(9);
   await expect(dealForm.locator('[name="companyName"]')).toBeFocused();
   await expect(dealForm.locator('[name="companyName"]')).toHaveAttribute("aria-invalid", "true");
 
@@ -249,31 +249,13 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
   await page.getByLabel("Contact email").fill(`jamie+${unique}@example.com`);
   await page.getByLabel("Contact phone").fill("555-555-0123");
   await page.getByLabel("Product interest").fill("Access control and video intercom");
-  await page.getByLabel("Estimated project value").fill("25000");
+  await expect(page.getByLabel("Estimated project value")).toHaveCount(0);
   await expect(page.getByLabel("Estimated monthly RMR")).toHaveCount(0);
   await page.getByLabel("Opportunity notes").fill("Automated isolated browser verification.");
   await expect(dealForm.locator(".field-error-text")).toHaveCount(0);
   await expect(dealForm.getByRole("alert")).toHaveCount(0);
   await page.getByRole("button", { name: "Submit deal for review" }).click();
   await expect(page.getByText("Deal registration submitted for GoAccess review.")).toBeVisible();
-
-  const missingEstimate = await page.request.post("/api/deals", {
-    data: {
-      companyName: "Missing Estimate Test",
-      communityAddress: "1 Validation Way",
-      city: "San Diego",
-      state: "CA",
-      domain: "missing-estimate.example",
-      contactName: "Validation Test",
-      contactEmail: "validation@example.com",
-      contactPhone: "555-555-0111",
-      productInterest: "Access control",
-    },
-  });
-  expect(missingEstimate.status()).toBe(400);
-  expect(await missingEstimate.json()).toMatchObject({
-    fieldErrors: { estimatedValue: "Estimated project value is required." },
-  });
 
   const dealsResponse = await page.request.get("/api/deals");
   expect(dealsResponse.ok()).toBeTruthy();
@@ -284,6 +266,7 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
     (deal) => deal.companyName === `Playwright Community ${unique}`,
   );
   expect(submittedDeal?.monthlyRmr).toBe(0);
+  expect(submittedDeal).not.toHaveProperty("estimatedValue");
   expect(JSON.stringify(submittedDeal).toLowerCase()).not.toContain("hubspot");
 
   for (const path of [
@@ -300,7 +283,7 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
     await expect(page.locator("body")).not.toContainText(/hubspot|crm/i);
   }
 
-  const tamperedRmr = await page.request.post("/api/deals", {
+  const tamperedFinancials = await page.request.post("/api/deals", {
     data: {
       companyName: `RMR Ownership Test ${unique}`,
       communityAddress: "99 Admin Control Way",
@@ -310,15 +293,16 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
       contactName: "Revenue Test",
       contactEmail: `revenue+${unique}@example.com`,
       contactPhone: "555-555-0199",
-      estimatedValue: 10000,
+      estimatedValue: 999999,
       monthlyRmr: 999999,
       productInterest: "Access control",
       notes: "Client-supplied RMR must be ignored.",
     },
   });
-  expect(tamperedRmr.ok()).toBeTruthy();
-  const tamperedPayload = (await tamperedRmr.json()) as { deal: { monthlyRmr: number } };
+  expect(tamperedFinancials.ok()).toBeTruthy();
+  const tamperedPayload = (await tamperedFinancials.json()) as { deal: { monthlyRmr: number } };
   expect(tamperedPayload.deal.monthlyRmr).toBe(0);
+  expect(tamperedPayload.deal).not.toHaveProperty("estimatedValue");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/portal/links");
@@ -369,7 +353,6 @@ test("unsigned vendor is limited to required legal onboarding", async ({ page })
       contactName: "Blocked Contact",
       contactEmail: "blocked@example.com",
       contactPhone: "555-0100",
-      estimatedValue: 1000,
       monthlyRmr: 999999,
       productInterest: "Access control",
       notes: "This request must be rejected until legal onboarding is complete.",
@@ -405,7 +388,6 @@ test("unsigned vendor is limited to required legal onboarding", async ({ page })
       contactName: "Blocked Contact",
       contactEmail: "nda-only-blocked@example.com",
       contactPhone: "555-0101",
-      estimatedValue: 1000,
       productInterest: "Access control",
       notes: "The Partner Agreement is still required.",
     },
@@ -432,7 +414,7 @@ test("GoAccess admin owns monthly RMR before deal approval", async ({ page }) =>
       contactName: "RMR Contact",
       contactEmail: `rmr+${unique}@example.com`,
       contactPhone: "555-555-0188",
-      estimatedValue: 20000,
+      estimatedValue: 999999,
       monthlyRmr: 999999,
       productInterest: "Access control",
       notes: "Admin ownership verification.",
@@ -454,6 +436,9 @@ test("GoAccess admin owns monthly RMR before deal approval", async ({ page }) =>
     data: { status: "under_review" },
   });
   expect(startReview.ok()).toBeTruthy();
+  expect(await startReview.json()).toMatchObject({
+    deal: { estimatedValue: 0, monthlyRmr: 0 },
+  });
 
   const blockedApproval = await page.request.patch(`/api/deals/${submissionPayload.deal.id}`, {
     data: { status: "approved" },
@@ -503,7 +488,6 @@ test("deal decisions notify the vendor, retain an admin audit trail, and share d
         contactName: "Decision Contact",
         contactEmail: `decision+${slug}-${unique}@example.com`,
         contactPhone: "555-555-0144",
-        estimatedValue: 18000,
         productInterest: "Access control",
         notes: "Deal decision workflow verification.",
       },

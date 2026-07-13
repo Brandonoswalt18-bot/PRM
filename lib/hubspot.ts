@@ -186,7 +186,6 @@ export function getHubSpotDealSyncConfig() {
     requiredFields: [
       { portalField: "Deal name", hubspotProperty: "dealname" },
       { portalField: "Deal stage", hubspotProperty: "dealstage" },
-      { portalField: "Estimated value", hubspotProperty: "amount" },
       { portalField: "Business type", hubspotProperty: "business" },
       { portalField: "Vendor business name", hubspotProperty: HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY },
       { portalField: "Submission detail", hubspotProperty: "description" },
@@ -1154,7 +1153,6 @@ export function buildHubSpotDealProperties(
   const properties: Record<string, string> = {
     dealname: `${payload.vendor.companyName} - ${payload.deal.companyName}`,
     dealstage: stageId,
-    amount: String(payload.deal.estimatedValue),
     business: HUBSPOT_DEAL_BUSINESS_TYPE,
     [HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY]: payload.vendor.companyName,
     description: [
@@ -1173,6 +1171,10 @@ export function buildHubSpotDealProperties(
       .filter(Boolean)
       .join("\n"),
   };
+
+  if (payload.deal.estimatedValue > 0) {
+    properties.amount = String(payload.deal.estimatedValue);
+  }
 
   if (allowedBusinessName) {
     properties[HUBSPOT_DEAL_BUSINESS_NAME_PROPERTY] = allowedBusinessName;

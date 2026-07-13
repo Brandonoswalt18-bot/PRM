@@ -182,7 +182,7 @@ export type DealRegistration = {
 
 export type ClientVendorDealRegistration = Omit<
   DealRegistration,
-  "hubspotCompanyId" | "hubspotContactId" | "hubspotDealId" | "status"
+  "estimatedValue" | "hubspotCompanyId" | "hubspotContactId" | "hubspotDealId" | "status"
 > & {
   status: Exclude<DealStatus, "synced_to_hubspot">;
 };
@@ -280,7 +280,6 @@ export type CreateDealInput = {
   contactName: string;
   contactEmail: string;
   contactPhone: string;
-  estimatedValue: number;
   productInterest: string;
   notes: string;
 };

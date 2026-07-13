@@ -42,11 +42,6 @@ export default async function PartnerDealDetailPage({
             : "Current GoAccess decision",
     },
     {
-      label: "Estimated value",
-      value: formatOptionalCurrency(deal.estimatedValue),
-      delta: "Submitted account opportunity value",
-    },
-    {
       label: "Monthly RMR",
       value: formatOptionalCurrency(deal.monthlyRmr),
       delta: deal.status === "closed_won" ? "Active recurring revenue" : "Projected if won",

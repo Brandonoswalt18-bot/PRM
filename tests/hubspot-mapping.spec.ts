@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { toClientApprovedVendor } from "../lib/goaccess-client-data";
+import {
+  toClientApprovedVendor,
+  toClientVendorDealRegistration,
+} from "../lib/goaccess-client-data";
 import {
   buildHubSpotDealReconciliationSnapshot,
   buildHubSpotDealProperties,
@@ -192,6 +195,7 @@ test("every HubSpot deal payload uses Channel Partner and the free-text vendor b
     });
     expect(HUBSPOT_DEAL_BUSINESS_TYPE).toBe("Channel Partner");
     expect(properties.business).toBe(HUBSPOT_DEAL_BUSINESS_TYPE);
+    expect(properties.amount).toBe("25000");
     expect(properties[HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY]).toBe("Acme Access");
     expect(properties.partner_community_name).toBe("Example Community");
     expect(properties).not.toHaveProperty(HUBSPOT_DEAL_BUSINESS_NAME_PROPERTY);
@@ -203,8 +207,18 @@ test("every HubSpot deal payload uses Channel Partner and the free-text vendor b
       portalField: "Vendor business name",
       hubspotProperty: HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY,
     });
+    expect(getHubSpotDealSyncConfig().requiredFields).not.toContainEqual({
+      portalField: "Estimated value",
+      hubspotProperty: "amount",
+    });
     expect(getHubSpotDealSyncConfig().mappedFields).toContain("business");
     expect(getHubSpotDealSyncConfig().mappedFields).toContain(HUBSPOT_DEAL_PARTNER_VENDOR_NAME_PROPERTY);
+
+    const propertiesWithoutVendorEstimate = buildHubSpotDealProperties({
+      vendor: buildVendor(),
+      deal: buildDeal({ estimatedValue: 0 }),
+    });
+    expect(propertiesWithoutVendorEstimate).not.toHaveProperty("amount");
   } finally {
     for (const [key, value] of Object.entries({
       HUBSPOT_DEAL_STAGE_ID: originalEnvironment.stage,
@@ -433,7 +447,7 @@ test("linked-deal retry properties preserve HubSpot-owned sales edits", () => {
   );
 });
 
-test("vendor-facing payloads redact HubSpot company mapping internals", () => {
+test("vendor-facing payloads redact internal company mapping and estimated value", () => {
   const clientVendor = toClientApprovedVendor(
     buildVendor({
       hubspotCompanyId: "company-1",
@@ -449,4 +463,7 @@ test("vendor-facing payloads redact HubSpot company mapping internals", () => {
   expect(clientVendor).not.toHaveProperty("hubspotCompanySyncedAt");
   expect(clientVendor).not.toHaveProperty("hubspotPartnerId");
   expect(clientVendor.vendorCode).toBe("GA-VENDOR-019");
+
+  const clientDeal = toClientVendorDealRegistration(buildDeal());
+  expect(clientDeal).not.toHaveProperty("estimatedValue");
 });

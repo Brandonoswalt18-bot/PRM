@@ -615,8 +615,8 @@ export function AdminDealManager({
                     </div>
                     <div className="detail-fact-grid admin-review-facts" aria-label="Submitted deal details">
                       <div className="detail-fact">
-                        <span>Estimated value</span>
-                        <strong>{formatCurrency(deal.estimatedValue)}</strong>
+                        <span>HubSpot estimated value</span>
+                        <strong>{deal.estimatedValue > 0 ? formatCurrency(deal.estimatedValue) : "Not provided"}</strong>
                       </div>
                       <div className="detail-fact">
                         <span>Community domain</span>

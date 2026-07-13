@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
 import { formatDealAgreementStatusLabel } from "@/lib/goaccess-copy";
-import type { DealRegistration } from "@/types/goaccess";
+import type { ClientVendorDealRegistration } from "@/types/goaccess";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-US", {
@@ -13,7 +13,7 @@ function formatCurrency(amount: number) {
   }).format(amount);
 }
 
-function formatPayoutSummary(deal: DealRegistration) {
+function formatPayoutSummary(deal: ClientVendorDealRegistration) {
   if (!deal.vendorPayoutType || deal.vendorPayoutRate <= 0) {
     return "GoAccess will confirm payout terms with this agreement.";
   }
@@ -23,7 +23,7 @@ function formatPayoutSummary(deal: DealRegistration) {
     : `${formatCurrency(deal.vendorPayoutRate)} flat monthly payout`;
 }
 
-export function VendorDealAgreementManager({ deal }: { deal: DealRegistration }) {
+export function VendorDealAgreementManager({ deal }: { deal: ClientVendorDealRegistration }) {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");

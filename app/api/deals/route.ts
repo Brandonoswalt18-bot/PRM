@@ -15,7 +15,6 @@ type DealPayload = {
   contactName?: string;
   contactEmail?: string;
   contactPhone?: string;
-  estimatedValue?: number | string;
   productInterest?: string;
   notes?: string;
 };
@@ -59,8 +58,6 @@ export async function POST(request: Request) {
   const contactName = body.contactName?.toString().trim() ?? "";
   const contactEmail = body.contactEmail?.toString().trim().toLowerCase() ?? "";
   const contactPhone = body.contactPhone?.toString().trim() ?? "";
-  const estimatedValueInput = body.estimatedValue?.toString().trim() ?? "";
-  const estimatedValue = Number(estimatedValueInput);
   const productInterest = body.productInterest?.toString().trim() ?? "";
   const notes = body.notes?.toString().trim() ?? "";
   const fieldErrors: DealFieldErrors = {};
@@ -74,19 +71,9 @@ export async function POST(request: Request) {
   if (!contactEmail) fieldErrors.contactEmail = "Contact email is required.";
   if (!contactPhone) fieldErrors.contactPhone = "Contact phone is required.";
   if (!productInterest) fieldErrors.productInterest = "Product interest is required.";
-  if (!estimatedValueInput) {
-    fieldErrors.estimatedValue = "Estimated project value is required.";
-  }
 
   if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
     fieldErrors.contactEmail = "Enter a valid contact email.";
-  }
-
-  if (
-    estimatedValueInput &&
-    (!Number.isFinite(estimatedValue) || estimatedValue < 0)
-  ) {
-    fieldErrors.estimatedValue = "Enter a valid project value of 0 or more.";
   }
 
   if (Object.keys(fieldErrors).length > 0) {
@@ -124,7 +111,6 @@ export async function POST(request: Request) {
       contactName,
       contactEmail,
       contactPhone,
-      estimatedValue,
       productInterest,
       notes,
     });
