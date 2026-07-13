@@ -73,6 +73,7 @@ const HUBSPOT_CUSTOM_DEAL_PROPERTY_ENV_VARS = [
 ] as const;
 const DEAL_SYNC_RECOMMENDED_ENV_VARS = [
   "HUBSPOT_DEAL_PIPELINE_ID",
+  "HUBSPOT_DEAL_OWNER_ID",
   "HUBSPOT_VENDOR_ID_PROPERTY",
   "HUBSPOT_VENDOR_EMAIL_PROPERTY",
   "HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY",
@@ -91,6 +92,7 @@ export function getHubSpotDealSyncConfig() {
   const customDealProperties = getHubSpotCustomDealPropertyConfig();
   const optionalMappings = [
     { envVar: "HUBSPOT_DEAL_PIPELINE_ID", hubspotProperty: "pipeline", source: "Portal default deal pipeline" },
+    { envVar: "HUBSPOT_DEAL_OWNER_ID", hubspotProperty: "hubspot_owner_id", source: "GoAccess deal owner" },
     { envVar: "HUBSPOT_VENDOR_ID_PROPERTY", hubspotProperty: process.env.HUBSPOT_VENDOR_ID_PROPERTY?.trim() || null, source: "Vendor HubSpot partner ID" },
     { envVar: "HUBSPOT_VENDOR_EMAIL_PROPERTY", hubspotProperty: process.env.HUBSPOT_VENDOR_EMAIL_PROPERTY?.trim() || null, source: "Vendor primary contact email" },
     { envVar: "HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY", hubspotProperty: process.env.HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY?.trim() || null, source: "Deal monthly RMR" },
@@ -131,6 +133,7 @@ export function getHubSpotDealSyncConfig() {
       "amount",
       "description",
       process.env.HUBSPOT_DEAL_PIPELINE_ID?.trim() ? "pipeline" : null,
+      process.env.HUBSPOT_DEAL_OWNER_ID?.trim() ? "hubspot_owner_id" : null,
       process.env.HUBSPOT_VENDOR_ID_PROPERTY?.trim() || null,
       process.env.HUBSPOT_VENDOR_EMAIL_PROPERTY?.trim() || null,
       customDealProperties.submissionId,
@@ -172,6 +175,22 @@ function isLikelyDomain(value: string) {
   return /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i.test(
     value.trim()
   );
+}
+
+function normalizeCompanyDomain(value: string) {
+  const candidate = value.trim().toLowerCase();
+
+  if (!candidate) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(candidate.includes("://") ? candidate : `https://${candidate}`);
+    const hostname = parsed.hostname.replace(/^www\./, "").replace(/\.$/, "");
+    return isLikelyDomain(hostname) ? hostname : null;
+  } catch {
+    return null;
+  }
 }
 
 function isValidHubSpotPropertyName(value: string) {
@@ -362,17 +381,17 @@ async function searchCompanyByDomain(domain: string) {
   return result.results?.[0]?.id ?? null;
 }
 
-async function searchCompanyByName(name: string) {
+async function searchCompanyIdsByName(name: string) {
   const normalizedName = name.trim();
 
   if (!normalizedName) {
-    return null;
+    return [];
   }
 
   const result = await hubSpotRequest<HubSpotSearchResponse>("/crm/v3/objects/companies/search", {
     method: "POST",
     body: JSON.stringify({
-      limit: 1,
+      limit: 2,
       properties: ["name", "domain", "city", "state"],
       filterGroups: [
         {
@@ -382,7 +401,7 @@ async function searchCompanyByName(name: string) {
     }),
   });
 
-  return result.results?.[0]?.id ?? null;
+  return result.results?.map((item) => item.id) ?? [];
 }
 
 async function searchDealsByProperty(propertyName: string, value: string) {
@@ -417,7 +436,7 @@ async function getContactByEmail(email: string) {
 }
 
 async function createOrUpdateCompany(deal: DealRegistration) {
-  const normalizedDomain = deal.domain.trim().toLowerCase();
+  const normalizedDomain = normalizeCompanyDomain(deal.domain);
   const properties: Record<string, string> = {
     name: deal.companyName,
   };
@@ -434,19 +453,25 @@ async function createOrUpdateCompany(deal: DealRegistration) {
     properties.state = deal.state.trim();
   }
 
-  if (isLikelyDomain(normalizedDomain)) {
+  if (normalizedDomain) {
     properties.domain = normalizedDomain;
+  }
+
+  const companyNameMatches = properties.domain
+    ? []
+    : await searchCompanyIdsByName(deal.companyName);
+
+  if (companyNameMatches.length > 1) {
+    throw new Error(
+      `Multiple HubSpot companies match ${deal.companyName}. Resolve the duplicate before syncing.`
+    );
   }
 
   const companyId = properties.domain
     ? await searchCompanyByDomain(properties.domain)
-    : await searchCompanyByName(deal.companyName);
+    : companyNameMatches[0] ?? null;
 
   if (companyId) {
-    await hubSpotRequest<HubSpotObjectResponse>(`/crm/v3/objects/companies/${companyId}`, {
-      method: "PATCH",
-      body: JSON.stringify({ properties }),
-    });
     return companyId;
   }
 
@@ -471,10 +496,6 @@ async function createOrUpdateContact(deal: DealRegistration) {
   const contactId = await getContactByEmail(deal.contactEmail);
 
   if (contactId) {
-    await hubSpotRequest<HubSpotObjectResponse>(`/crm/v3/objects/contacts/${contactId}`, {
-      method: "PATCH",
-      body: JSON.stringify({ properties }),
-    });
     return contactId;
   }
 
@@ -569,10 +590,15 @@ export async function inspectDealRegistrationForHubSpot(
     };
   }
 
-  const normalizedDomain = payload.deal.domain.trim().toLowerCase();
-  const existingCompanyId = isLikelyDomain(normalizedDomain)
+  const normalizedDomain = normalizeCompanyDomain(payload.deal.domain);
+  const companyNameMatches = normalizedDomain
+    ? []
+    : await searchCompanyIdsByName(payload.deal.companyName);
+  const existingCompanyId = normalizedDomain
     ? await searchCompanyByDomain(normalizedDomain)
-    : await searchCompanyByName(payload.deal.companyName);
+    : companyNameMatches.length === 1
+      ? companyNameMatches[0]
+      : null;
   const existingContactId = await getContactByEmail(payload.deal.contactEmail);
   const existingSubmissionDealIds = await searchDealsByProperty(
     customDealProperties.submissionId as string,
@@ -596,6 +622,12 @@ export async function inspectDealRegistrationForHubSpot(
 
   if (existingSubmissionDealIds.length > 1) {
     conflicts.push(`Multiple HubSpot deals already match submission ${payload.deal.id}.`);
+  }
+
+  if (companyNameMatches.length > 1) {
+    conflicts.push(
+      `Multiple HubSpot companies match ${payload.deal.companyName}; add a unique website domain or resolve the duplicate before syncing.`
+    );
   }
 
   if (
@@ -625,7 +657,7 @@ export async function inspectDealRegistrationForHubSpot(
     );
   }
 
-  if (!isLikelyDomain(normalizedDomain)) {
+  if (!normalizedDomain) {
     warnings.push(
       "No company domain was submitted, so company matching falls back to an exact HubSpot company-name search."
     );
@@ -669,6 +701,7 @@ function buildDealProperties(payload: HubSpotDealSyncPayload) {
   const customDealProperties = getHubSpotCustomDealPropertyConfig();
   const stageId = process.env.HUBSPOT_DEAL_STAGE_ID;
   const pipelineId = process.env.HUBSPOT_DEAL_PIPELINE_ID;
+  const ownerId = process.env.HUBSPOT_DEAL_OWNER_ID;
   const vendorIdProperty = process.env.HUBSPOT_VENDOR_ID_PROPERTY;
   const vendorEmailProperty = process.env.HUBSPOT_VENDOR_EMAIL_PROPERTY;
   const monthlyRmrProperty = process.env.HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY;
@@ -709,6 +742,10 @@ function buildDealProperties(payload: HubSpotDealSyncPayload) {
     properties.pipeline = pipelineId;
   }
 
+  if (ownerId) {
+    properties.hubspot_owner_id = ownerId;
+  }
+
   if (vendorIdProperty) {
     properties[vendorIdProperty] = payload.vendor.hubspotPartnerId;
   }
@@ -718,7 +755,7 @@ function buildDealProperties(payload: HubSpotDealSyncPayload) {
   }
 
   properties[customDealProperties.submissionId as string] = payload.deal.id;
-  properties[customDealProperties.registrationStatus as string] = payload.deal.status;
+  properties[customDealProperties.registrationStatus as string] = "synced_to_hubspot";
   properties[customDealProperties.registeredAt as string] = payload.deal.createdAt;
 
   if (monthlyRmrProperty) {

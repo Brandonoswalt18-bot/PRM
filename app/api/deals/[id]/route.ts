@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminRouteAccess } from "@/lib/auth-guards";
+import { getWorkspaceSession } from "@/lib/auth";
 import { toClientApprovedVendor } from "@/lib/goaccess-client-data";
 import {
   inspectDealRegistrationForHubSpot,
@@ -9,6 +10,8 @@ import {
   canTransitionDealStatus,
   getDealById,
   getVendorById,
+  listDealDecisionAudit,
+  recordDealDecision,
   recordDealSyncEvent,
   updateDealMonthlyRmr,
   updateDealStatus,
@@ -98,7 +101,10 @@ export async function GET(
   }
 
   const { id } = await context.params;
-  const deal = await getDealById(id);
+  const [deal, decisionAudit] = await Promise.all([
+    getDealById(id),
+    listDealDecisionAudit(id),
+  ]);
 
   if (!deal) {
     return NextResponse.json({ message: "Deal not found." }, { status: 404 });
@@ -116,6 +122,7 @@ export async function GET(
     return NextResponse.json({
       ok: true,
       deal,
+      decisionAudit,
       vendor: toClientApprovedVendor(vendor),
       hubspot,
     });
@@ -144,16 +151,44 @@ export async function PATCH(
 
   const { id } = await context.params;
 
-  let body: { status?: DealStatus; monthlyRmr?: number | string };
+  let body: {
+    status?: DealStatus;
+    monthlyRmr?: number | string;
+    declineReason?: string;
+  };
 
   try {
-    body = (await request.json()) as { status?: DealStatus; monthlyRmr?: number | string };
+    body = (await request.json()) as {
+      status?: DealStatus;
+      monthlyRmr?: number | string;
+      declineReason?: string;
+    };
   } catch {
     return NextResponse.json({ message: "Invalid status payload." }, { status: 400 });
   }
 
   if (body.status && !allowedStatuses.includes(body.status)) {
     return NextResponse.json({ message: "Unsupported deal status." }, { status: 400 });
+  }
+
+  if (body.declineReason !== undefined && typeof body.declineReason !== "string") {
+    return NextResponse.json({ message: "Decline reason must be text." }, { status: 400 });
+  }
+
+  const declineReason = body.declineReason?.trim() || undefined;
+
+  if (declineReason && body.status !== "rejected") {
+    return NextResponse.json(
+      { message: "A decline reason can only be saved when declining a deal." },
+      { status: 400 }
+    );
+  }
+
+  if (declineReason && declineReason.length > 1000) {
+    return NextResponse.json(
+      { message: "Decline reason must be 1,000 characters or fewer." },
+      { status: 400 }
+    );
   }
 
   const hasMonthlyRmr = body.monthlyRmr !== undefined && body.monthlyRmr !== null && body.monthlyRmr !== "";
@@ -204,17 +239,27 @@ export async function PATCH(
     }
 
     if (body.status === "approved") {
+      const adminSession = await getWorkspaceSession();
+
+      if (!adminSession) {
+        return NextResponse.json({ message: "Admin session required." }, { status: 401 });
+      }
+
       const vendor = await getVendorById(existingDeal.vendorId);
 
       if (!vendor) {
         return NextResponse.json({ message: "Approved vendor not found for this deal." }, { status: 404 });
       }
 
-      const approvedDeal = await updateDealStatus(id, "approved", {
+      const decisionResult = await recordDealDecision(id, {
+        decision: "approved",
+        decidedByName: adminSession.fullName,
+        decidedByEmail: adminSession.email,
         syncAction: "Deal approved. Automatic HubSpot handoff started",
         syncStatus: "queued",
         syncReference: "Running HubSpot readiness check",
       });
+      const approvedDeal = decisionResult.deal;
 
       try {
         const syncResult = await attemptDealHubSpotSync(approvedDeal, vendor);
@@ -223,6 +268,9 @@ export async function PATCH(
           return NextResponse.json({
             ok: true,
             deal: syncResult.deal,
+            decisionAuditEntry: decisionResult.auditEntry,
+            decisionNotification: decisionResult.notification,
+            handoffStatus: "synced",
             hubspot: syncResult.inspection,
             message: "Deal approved and written to HubSpot.",
           });
@@ -231,6 +279,9 @@ export async function PATCH(
         return NextResponse.json({
           ok: true,
           deal: approvedDeal,
+          decisionAuditEntry: decisionResult.auditEntry,
+          decisionNotification: decisionResult.notification,
+          handoffStatus: "held",
           hubspot: syncResult.inspection,
           message: `Deal approved, but HubSpot sync is blocked: ${syncResult.reference}`,
         });
@@ -248,9 +299,35 @@ export async function PATCH(
         return NextResponse.json({
           ok: true,
           deal: approvedDeal,
+          decisionAuditEntry: decisionResult.auditEntry,
+          decisionNotification: decisionResult.notification,
+          handoffStatus: "failed",
           message: `Deal approved, but automatic HubSpot delivery failed: ${reference}`,
         });
       }
+    }
+
+    if (body.status === "rejected") {
+      const adminSession = await getWorkspaceSession();
+
+      if (!adminSession) {
+        return NextResponse.json({ message: "Admin session required." }, { status: 401 });
+      }
+
+      const decisionResult = await recordDealDecision(id, {
+        decision: "rejected",
+        declineReason,
+        decidedByName: adminSession.fullName,
+        decidedByEmail: adminSession.email,
+      });
+
+      return NextResponse.json({
+        ok: true,
+        deal: decisionResult.deal,
+        decisionAuditEntry: decisionResult.auditEntry,
+        decisionNotification: decisionResult.notification,
+        message: getDealStatusMessage("rejected"),
+      });
     }
 
     if (body.status === "synced_to_hubspot") {
@@ -267,6 +344,7 @@ export async function PATCH(
           return NextResponse.json(
             {
               message: syncResult.reference,
+              handoffStatus: "held",
               hubspot: syncResult.inspection,
             },
             { status: 409 }
@@ -276,6 +354,7 @@ export async function PATCH(
         return NextResponse.json({
           ok: true,
           deal: syncResult.deal,
+          handoffStatus: "synced",
           hubspot: syncResult.inspection,
           message: "Deal approved and written to HubSpot.",
         });
@@ -294,6 +373,7 @@ export async function PATCH(
               error instanceof Error
                 ? error.message
                 : "Unable to write this approved deal to HubSpot.",
+            handoffStatus: "failed",
           },
           { status: 502 }
         );

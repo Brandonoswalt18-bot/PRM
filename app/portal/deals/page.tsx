@@ -34,11 +34,11 @@ export default async function PartnerDealsPage() {
       delta: `${formatCurrency(deals.filter((deal) => deal.status === "closed_won").reduce((sum, deal) => sum + deal.monthlyRmr, 0))} active monthly RMR`,
     },
     {
-      label: "Held or rejected",
+      label: "In review / declined",
       value: String(
         deals.filter((deal) => deal.status === "under_review" || deal.status === "rejected").length
       ),
-      delta: `${deals.filter((deal) => deal.status === "approved").length} approved and pending internal follow-through`,
+      delta: `${deals.filter((deal) => deal.status === "under_review").length} in review · ${deals.filter((deal) => deal.status === "rejected").length} declined`,
     },
   ];
 
@@ -62,7 +62,7 @@ export default async function PartnerDealsPage() {
             </div>
           </div>
           {deals.length > 0 ? (
-            <p className="table-note">Open any deal for agreement status, expected earnings, and the full review timeline.</p>
+            <p className="table-note">Open any deal for its agreement status, expected earnings, and status history.</p>
           ) : null}
           <div className="data-table">
             <div className="table-head table-cols-5">
@@ -83,16 +83,15 @@ export default async function PartnerDealsPage() {
                 </span>
               </div>
             ))}
-            {deals.length === 0 ? (
-              <div className="table-row table-cols-5">
-                <span>No deal registrations yet</span>
-                <span>-</span>
-                <span>-</span>
-                <span>Start with your first community submission</span>
-                <span>-</span>
-              </div>
-            ) : null}
           </div>
+          {deals.length === 0 ? (
+            <div className="empty-state-card">
+              <span className="section-kicker">No deals yet</span>
+              <h3>Register your first opportunity.</h3>
+              <p>Submit a community opportunity and GoAccess will handle the review and next steps.</p>
+              <a className="button button-primary" href="/portal/links">Register a deal</a>
+            </div>
+          ) : null}
         </article>
         <section className="dashboard-grid">
           {deals.slice(0, 3).map((deal) => (

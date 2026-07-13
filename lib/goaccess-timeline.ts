@@ -241,8 +241,10 @@ export function buildVendorDealTimeline(deal: DealRegistration): TimelineEntry[]
   if (deal.status === "rejected") {
     entries.push({
       title: "Deal declined",
-      detail: "GoAccess completed its review and declined this registration.",
-      timestamp: deal.updatedAt,
+      detail: deal.declineReason
+        ? `GoAccess completed its review. Reason: ${deal.declineReason}`
+        : "GoAccess completed its review and declined this registration.",
+      timestamp: deal.decisionAt ?? deal.updatedAt,
       tone: "danger",
     });
   }

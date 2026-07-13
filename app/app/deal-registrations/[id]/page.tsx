@@ -15,6 +15,7 @@ import {
   formatCurrency,
   getDealById,
   getVendorById,
+  listDealDecisionAudit,
   listSupportRequests,
   listSyncEvents,
 } from "@/lib/goaccess-store";
@@ -33,7 +34,11 @@ export default async function AdminDealDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [deal, syncEvents] = await Promise.all([getDealById(id), listSyncEvents()]);
+  const [deal, syncEvents, decisionAudit] = await Promise.all([
+    getDealById(id),
+    listSyncEvents(),
+    listDealDecisionAudit(id),
+  ]);
 
   if (!deal) {
     notFound();
@@ -135,6 +140,19 @@ export default async function AdminDealDetailPage({
     profileRows.push({ label: "Notes", value: deal.notes });
   }
 
+  if (deal.declineReason) {
+    profileRows.push({ label: "Reason shared with vendor", value: deal.declineReason });
+  }
+
+  const decisionTimeline = decisionAudit.map((entry) => ({
+    title: entry.decision === "approved" ? "Deal approved" : "Deal declined",
+    detail: `${entry.decidedByName} (${entry.decidedByEmail})${
+      entry.declineReason ? ` · Shared reason: ${entry.declineReason}` : ""
+    }`,
+    timestamp: entry.createdAt,
+    tone: entry.decision === "approved" ? ("success" as const) : ("danger" as const),
+  }));
+
   return (
     <>
       <WorkspacePageHeader
@@ -204,13 +222,26 @@ export default async function AdminDealDetailPage({
           </article>
         </section>
         <section className="dashboard-grid">
-          <AdminDealAgreementManager deal={deal} />
+          {deal.status === "closed_won" || deal.agreementStatus !== "not_started" ? (
+            <AdminDealAgreementManager deal={deal} />
+          ) : (
+            <article className="workspace-card wide-card">
+              <span className="section-kicker">Dealer agreement</span>
+              <h3>Available after closed won</h3>
+              <p>Complete the deal review first. Agreement upload and payout terms begin after the opportunity closes won.</p>
+            </article>
+          )}
         </section>
         <section className="dashboard-grid">
           <TimelineSection
             title="Review and sync timeline"
-            description="Submission, review decisions, HubSpot writes, and final outcomes."
+            description="Recorded submission, review, HubSpot, agreement, and outcome events."
             entries={buildDealTimeline(deal, syncEvents)}
+          />
+          <TimelineSection
+            title="Admin decision audit"
+            description="Who made each approval or decline decision and when it was recorded."
+            entries={decisionTimeline}
           />
         </section>
       </div>

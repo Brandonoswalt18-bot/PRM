@@ -123,7 +123,7 @@ function getDealNextAction(deal: DealRegistration) {
   }
 
   if (deal.status === "under_review") {
-    return "Approve and sync or decline it now.";
+    return "Approve or decline it now.";
   }
 
   if (deal.status === "approved") {
@@ -228,6 +228,8 @@ export function AdminDealManager({
   const [performanceRange, setPerformanceRange] = useState<PerformanceRange>("weekly");
   const [actionFilter, setActionFilter] = useState<ActionQueueFilter>(mapLegacyQueueToActionFilter(activeQueue));
   const [searchQuery, setSearchQuery] = useState("");
+  const [declineOpenId, setDeclineOpenId] = useState<string | null>(null);
+  const [declineReasons, setDeclineReasons] = useState<Record<string, string>>({});
   const [rmrValues, setRmrValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(deals.map((deal) => [deal.id, deal.monthlyRmr > 0 ? String(deal.monthlyRmr) : ""]))
   );
@@ -371,13 +373,6 @@ export function AdminDealManager({
   }, [actionFilter, deals, deferredSearch, vendors]);
 
   async function updateStatus(dealId: string, status: DealStatus) {
-    if (
-      status === "rejected" &&
-      !window.confirm("Reject this deal? This removes it from the active deal workflow and cannot be undone here.")
-    ) {
-      return;
-    }
-
     setBusyId(dealId);
     setMessage("");
 
@@ -389,6 +384,9 @@ export function AdminDealManager({
         body: JSON.stringify({
           status,
           ...(rmrValue ? { monthlyRmr: Number(rmrValue) } : {}),
+          ...(status === "rejected"
+            ? { declineReason: declineReasons[dealId]?.trim() || undefined }
+            : {}),
         }),
       });
 
@@ -403,6 +401,9 @@ export function AdminDealManager({
       startTransition(() => {
         router.refresh();
       });
+      if (status === "rejected") {
+        setDeclineOpenId(null);
+      }
       setMessage(payload.message ?? `Deal updated to ${formatDealStatusLabel(status)}.`);
     } catch {
       setMessage("Network error while updating deal.");
@@ -414,8 +415,8 @@ export function AdminDealManager({
   async function saveMonthlyRmr(dealId: string) {
     const monthlyRmr = Number(rmrValues[dealId]);
 
-    if (!Number.isFinite(monthlyRmr) || monthlyRmr < 0) {
-      setMessage("Enter a valid non-negative monthly RMR amount.");
+    if (!Number.isFinite(monthlyRmr) || monthlyRmr <= 0) {
+      setMessage("Enter a monthly RMR amount greater than zero.");
       return;
     }
 
@@ -544,6 +545,7 @@ export function AdminDealManager({
             const allowedNextSteps = allowedTransitions[deal.status];
             const isRejected = deal.status === "rejected";
             const isSelected = selectedDealId === deal.id;
+            const isRmrReady = Number(rmrValues[deal.id]) > 0;
 
             return (
               <div
@@ -611,12 +613,42 @@ export function AdminDealManager({
                         </p>
                       </div>
                     </div>
+                    <div className="detail-fact-grid admin-review-facts" aria-label="Submitted deal details">
+                      <div className="detail-fact">
+                        <span>Estimated value</span>
+                        <strong>{formatCurrency(deal.estimatedValue)}</strong>
+                      </div>
+                      <div className="detail-fact">
+                        <span>Community domain</span>
+                        <strong>{deal.domain || "Not provided"}</strong>
+                      </div>
+                      <div className="detail-fact">
+                        <span>Contact phone</span>
+                        <strong>{deal.contactPhone || "Not provided"}</strong>
+                      </div>
+                      <div className="detail-fact">
+                        <span>Product interest</span>
+                        <strong>{deal.productInterest || "Not provided"}</strong>
+                      </div>
+                    </div>
+                    {deal.notes ? (
+                      <div className="admin-review-notes">
+                        <span className="detail-banner-label">Vendor notes</span>
+                        <p>{deal.notes}</p>
+                      </div>
+                    ) : null}
+                    {deal.declineReason ? (
+                      <div className="admin-review-notes admin-review-notes-danger">
+                        <span className="detail-banner-label">Reason shared with vendor</span>
+                        <p>{deal.declineReason}</p>
+                      </div>
+                    ) : null}
                     <div className="admin-rmr-control">
                       <label className="field-group">
                         <span className="field-label">Monthly RMR (GoAccess admin)</span>
                         <input
                           aria-label={`Monthly RMR for ${deal.companyName}`}
-                          min="0"
+                          min="1"
                           placeholder="Enter approved monthly RMR"
                           step="1"
                           type="number"
@@ -635,7 +667,9 @@ export function AdminDealManager({
                         >
                           Save RMR
                         </button>
-                        <p className="stack-note">Required before approval. Vendors cannot enter or change this amount.</p>
+                        <p className="stack-note">
+                          Enter an amount greater than zero before approval. Vendors cannot enter or change it.
+                        </p>
                       </div>
                     </div>
                     <div className="stage-pill-row" aria-label="Deal lifecycle">
@@ -652,7 +686,8 @@ export function AdminDealManager({
                               disabled={
                                 busyId === deal.id ||
                                 !actionStatus ||
-                                !allowedNextSteps.includes(actionStatus)
+                                !allowedNextSteps.includes(actionStatus) ||
+                                (actionStatus === "approved" && deal.status === "under_review" && !isRmrReady)
                               }
                               key={`${deal.id}-${stage.label}`}
                               type="button"
@@ -667,11 +702,50 @@ export function AdminDealManager({
                         className="button button-secondary button-inline-danger"
                         type="button"
                         disabled={busyId === deal.id || !allowedNextSteps.includes("rejected")}
-                        onClick={() => updateStatus(deal.id, "rejected")}
+                        onClick={() => setDeclineOpenId(deal.id)}
                       >
-                        Reject
+                        Decline
                       </button>
                     </div>
+                    {declineOpenId === deal.id ? (
+                      <div className="decline-decision-panel">
+                        <label className="field-group">
+                          <span className="field-label">Reason shared with vendor (optional)</span>
+                          <textarea
+                            maxLength={1000}
+                            placeholder="Briefly explain why this registration cannot be approved."
+                            value={declineReasons[deal.id] ?? ""}
+                            onChange={(event) =>
+                              setDeclineReasons((current) => ({
+                                ...current,
+                                [deal.id]: event.target.value,
+                              }))
+                            }
+                          />
+                        </label>
+                        <p className="stack-note">
+                          The vendor will see this reason in the portal and in the decision email.
+                        </p>
+                        <div className="inline-button-row">
+                          <button
+                            className="button button-secondary"
+                            disabled={busyId === deal.id}
+                            onClick={() => setDeclineOpenId(null)}
+                            type="button"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            className="button button-secondary button-inline-danger"
+                            disabled={busyId === deal.id}
+                            onClick={() => updateStatus(deal.id, "rejected")}
+                            type="button"
+                          >
+                            Confirm decline
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
                     <div className="detail-fact-grid">
                       <div className="detail-fact">
                         <span>Status</span>
@@ -689,6 +763,12 @@ export function AdminDealManager({
                         <span>HubSpot</span>
                         <strong>{deal.hubspotDealId ? `#${deal.hubspotDealId}` : "Not synced"}</strong>
                       </div>
+                      {deal.decisionAt ? (
+                        <div className="detail-fact">
+                          <span>Decision recorded</span>
+                          <strong>{new Date(deal.decisionAt).toLocaleString()}</strong>
+                        </div>
+                      ) : null}
                     </div>
                     <div className="detail-link-row">
                       <Link className="detail-link-chip" href={`/app/deal-registrations/${deal.id}`}>

@@ -20,11 +20,13 @@ import type {
   DealAgreementStatus,
   DealAgreementUploadInput,
   DealAgreementUploadResult,
+  DealDecisionAuditEntry,
   DealRegistration,
   DealStatus,
   DealStatusUpdateOptions,
   DealSyncEvent,
   PortalStore,
+  RecordDealDecisionInput,
   VendorPayoutType,
   SupportRequest,
   TimelineEntry,
@@ -158,8 +160,21 @@ type DealRegistrationRow = {
   hubspot_company_id: string | null;
   hubspot_contact_id: string | null;
   hubspot_deal_id: string | null;
+  decision_at: string | null;
+  decline_reason: string | null;
   created_at: string;
   updated_at: string;
+};
+
+type DealDecisionAuditRow = {
+  id: string;
+  deal_id: string;
+  vendor_id: string;
+  decision: DealDecisionAuditEntry["decision"];
+  decline_reason: string | null;
+  decided_by_name: string;
+  decided_by_email: string;
+  created_at: string;
 };
 
 type DealSyncEventRow = {
@@ -176,6 +191,7 @@ type VendorNotificationRow = {
   id: string;
   application_id: string | null;
   vendor_id: string | null;
+  deal_id: string | null;
   recipient_email: string;
   subject: string;
   category: VendorNotification["category"];
@@ -480,6 +496,7 @@ const seedStore: PortalStore = {
       updatedAt: "2026-02-28T12:00:00.000Z",
     },
   ],
+  dealDecisionAudit: [],
   syncEvents: [
     {
       id: "sync-1",
@@ -729,6 +746,7 @@ function normalizeStore(store: PortalStore | Partial<PortalStore>): PortalStore 
     ),
     approvedVendors: approvedVendors.map(normalizeApprovedVendor),
     deals: store.deals ?? seed.deals,
+    dealDecisionAudit: store.dealDecisionAudit ?? seed.dealDecisionAudit,
     syncEvents: store.syncEvents ?? seed.syncEvents,
     notifications: store.notifications ?? seed.notifications,
     supportRequests: store.supportRequests ?? seed.supportRequests,
@@ -926,6 +944,8 @@ function dealRegistrationToRow(deal: DealRegistration): DealRegistrationRow {
     hubspot_company_id: deal.hubspotCompanyId ?? null,
     hubspot_contact_id: deal.hubspotContactId ?? null,
     hubspot_deal_id: deal.hubspotDealId ?? null,
+    decision_at: deal.decisionAt ?? null,
+    decline_reason: deal.declineReason ?? null,
     created_at: deal.createdAt,
     updated_at: deal.updatedAt,
   };
@@ -968,8 +988,36 @@ function rowToDealRegistration(row: DealRegistrationRow): DealRegistration {
     hubspotCompanyId: row.hubspot_company_id ?? undefined,
     hubspotContactId: row.hubspot_contact_id ?? undefined,
     hubspotDealId: row.hubspot_deal_id ?? undefined,
+    decisionAt: row.decision_at ?? undefined,
+    declineReason: row.decline_reason ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+}
+
+function dealDecisionAuditToRow(entry: DealDecisionAuditEntry): DealDecisionAuditRow {
+  return {
+    id: entry.id,
+    deal_id: entry.dealId,
+    vendor_id: entry.vendorId,
+    decision: entry.decision,
+    decline_reason: entry.declineReason ?? null,
+    decided_by_name: entry.decidedByName,
+    decided_by_email: entry.decidedByEmail,
+    created_at: entry.createdAt,
+  };
+}
+
+function rowToDealDecisionAudit(row: DealDecisionAuditRow): DealDecisionAuditEntry {
+  return {
+    id: row.id,
+    dealId: row.deal_id,
+    vendorId: row.vendor_id,
+    decision: row.decision,
+    declineReason: row.decline_reason ?? undefined,
+    decidedByName: row.decided_by_name,
+    decidedByEmail: row.decided_by_email,
+    createdAt: row.created_at,
   };
 }
 
@@ -1002,6 +1050,7 @@ function vendorNotificationToRow(notification: VendorNotification): VendorNotifi
     id: notification.id,
     application_id: notification.applicationId ?? null,
     vendor_id: notification.vendorId ?? null,
+    deal_id: notification.dealId ?? null,
     recipient_email: notification.recipientEmail,
     subject: notification.subject,
     category: notification.category,
@@ -1016,6 +1065,7 @@ function rowToVendorNotification(row: VendorNotificationRow): VendorNotification
     id: row.id,
     applicationId: row.application_id ?? undefined,
     vendorId: row.vendor_id ?? undefined,
+    dealId: row.deal_id ?? undefined,
     recipientEmail: row.recipient_email,
     subject: row.subject,
     category: row.category,
@@ -1207,6 +1257,7 @@ async function readSupabaseStore(): Promise<DatabasePortalStore | null> {
     { data: vendorApplicationRows, error: vendorApplicationsError },
     { data: approvedVendorRows, error: approvedVendorsError },
     { data: dealRows, error: dealsError },
+    { data: dealDecisionAuditRows, error: dealDecisionAuditError },
     { data: syncEventRows, error: syncEventsError },
     { data: notificationRows, error: notificationsError },
     { data: supportRequestRows, error: supportRequestsError },
@@ -1216,6 +1267,7 @@ async function readSupabaseStore(): Promise<DatabasePortalStore | null> {
     client.from("vendor_applications").select("*"),
     client.from("approved_vendors").select("*"),
     client.from("deal_registrations").select("*"),
+    client.from("deal_decision_audit").select("*"),
     client.from("sync_events").select("*"),
     client.from("vendor_notifications").select("*"),
     client.from("support_requests").select("*"),
@@ -1227,6 +1279,7 @@ async function readSupabaseStore(): Promise<DatabasePortalStore | null> {
     vendorApplicationsError ??
     approvedVendorsError ??
     dealsError ??
+    dealDecisionAuditError ??
     syncEventsError ??
     notificationsError ??
     supportRequestsError ??
@@ -1243,6 +1296,9 @@ async function readSupabaseStore(): Promise<DatabasePortalStore | null> {
     ),
     approvedVendors: ((approvedVendorRows ?? []) as ApprovedVendorRow[]).map(rowToApprovedVendor),
     deals: ((dealRows ?? []) as DealRegistrationRow[]).map(rowToDealRegistration),
+    dealDecisionAudit: ((dealDecisionAuditRows ?? []) as DealDecisionAuditRow[]).map(
+      rowToDealDecisionAudit
+    ),
     syncEvents: ((syncEventRows ?? []) as DealSyncEventRow[]).map(rowToDealSyncEvent),
     notifications: ((notificationRows ?? []) as VendorNotificationRow[]).map(
       rowToVendorNotification
@@ -1351,6 +1407,11 @@ async function writeSupabaseStore(
     await upsertRows(client, "vendor_applications", store.vendorApplications.map(vendorApplicationToRow));
     await upsertRows(client, "approved_vendors", store.approvedVendors.map(approvedVendorToRow));
     await upsertRows(client, "deal_registrations", store.deals.map(dealRegistrationToRow));
+    await upsertRows(
+      client,
+      "deal_decision_audit",
+      store.dealDecisionAudit.map(dealDecisionAuditToRow)
+    );
     await upsertRows(client, "sync_events", store.syncEvents.map(dealSyncEventToRow));
     await upsertRows(client, "vendor_notifications", store.notifications.map(vendorNotificationToRow));
     await upsertRows(client, "support_requests", store.supportRequests.map(supportRequestToRow));
@@ -1393,6 +1454,31 @@ async function writeStore(store: PortalStore) {
   }
 
   await writeLegacyStore(store);
+}
+
+async function persistVendorNotification(notification: VendorNotification) {
+  const supabaseConfig = getSupabaseServerConfig();
+
+  if (supabaseConfig.enabled) {
+    const client = await getSupabaseAdminClient();
+
+    if (!client) {
+      throw new Error("Supabase is configured but unavailable.");
+    }
+
+    await upsertRows(client, "vendor_notifications", [vendorNotificationToRow(notification)]);
+    return;
+  }
+
+  // The JSON fallback is only used for local development and isolated tests. Merge
+  // into the latest snapshot so email latency cannot restore the pre-email store.
+  const latestStore = await readLegacyStore();
+
+  if (!latestStore.notifications.some((item) => item.id === notification.id)) {
+    latestStore.notifications.unshift(notification);
+  }
+
+  await writeLegacyStore(latestStore);
 }
 
 /*
@@ -1569,6 +1655,13 @@ export async function listDeals(vendorId?: string) {
   const store = await readStore();
   const deals = vendorId ? store.deals.filter((deal) => deal.vendorId === vendorId) : store.deals;
   return [...deals].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function listDealDecisionAudit(dealId: string) {
+  const store = await readStore();
+  return store.dealDecisionAudit
+    .filter((entry) => entry.dealId === dealId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function listSyncEvents() {
@@ -1982,6 +2075,7 @@ function buildNotification(
 async function recordWorkflowEmail(input: {
   applicationId?: string;
   vendorId?: string;
+  dealId?: string;
   recipientEmail: string | string[];
   subject: string;
   category: VendorNotification["category"];
@@ -2001,6 +2095,7 @@ async function recordWorkflowEmail(input: {
   return buildNotification({
     applicationId: input.applicationId,
     vendorId: input.vendorId,
+    dealId: input.dealId,
     recipientEmail: Array.isArray(input.recipientEmail)
       ? input.recipientEmail.join(", ")
       : input.recipientEmail,
@@ -2658,6 +2753,145 @@ export async function updateDealStatus(
 
   await writeStore(store);
   return deal;
+}
+
+export async function recordDealDecision(
+  dealId: string,
+  input: RecordDealDecisionInput
+) {
+  const decidedByName = input.decidedByName.trim();
+  const decidedByEmail = input.decidedByEmail.trim().toLowerCase();
+  const declineReason =
+    input.decision === "rejected" ? input.declineReason?.trim() || undefined : undefined;
+
+  if (!decidedByName || !decidedByEmail) {
+    throw new Error("The administrator making this decision must be identified.");
+  }
+
+  if (declineReason && declineReason.length > 1000) {
+    throw new Error("Decline reason must be 1,000 characters or fewer.");
+  }
+
+  const store = await readStore();
+  const deal = store.deals.find((item) => item.id === dealId);
+
+  if (!deal) {
+    throw new Error("Deal not found.");
+  }
+
+  if (!canTransitionDealStatus(deal.status, input.decision)) {
+    throw new Error(
+      `Cannot move a deal from ${deal.status.replaceAll("_", " ")} to ${input.decision.replaceAll("_", " ")}.`
+    );
+  }
+
+  const vendor = store.approvedVendors.find((item) => item.id === deal.vendorId);
+
+  if (!vendor) {
+    throw new Error("Approved vendor not found for this deal.");
+  }
+
+  const timestamp = nowIso();
+  const auditEntry: DealDecisionAuditEntry = {
+    id: makeId("decision"),
+    dealId: deal.id,
+    vendorId: deal.vendorId,
+    decision: input.decision,
+    declineReason,
+    decidedByName,
+    decidedByEmail,
+    createdAt: timestamp,
+  };
+
+  deal.status = input.decision;
+  deal.decisionAt = timestamp;
+  deal.declineReason = declineReason;
+  deal.updatedAt = timestamp;
+  store.dealDecisionAudit.unshift(auditEntry);
+  store.syncEvents.unshift({
+    id: makeId("sync"),
+    dealId: deal.id,
+    vendorId: deal.vendorId,
+    action:
+      input.syncAction ??
+      (input.decision === "approved"
+        ? "Deal approved by GoAccess"
+        : "Deal declined by GoAccess"),
+    status:
+      input.syncStatus ?? (input.decision === "approved" ? "queued" : "failed"),
+    reference: input.syncReference ?? deal.companyName,
+    createdAt: timestamp,
+  });
+
+  // Persist the business decision and its actor before attempting external email delivery.
+  await writeStore(store);
+
+  const portalUrl = `${getPortalBaseUrl()}/portal/deals/${encodeURIComponent(deal.id)}`;
+  const isApproved = input.decision === "approved";
+  const subject = isApproved
+    ? `Deal registration approved: ${deal.companyName}`
+    : `Deal registration update: ${deal.companyName}`;
+  let notification: VendorNotification;
+
+  try {
+    notification = await recordWorkflowEmail({
+      vendorId: vendor.id,
+      dealId: deal.id,
+      recipientEmail: vendor.primaryContactEmail,
+      subject,
+      category: isApproved ? "deal_approved" : "deal_declined",
+      text: isApproved
+        ? [
+            `Hi ${vendor.primaryContactName},`,
+            "",
+            `GoAccess approved your deal registration for ${deal.companyName}.`,
+            "",
+            `View the deal in your vendor portal: ${portalUrl}`,
+          ].join("\n")
+        : [
+            `Hi ${vendor.primaryContactName},`,
+            "",
+            `GoAccess reviewed your deal registration for ${deal.companyName} and is unable to approve it.`,
+            declineReason ? `Reason: ${declineReason}` : "",
+            "",
+            `View the deal in your vendor portal: ${portalUrl}`,
+          ]
+            .filter(Boolean)
+            .join("\n"),
+      html: isApproved
+        ? [
+            `<p>Hi ${escapeHtml(vendor.primaryContactName)},</p>`,
+            `<p>GoAccess approved your deal registration for <strong>${escapeHtml(deal.companyName)}</strong>.</p>`,
+            `<p><a href="${escapeHtml(portalUrl)}">View the deal in your vendor portal</a></p>`,
+          ].join("")
+        : [
+            `<p>Hi ${escapeHtml(vendor.primaryContactName)},</p>`,
+            `<p>GoAccess reviewed your deal registration for <strong>${escapeHtml(deal.companyName)}</strong> and is unable to approve it.</p>`,
+            declineReason
+              ? `<p><strong>Reason:</strong> ${escapeHtml(declineReason)}</p>`
+              : "",
+            `<p><a href="${escapeHtml(portalUrl)}">View the deal in your vendor portal</a></p>`,
+          ].join(""),
+    });
+  } catch (error) {
+    notification = buildNotification({
+      vendorId: vendor.id,
+      dealId: deal.id,
+      recipientEmail: vendor.primaryContactEmail,
+      subject,
+      category: isApproved ? "deal_approved" : "deal_declined",
+      reference: error instanceof Error ? error.message : "Vendor decision email failed",
+      status: "failed",
+    });
+  }
+
+  try {
+    await persistVendorNotification(notification);
+  } catch (error) {
+    console.error("Failed to persist the deal decision email record.", error);
+  }
+
+  return { deal, auditEntry, notification };
 }
 
 export async function applyHubSpotDealReconciliation(

@@ -100,16 +100,30 @@ export default async function PartnerDealDetailPage({
     profileRows.push({ label: "Notes", value: deal.notes });
   }
 
+  if (deal.declineReason) {
+    profileRows.push({ label: "GoAccess decision reason", value: deal.declineReason });
+  }
+
   return (
     <>
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title={deal.companyName}
-        subtitle={`Review the registration for ${formatDealLocation(deal)} and its full trail of review, approval, and outcome updates.`}
+        subtitle={`Review the registration for ${formatDealLocation(deal)} and its current status, agreement, and outcome updates.`}
         primaryLabel="Back to deal history"
         primaryHref="/portal/deals"
       />
       <div className="app-content">
+        {deal.status === "rejected" ? (
+          <article className="workspace-card wide-card decision-notice decision-notice-danger">
+            <span className="section-kicker">GoAccess decision</span>
+            <h3>This registration was declined.</h3>
+            <p>{deal.declineReason ?? "Contact GoAccess support if you need more information about this decision."}</p>
+            {deal.decisionAt ? (
+              <span className="stack-note">Decision recorded {new Date(deal.decisionAt).toLocaleString()}</span>
+            ) : null}
+          </article>
+        ) : null}
         <MetricGrid metrics={metrics} />
         <section className="dashboard-grid">
           <TableSection
@@ -123,12 +137,20 @@ export default async function PartnerDealDetailPage({
           />
         </section>
         <section className="dashboard-grid">
-          <VendorDealAgreementManager deal={toClientVendorDealRegistration(deal)} />
+          {deal.agreementStatus === "not_started" ? (
+            <article className="workspace-card wide-card">
+              <span className="section-kicker">Dealer agreement</span>
+              <h3>No action needed yet</h3>
+              <p>GoAccess will add the dealer agreement when it is ready for your review and signature.</p>
+            </article>
+          ) : (
+            <VendorDealAgreementManager deal={toClientVendorDealRegistration(deal)} />
+          )}
         </section>
         <section className="dashboard-grid">
           <TimelineSection
             title="Status timeline"
-            description="Every submission, review, approval, and outcome tied to this deal."
+            description="Recorded status and agreement updates for this deal."
             entries={buildVendorDealTimeline(deal)}
           />
         </section>

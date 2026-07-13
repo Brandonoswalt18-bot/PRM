@@ -116,6 +116,13 @@ export default async function LinksPage() {
                 </div>
               ))}
             </div>
+            {deals.length === 0 ? (
+              <div className="empty-state-card">
+                <span className="section-kicker">Nothing submitted yet</span>
+                <h3>Your first registration will appear here.</h3>
+                <p>Complete the form above to send an opportunity to GoAccess for review.</p>
+              </div>
+            ) : null}
           </article>
         </section>
       </div>

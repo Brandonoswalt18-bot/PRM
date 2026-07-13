@@ -18,6 +18,8 @@ export type DealStatus =
   | "closed_lost"
   | "rejected";
 
+export type DealDecision = Extract<DealStatus, "approved" | "rejected">;
+
 export type DealAgreementStatus = "not_started" | "uploaded" | "sent" | "signed";
 export type VendorPayoutType = "percentage_rmr" | "flat_monthly";
 
@@ -161,6 +163,8 @@ export type DealRegistration = {
   hubspotCompanyId?: string;
   hubspotContactId?: string;
   hubspotDealId?: string;
+  decisionAt?: string;
+  declineReason?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -182,16 +186,30 @@ export type DealSyncEvent = {
   createdAt: string;
 };
 
+export type DealDecisionAuditEntry = {
+  id: string;
+  dealId: string;
+  vendorId: string;
+  decision: DealDecision;
+  declineReason?: string;
+  decidedByName: string;
+  decidedByEmail: string;
+  createdAt: string;
+};
+
 export type VendorNotification = {
   id: string;
   applicationId?: string;
   vendorId?: string;
+  dealId?: string;
   recipientEmail: string;
   subject: string;
   category:
     | "application_received"
     | "application_internal_alert"
     | "deal_internal_alert"
+    | "deal_approved"
+    | "deal_declined"
     | "application_approved"
     | "nda_sent"
     | "credentials_issued"
@@ -222,6 +240,7 @@ export type PortalStore = {
   vendorApplications: VendorApplication[];
   approvedVendors: ApprovedVendor[];
   deals: DealRegistration[];
+  dealDecisionAudit: DealDecisionAuditEntry[];
   syncEvents: DealSyncEvent[];
   notifications: VendorNotification[];
   supportRequests: SupportRequest[];
@@ -277,6 +296,16 @@ export type DealStatusUpdateOptions = {
   hubspotContactId?: string;
   hubspotDealId?: string;
   agreementStatus?: DealAgreementStatus;
+  syncAction?: string;
+  syncStatus?: SyncEventStatus;
+  syncReference?: string;
+};
+
+export type RecordDealDecisionInput = {
+  decision: DealDecision;
+  declineReason?: string;
+  decidedByName: string;
+  decidedByEmail: string;
   syncAction?: string;
   syncStatus?: SyncEventStatus;
   syncReference?: string;

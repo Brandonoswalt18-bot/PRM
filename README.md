@@ -59,7 +59,7 @@ Current behavior:
 - creates or updates HubSpot companies, contacts, and deals when an admin syncs an approved vendor deal
 - inspects HubSpot for existing company, contact, and open associated deal conflicts before writing a new approved vendor deal
 - records outbound applicant, admin, approval, legal onboarding, and credential notifications in the durable portal store
-- sends approved vendors to a secure legal checklist where they upload the NDA and accept the versioned Partner Terms & Conditions
+- sends approved vendors to a secure click-through checklist where they review and accept the NDA and versioned Partner Terms & Conditions
 - prevents NDA confirmation, portal activation, and deal registration until the required legal steps are complete
 - sends vendor lifecycle emails through Resend when email env vars are configured
 - supports admin-managed training videos and documents for vendor learning
@@ -74,6 +74,7 @@ Required env vars for HubSpot routing:
 Optional env vars for HubSpot deal sync:
 
 - `HUBSPOT_DEAL_PIPELINE_ID`
+- `HUBSPOT_DEAL_OWNER_ID`
 - `HUBSPOT_VENDOR_ID_PROPERTY`
 - `HUBSPOT_VENDOR_EMAIL_PROPERTY`
 - `HUBSPOT_DEAL_SUBMISSION_ID_PROPERTY` - HubSpot internal deal property name that stores the portal deal ID, for example `partner_portal_submission_id`
@@ -88,6 +89,9 @@ Operational notes:
 - sync creates a new HubSpot deal only when no submission-linked deal exists and no duplicate-risk conflict is found on the matched company
 - sync updates an existing HubSpot deal when the configured submission ID property already matches the portal submission
 - sync holds for review when the matched company already has open deal(s), when multiple submission-linked deals are found, or when submission-link signals conflict
+- website URLs are normalized to a bare company domain before matching, and ambiguous exact-name company matches are held for review
+- existing HubSpot company and contact records are linked without overwriting CRM-curated identity fields
+- successful handoff writes `synced_to_hubspot` to the configured registration-status property
 
 Portal workflow env vars:
 

@@ -371,6 +371,145 @@ test("GoAccess admin owns monthly RMR before deal approval", async ({ page }) =>
   expect(approvalPayload.message).toContain("Deal approved");
 });
 
+test("deal decisions notify the vendor, retain an admin audit trail, and share decline reasons safely", async ({
+  page,
+}) => {
+  const unique = Date.now();
+
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill("jordan@bluehavenintegrators.com");
+  await page.getByLabel("Password").fill("goaccess-vendor-demo");
+  await page.getByRole("button", { name: "Sign in" }).click();
+
+  const submitDeal = async (label: string) => {
+    const slug = label.toLowerCase().replaceAll(" ", "-");
+    const response = await page.request.post("/api/deals", {
+      data: {
+        companyName: `${label} ${unique}`,
+        communityAddress: "240 Decision Trail",
+        city: "San Diego",
+        state: "CA",
+        domain: `${slug}-${unique}.example`,
+        contactName: "Decision Contact",
+        contactEmail: `decision+${slug}-${unique}@example.com`,
+        contactPhone: "555-555-0144",
+        estimatedValue: 18000,
+        productInterest: "Access control",
+        notes: "Deal decision workflow verification.",
+      },
+    });
+    expect(response.ok()).toBeTruthy();
+    return (await response.json()) as { deal: { id: string } };
+  };
+
+  const approvedSubmission = await submitDeal("Approved Decision");
+  const declinedSubmission = await submitDeal("Declined Decision");
+
+  await page.goto("/auth/logout");
+  await page.getByLabel("Email address").fill("maya@goaccess.com");
+  await page.getByLabel("Password").fill("goaccess-admin-demo");
+  await page.getByRole("button", { name: "Sign in" }).click();
+
+  for (const dealId of [approvedSubmission.deal.id, declinedSubmission.deal.id]) {
+    const review = await page.request.patch(`/api/deals/${dealId}`, {
+      data: { status: "under_review" },
+    });
+    expect(review.ok()).toBeTruthy();
+  }
+
+  const monthlyRmr = await page.request.patch(`/api/deals/${approvedSubmission.deal.id}`, {
+    data: { monthlyRmr: 625 },
+  });
+  expect(monthlyRmr.ok()).toBeTruthy();
+
+  const approval = await page.request.patch(`/api/deals/${approvedSubmission.deal.id}`, {
+    data: { status: "approved" },
+  });
+  expect(approval.ok()).toBeTruthy();
+  const approvalPayload = (await approval.json()) as {
+    handoffStatus: string;
+    decisionAuditEntry: {
+      decision: string;
+      decidedByName: string;
+      decidedByEmail: string;
+      createdAt: string;
+    };
+    decisionNotification: { category: string; recipientEmail: string; status: string };
+  };
+  expect(approvalPayload.decisionAuditEntry).toMatchObject({
+    decision: "approved",
+    decidedByName: "Maya Chen",
+    decidedByEmail: "maya@goaccess.com",
+  });
+  expect(approvalPayload.decisionAuditEntry.createdAt).toBeTruthy();
+  expect(approvalPayload.handoffStatus).toBe("held");
+  expect(approvalPayload.decisionNotification).toMatchObject({
+    category: "deal_approved",
+    recipientEmail: "jordan@bluehavenintegrators.com",
+    status: "logged",
+  });
+
+  const declineReason = "The community is already registered through another authorized vendor.";
+  const decline = await page.request.patch(`/api/deals/${declinedSubmission.deal.id}`, {
+    data: { status: "rejected", declineReason },
+  });
+  expect(decline.ok()).toBeTruthy();
+  const declinePayload = (await decline.json()) as {
+    deal: { declineReason?: string; decisionAt?: string };
+    decisionAuditEntry: {
+      decision: string;
+      declineReason?: string;
+      decidedByEmail: string;
+    };
+    decisionNotification: { category: string; recipientEmail: string; status: string };
+  };
+  expect(declinePayload.deal).toMatchObject({ declineReason });
+  expect(declinePayload.deal.decisionAt).toBeTruthy();
+  expect(declinePayload.decisionAuditEntry).toMatchObject({
+    decision: "rejected",
+    declineReason,
+    decidedByEmail: "maya@goaccess.com",
+  });
+  expect(declinePayload.decisionNotification).toMatchObject({
+    category: "deal_declined",
+    recipientEmail: "jordan@bluehavenintegrators.com",
+    status: "logged",
+  });
+
+  const adminDeal = await page.request.get(`/api/deals/${declinedSubmission.deal.id}`);
+  expect(adminDeal.ok()).toBeTruthy();
+  const adminDealPayload = (await adminDeal.json()) as {
+    decisionAudit: Array<{
+      decision: string;
+      declineReason?: string;
+      decidedByEmail: string;
+    }>;
+  };
+  expect(adminDealPayload.decisionAudit[0]).toMatchObject({
+    decision: "rejected",
+    declineReason,
+    decidedByEmail: "maya@goaccess.com",
+  });
+
+  await page.goto("/auth/logout");
+  await page.getByLabel("Email address").fill("jordan@bluehavenintegrators.com");
+  await page.getByLabel("Password").fill("goaccess-vendor-demo");
+  await page.getByRole("button", { name: "Sign in" }).click();
+
+  const vendorDeals = await page.request.get("/api/deals");
+  expect(vendorDeals.ok()).toBeTruthy();
+  const vendorPayload = (await vendorDeals.json()) as {
+    items: Array<{ id: string; declineReason?: string; decisionAt?: string }>;
+  };
+  const vendorDeclinedDeal = vendorPayload.items.find(
+    (deal) => deal.id === declinedSubmission.deal.id,
+  );
+  expect(vendorDeclinedDeal).toMatchObject({ declineReason });
+  expect(vendorDeclinedDeal?.decisionAt).toBeTruthy();
+  expect(JSON.stringify(vendorPayload)).not.toContain("maya@goaccess.com");
+  expect(JSON.stringify(vendorPayload).toLowerCase()).not.toContain("hubspot");
+});
+
 test("vendor mobile navigation keeps grouped destinations accessible", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/login");
