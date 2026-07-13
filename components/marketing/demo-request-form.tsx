@@ -78,35 +78,35 @@ export function DemoRequestForm() {
   }
 
   return (
-    <form className="cta-form" onSubmit={handleSubmit}>
-      <label className="form-field public-form-field" htmlFor="vendor-company-name">
-        <span>Company name</span>
-        <input
-          autoComplete="organization"
-          id="vendor-company-name"
-          maxLength={160}
-          placeholder="Acme Security Integrators"
-          type="text"
-          value={form.companyName}
-          onChange={(event) => update("companyName", event.target.value)}
-          onFocus={() => trackEvent("vendor_application_field_focused", { field: "companyName" })}
-          required
-        />
-      </label>
-      <label className="form-field public-form-field" htmlFor="vendor-website">
-        <span>Website <small>Optional</small></span>
-        <input
-          autoComplete="url"
-          id="vendor-website"
-          maxLength={300}
-          placeholder="https://acmesecurity.com"
-          type="url"
-          value={form.website}
-          onChange={(event) => update("website", event.target.value)}
-          onFocus={() => trackEvent("vendor_application_field_focused", { field: "website" })}
-        />
-      </label>
-      <div className="inline-form-grid">
+    <form className="cta-form vendor-application-form" onSubmit={handleSubmit}>
+      <div className="vendor-application-fields">
+        <label className="form-field public-form-field" htmlFor="vendor-company-name">
+          <span>Company name</span>
+          <input
+            autoComplete="organization"
+            id="vendor-company-name"
+            maxLength={160}
+            placeholder="Acme Security Integrators"
+            type="text"
+            value={form.companyName}
+            onChange={(event) => update("companyName", event.target.value)}
+            onFocus={() => trackEvent("vendor_application_field_focused", { field: "companyName" })}
+            required
+          />
+        </label>
+        <label className="form-field public-form-field" htmlFor="vendor-website">
+          <span>Website <small>Optional</small></span>
+          <input
+            autoComplete="url"
+            id="vendor-website"
+            maxLength={300}
+            placeholder="https://acmesecurity.com"
+            type="url"
+            value={form.website}
+            onChange={(event) => update("website", event.target.value)}
+            onFocus={() => trackEvent("vendor_application_field_focused", { field: "website" })}
+          />
+        </label>
         <label className="form-field public-form-field" htmlFor="vendor-city">
           <span>City</span>
           <input
@@ -135,42 +135,41 @@ export function DemoRequestForm() {
             required
           />
         </label>
+        <label className="form-field public-form-field" htmlFor="vendor-contact-name">
+          <span>Primary contact</span>
+          <input
+            autoComplete="name"
+            id="vendor-contact-name"
+            maxLength={120}
+            placeholder="Taylor Morgan"
+            type="text"
+            value={form.primaryContactName}
+            onChange={(event) => update("primaryContactName", event.target.value)}
+            onFocus={() =>
+              trackEvent("vendor_application_field_focused", { field: "primaryContactName" })
+            }
+            required
+          />
+        </label>
+        <label className="form-field public-form-field" htmlFor="vendor-contact-email">
+          <span>Work email</span>
+          <input
+            autoComplete="email"
+            id="vendor-contact-email"
+            maxLength={254}
+            placeholder="taylor@acmesecurity.com"
+            type="email"
+            value={form.primaryContactEmail}
+            onChange={(event) => update("primaryContactEmail", event.target.value)}
+            onFocus={() =>
+              trackEvent("vendor_application_field_focused", { field: "primaryContactEmail" })
+            }
+            required
+          />
+        </label>
       </div>
-      <label className="form-field public-form-field" htmlFor="vendor-contact-name">
-        <span>Primary contact</span>
-        <input
-          autoComplete="name"
-          id="vendor-contact-name"
-          maxLength={120}
-          placeholder="Taylor Morgan"
-          type="text"
-          value={form.primaryContactName}
-          onChange={(event) => update("primaryContactName", event.target.value)}
-          onFocus={() =>
-            trackEvent("vendor_application_field_focused", { field: "primaryContactName" })
-          }
-          required
-        />
-      </label>
-      <label className="form-field public-form-field" htmlFor="vendor-contact-email">
-        <span>Work email</span>
-        <input
-          autoComplete="email"
-          id="vendor-contact-email"
-          maxLength={254}
-          placeholder="taylor@acmesecurity.com"
-          type="email"
-          value={form.primaryContactEmail}
-          onChange={(event) => update("primaryContactEmail", event.target.value)}
-          onFocus={() =>
-            trackEvent("vendor_application_field_focused", { field: "primaryContactEmail" })
-          }
-          required
-        />
-      </label>
       <button className="button button-primary" type="submit" disabled={status === "submitting"}>
-        <span>{status === "submitting" ? "Submitting..." : "Submit vendor application"}</span>
-        {status !== "submitting" ? <span aria-hidden="true" className="button-arrow">→</span> : null}
+        {status === "submitting" ? "Submitting..." : "Submit application"}
       </button>
       <p
         className={`form-message ${
@@ -178,7 +177,7 @@ export function DemoRequestForm() {
         } ${status === "error" ? "form-message-error" : ""}`.trim()}
         aria-live="polite"
       >
-        {message || "GoAccess reviews each application before NDA and portal access are sent."}
+        {message || "We usually review applications within two business days."}
       </p>
     </form>
   );

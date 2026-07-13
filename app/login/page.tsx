@@ -30,32 +30,16 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const showError = Boolean(error);
 
   return (
-    <main className="login-shell">
-      <div className="login-layout">
-        <section className="login-aside">
-          <Link className="brand brand-light" href="/">
-            <span className="brand-mark brand-mark-light">G</span>
+    <main className="login-shell auth-login-shell">
+      <div className="login-layout auth-login-layout">
+        <section aria-labelledby="login-title" className="login-card auth-login-card">
+          <Link className="brand auth-login-brand" href="/">
+            <span className="brand-mark">G</span>
             <span className="brand-text">GoAccess</span>
           </Link>
-          <div className="login-aside-copy">
-            <span className="eyebrow">VENDOR WORKSPACE</span>
-            <h1>One place to move every partner opportunity forward.</h1>
-            <p>
-              Keep onboarding, registered deals, agreements, support, and recurring revenue connected from first review through close.
-            </p>
-          </div>
-          <ul className="login-benefit-list">
-            <li>Role-protected admin and vendor workspaces</li>
-            <li>Deal and agreement status at a glance</li>
-            <li>Monthly RMR and support history in context</li>
-          </ul>
-        </section>
-
-        <section aria-labelledby="login-title" className="login-card">
           <div className="login-card-heading">
-            <span className="eyebrow">WELCOME BACK</span>
-            <h2 id="login-title">Sign in to your portal</h2>
-            <p>Use the email and password tied to your GoAccess access.</p>
+            <h1 id="login-title">Sign in</h1>
+            <p>Enter your GoAccess portal credentials.</p>
           </div>
 
           <form action="/auth/login" className="login-form" method="post">
@@ -83,8 +67,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </label>
             {nextPath ? <input name="next" type="hidden" value={nextPath} /> : null}
             <button className="button button-primary login-submit" type="submit">
-              <span>Sign in</span>
-              <span aria-hidden="true" className="button-arrow">→</span>
+              Sign in
             </button>
           </form>
 
@@ -96,8 +79,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </p>
 
           <div className="login-footer">
-            <span>New to GoAccess?</span>
-            <Link href="/#application">Apply for vendor access</Link>
+            <span>Need vendor access?</span>
+            <Link href="/#application">Apply here</Link>
           </div>
           <Link className="login-reset-link" href="/auth/logout" prefetch={false}>
             Clear this browser session

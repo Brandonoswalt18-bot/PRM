@@ -292,6 +292,98 @@ span {
   color: var(--ink);
 }
 
+.public-application-shell {
+  --max: 920px;
+  min-height: 100dvh;
+  padding-bottom: 48px;
+}
+
+.public-application-shell .topbar {
+  margin-top: 24px;
+}
+
+.public-application-shell .public-nav {
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.public-application-shell .public-nav a {
+  color: var(--signal);
+}
+
+.public-application-main {
+  display: grid;
+  gap: 28px;
+  width: min(720px, 100%);
+  margin: clamp(56px, 8vw, 88px) auto 0;
+}
+
+.public-application-intro {
+  display: grid;
+  gap: 10px;
+}
+
+.public-application-intro .access-label {
+  margin-bottom: 2px;
+}
+
+.public-application-intro h1 {
+  max-width: none;
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+}
+
+.public-application-intro p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.public-application-card-simple {
+  padding: 32px;
+  border-color: var(--line-strong);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(22, 55, 112, 0.07);
+}
+
+.vendor-application-form {
+  gap: 18px;
+}
+
+.vendor-application-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 16px;
+}
+
+.vendor-application-form .public-form-field {
+  gap: 7px;
+}
+
+.vendor-application-form .public-form-field input {
+  min-height: 48px;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.vendor-application-form > .button {
+  min-height: 48px;
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.vendor-application-form .form-message {
+  min-height: 0;
+  margin: -2px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 .public-main {
   display: grid;
   gap: 72px;
@@ -3518,6 +3610,91 @@ li + li {
   font-size: 0.76rem;
 }
 
+.auth-login-shell {
+  min-height: 100dvh;
+  padding: 32px 20px;
+  background: #f7f8fa;
+}
+
+.auth-login-layout {
+  display: block;
+  width: min(430px, 100%);
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.auth-login-card {
+  display: grid;
+  align-content: start;
+  padding: 36px;
+  border: 1px solid var(--line-strong);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(22, 55, 112, 0.06);
+}
+
+.auth-login-brand {
+  justify-self: start;
+  margin-bottom: 44px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.auth-login-brand .brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  box-shadow: none;
+}
+
+.auth-login-card .login-card-heading {
+  gap: 6px;
+}
+
+.auth-login-card .login-card-heading h1 {
+  max-width: none;
+  font-size: 1.75rem;
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+}
+
+.auth-login-card .login-form {
+  gap: 16px;
+  margin: 28px 0 12px;
+}
+
+.auth-login-card .login-input {
+  min-height: 48px;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.auth-login-card .login-submit {
+  min-height: 48px;
+  border-radius: 10px;
+}
+
+.auth-login-card .form-message {
+  min-height: 0;
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.auth-login-card .login-footer {
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.auth-login-card .login-reset-link {
+  margin-top: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
 @media (max-width: 960px) {
   .public-hero {
     grid-template-columns: 1fr;
@@ -3566,8 +3743,40 @@ li + li {
 }
 
 @media (max-width: 760px) {
-  .public-nav > a:not(.button) {
+  .public-application-shell {
+    width: min(100% - 28px, var(--max));
+    padding-bottom: 32px;
+  }
+
+  .public-application-shell .topbar {
+    margin-top: 18px;
+  }
+
+  .public-application-shell .public-nav > span {
     display: none;
+  }
+
+  .public-application-main {
+    gap: 24px;
+    margin-top: 44px;
+  }
+
+  .public-application-intro h1 {
+    font-size: clamp(2rem, 10vw, 2.65rem);
+  }
+
+  .public-application-card-simple {
+    padding: 24px;
+    border-radius: 18px;
+  }
+
+  .vendor-application-fields {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .public-nav > a:not(.button) {
+    display: inline-flex;
   }
 
   .public-hero {
@@ -3634,6 +3843,23 @@ li + li {
 
   .login-footer > * {
     width: auto;
+  }
+
+  .auth-login-shell {
+    padding: 20px 14px;
+  }
+
+  .auth-login-layout {
+    border-radius: 0;
+  }
+
+  .auth-login-card {
+    padding: 30px 24px;
+    border-radius: 16px;
+  }
+
+  .auth-login-brand {
+    margin-bottom: 36px;
   }
 }
 

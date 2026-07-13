@@ -12,8 +12,8 @@ test("public vendor application is accepted and protected APIs reject anonymous 
   await page.getByLabel("City").fill("San Diego");
   await page.getByLabel("State").fill("CA");
   await page.getByLabel("Primary contact").fill("Taylor Test");
-  await page.getByLabel("Email address").fill(`taylor+${unique}@example.com`);
-  await page.getByRole("button", { name: "Submit vendor application" }).click();
+  await page.getByLabel("Work email").fill(`taylor+${unique}@example.com`);
+  await page.getByRole("button", { name: "Submit application" }).click();
   await expect(page.getByText(/application was submitted/i)).toBeVisible();
 
   const applications = await request.get("/api/vendor-applications");
@@ -80,7 +80,7 @@ test("approved vendor completes NDA and Partner Terms before portal activation",
   await page.getByLabel(/I have read and agree/).check();
   await page.getByRole("button", { name: "Accept Terms & Conditions" }).click();
   await expect(page.getByText("Terms & Conditions accepted and recorded.")).toBeVisible();
-  await expect(page.getByText("2 of 2 complete")).toBeVisible();
+  await expect(page.locator(".onboarding-progress-card strong")).toHaveText("2 of 2 complete");
 
   const confirmLegal = await page.request.patch(
     `/api/vendor-applications/${submissionPayload.application.id}`,
