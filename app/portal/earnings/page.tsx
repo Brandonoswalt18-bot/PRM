@@ -28,7 +28,7 @@ export default async function EarningsPage() {
     {
       label: "Forecast monthly RMR",
       value: formatCurrency(forecastRmr),
-      delta: "Includes HubSpot-synced pipeline not yet won",
+      delta: "Includes approved pipeline not yet won",
     },
     {
       label: "Active accounts",
@@ -52,7 +52,7 @@ export default async function EarningsPage() {
       stage: deal.status === "closed_won" ? "Active" : "Forecast",
       rmr: formatCurrency(deal.expectedMonthlyRmr || deal.monthlyRmr),
       earnings: formatCurrency(deal.expectedVendorMonthlyRevenue || 0),
-      hubspot: deal.hubspotDealId ? `#${deal.hubspotDealId}` : "Pending",
+      updated: new Date(deal.updatedAt).toLocaleDateString(),
     }));
 
   return (
@@ -83,7 +83,7 @@ export default async function EarningsPage() {
                 <span>Stage</span>
                 <span>Expected monthly RMR</span>
                 <span>Expected earnings</span>
-                <span>HubSpot</span>
+                <span>Last updated</span>
               </div>
               {ledgerRows.map((row) => (
                 <div className="table-row table-cols-5" key={row.id}>
@@ -91,7 +91,7 @@ export default async function EarningsPage() {
                   <span>{row.stage}</span>
                   <span>{row.rmr}</span>
                   <span>{row.earnings}</span>
-                  <span>{row.hubspot}</span>
+                  <span>{row.updated}</span>
                 </div>
               ))}
             </div>
@@ -100,7 +100,7 @@ export default async function EarningsPage() {
             <h3>How to read this page</h3>
             <ul>
               <li>Closed won accounts contribute active monthly RMR immediately.</li>
-              <li>HubSpot-synced accounts stay forecasted until GoAccess marks them won.</li>
+              <li>Approved accounts stay forecasted until GoAccess marks them won.</li>
               <li>If an account is missing, open a support request from the portal.</li>
               <li>Statements are generated from the same underlying deal records.</li>
             </ul>

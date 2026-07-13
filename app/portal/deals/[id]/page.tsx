@@ -9,9 +9,10 @@ import { VendorDealAgreementManager } from "@/components/product/vendor-deal-agr
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
 import { formatDealLocation } from "@/lib/deal-registration";
+import { toClientVendorDealRegistration } from "@/lib/goaccess-client-data";
 import { formatDealAgreementStatusLabel, formatVendorDealStatusLabel } from "@/lib/goaccess-copy";
-import { buildDealTimeline } from "@/lib/goaccess-timeline";
-import { formatCurrency, getDealById, listSyncEvents } from "@/lib/goaccess-store";
+import { buildVendorDealTimeline } from "@/lib/goaccess-timeline";
+import { formatCurrency, getDealById } from "@/lib/goaccess-store";
 
 function formatOptionalCurrency(value: number) {
   return value > 0 ? formatCurrency(value) : "Not provided";
@@ -23,7 +24,7 @@ export default async function PartnerDealDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const [{ id }, session] = await Promise.all([params, getWorkspaceSession()]);
-  const [deal, syncEvents] = await Promise.all([getDealById(id), listSyncEvents()]);
+  const deal = await getDealById(id);
 
   if (!deal || !session?.vendorId || deal.vendorId !== session.vendorId) {
     notFound();
@@ -33,7 +34,12 @@ export default async function PartnerDealDetailPage({
     {
       label: "Deal status",
       value: formatVendorDealStatusLabel(deal.status),
-      delta: deal.hubspotDealId ? `HubSpot #${deal.hubspotDealId}` : "Not yet linked to HubSpot",
+      delta:
+        deal.status === "approved" || deal.status === "synced_to_hubspot"
+          ? "Approved by GoAccess"
+          : deal.status === "submitted" || deal.status === "under_review"
+            ? "GoAccess review is in progress"
+            : "Current GoAccess decision",
     },
     {
       label: "Estimated value",
@@ -99,7 +105,7 @@ export default async function PartnerDealDetailPage({
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title={deal.companyName}
-        subtitle={`Review the registration for ${formatDealLocation(deal)} and the full trail of review, HubSpot sync, and outcome updates.`}
+        subtitle={`Review the registration for ${formatDealLocation(deal)} and its full trail of review, approval, and outcome updates.`}
         primaryLabel="Back to deal history"
         primaryHref="/portal/deals"
       />
@@ -117,13 +123,13 @@ export default async function PartnerDealDetailPage({
           />
         </section>
         <section className="dashboard-grid">
-          <VendorDealAgreementManager deal={deal} />
+          <VendorDealAgreementManager deal={toClientVendorDealRegistration(deal)} />
         </section>
         <section className="dashboard-grid">
           <TimelineSection
             title="Status timeline"
-            description="Every submission, review, sync, and outcome tied to this deal."
-            entries={buildDealTimeline(deal, syncEvents)}
+            description="Every submission, review, approval, and outcome tied to this deal."
+            entries={buildVendorDealTimeline(deal)}
           />
         </section>
       </div>

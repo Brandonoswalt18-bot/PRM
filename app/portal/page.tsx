@@ -144,7 +144,7 @@ export default async function PartnerPortalPage() {
               <div>
                 <span className="simple-eyebrow">Deals</span>
                 <h2>Your recent deals</h2>
-                <p>Track each opportunity from submission through GoAccess approval and HubSpot.</p>
+                <p>Track each opportunity from submission through GoAccess review and approval.</p>
               </div>
               <Link href="/portal/deals" className="simple-text-link" prefetch={false}>
                 View all
@@ -182,7 +182,7 @@ export default async function PartnerPortalPage() {
             ) : (
               <div className="simple-empty-state">
                 <h3>Register your first deal</h3>
-                <p>Register your first opportunity and GoAccess will review it before it enters HubSpot.</p>
+                <p>Register your first opportunity and GoAccess will handle the review and next steps.</p>
                 <Link className="button button-primary" href="/portal/links">
                   Register your first deal
                 </Link>

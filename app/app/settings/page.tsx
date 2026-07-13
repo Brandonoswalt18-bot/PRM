@@ -20,6 +20,11 @@ function getEmailReadiness() {
     fromAddress: process.env.EMAIL_FROM_ADDRESS?.trim() || null,
     portalNotifications:
       process.env.GOACCESS_APPLICATION_NOTIFICATION_EMAIL?.trim() || null,
+    dealNotifications:
+      process.env.GOACCESS_DEAL_NOTIFICATION_EMAIL?.trim() ||
+      process.env.GOACCESS_APPLICATION_NOTIFICATION_EMAIL?.trim() ||
+      process.env.GOACCESS_ADMIN_EMAIL?.trim() ||
+      "maya@goaccess.com",
   };
 }
 
@@ -126,6 +131,7 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
                 {emailReadiness.portalNotifications ??
                   "GOACCESS_APPLICATION_NOTIFICATION_EMAIL not set"}
               </li>
+              <li>Deal submission alerts: {emailReadiness.dealNotifications}</li>
               <li>Workflow emails still require the GoAccess sender domain to be verified in Resend before real external delivery will work.</li>
               <li>Resend test-mode senders only deliver to the account owner until domain verification is complete.</li>
               <li>{notifications.filter((item) => item.status === "failed").length} delivery failures are still visible.</li>

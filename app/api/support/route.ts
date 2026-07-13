@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireVendorLegalRouteAccess } from "@/lib/auth-guards";
+import {
+  toClientVendorSupportRequest,
+  toClientVendorSupportRequests,
+} from "@/lib/goaccess-client-data";
 import { listSupportRequests, submitSupportRequest } from "@/lib/goaccess-store";
 import type { SupportRequestCategory } from "@/types/goaccess";
 
@@ -27,7 +31,7 @@ export async function GET() {
 
   const session = auth.session;
   const requests = await listSupportRequests(session?.vendorId);
-  return NextResponse.json({ items: requests });
+  return NextResponse.json({ items: toClientVendorSupportRequests(requests) });
 }
 
 export async function POST(request: Request) {
@@ -75,7 +79,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      supportRequest,
+      supportRequest: toClientVendorSupportRequest(supportRequest),
       message: "Support request submitted to the GoAccess team.",
     });
   } catch (error) {

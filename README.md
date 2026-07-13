@@ -96,6 +96,7 @@ Portal workflow env vars:
 - `GOACCESS_TERMS_VERSION`
 - `GOACCESS_PORTAL_BASE_URL`
 - `GOACCESS_APPLICATION_NOTIFICATION_EMAIL`
+- `GOACCESS_DEAL_NOTIFICATION_EMAIL` (optional; falls back to the application notification or admin email)
 - `BLOB_READ_WRITE_TOKEN`
 - `RESEND_API_KEY`
 - `EMAIL_FROM_ADDRESS`

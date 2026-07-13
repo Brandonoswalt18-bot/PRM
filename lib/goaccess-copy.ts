@@ -2,6 +2,7 @@ import type {
   ApprovedVendor,
   DealAgreementStatus,
   DealStatus,
+  SupportRequestCategory,
   VendorApplicationStatus,
   VendorStatus,
 } from "@/types/goaccess";
@@ -145,6 +146,25 @@ export function formatDealAgreementStatusLabel(status: DealAgreementStatus) {
       return "Signed and stored";
     default:
       return humanizeSnakeCase(status);
+  }
+}
+
+export function formatVendorSupportCategoryLabel(category: SupportRequestCategory) {
+  switch (category) {
+    case "hubspot_sync":
+      return "Deal status";
+    case "deal_registration":
+      return "Deal registration";
+    case "profile_update":
+      return "Profile update";
+    case "rmr_question":
+      return "RMR question";
+    case "portal_access":
+      return "Portal access";
+    case "general":
+      return "General";
+    default:
+      return humanizeSnakeCase(category);
   }
 }
 

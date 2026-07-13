@@ -142,7 +142,7 @@ export default async function PartnerPayoutsPage({
             <h3>Statement notes</h3>
             <ul>
               <li>Statement periods are derived from the deal ledger, not placeholder month math.</li>
-              <li>Forecast statements include accounts in HubSpot but not yet closed won.</li>
+              <li>Forecast statements include approved accounts that are not yet closed won.</li>
               <li>Recognized statements include only recurring revenue from won accounts.</li>
               <li>If a statement amount looks wrong, use the support page to open a review request.</li>
             </ul>

@@ -211,27 +211,46 @@ export async function PATCH(
       }
 
       const approvedDeal = await updateDealStatus(id, "approved", {
-        syncAction: "Deal approved. Starting HubSpot sync check",
-        syncStatus: "held",
+        syncAction: "Deal approved. Automatic HubSpot handoff started",
+        syncStatus: "queued",
         syncReference: "Running HubSpot readiness check",
       });
-      const syncResult = await attemptDealHubSpotSync(approvedDeal, vendor);
 
-      if (syncResult.ok) {
+      try {
+        const syncResult = await attemptDealHubSpotSync(approvedDeal, vendor);
+
+        if (syncResult.ok) {
+          return NextResponse.json({
+            ok: true,
+            deal: syncResult.deal,
+            hubspot: syncResult.inspection,
+            message: "Deal approved and written to HubSpot.",
+          });
+        }
+
         return NextResponse.json({
           ok: true,
-          deal: syncResult.deal,
+          deal: approvedDeal,
           hubspot: syncResult.inspection,
-          message: "Deal approved and written to HubSpot.",
+          message: `Deal approved, but HubSpot sync is blocked: ${syncResult.reference}`,
+        });
+      } catch (error) {
+        const reference = error instanceof Error ? error.message : "HubSpot sync failed";
+
+        await recordDealSyncEvent({
+          dealId: approvedDeal.id,
+          vendorId: approvedDeal.vendorId,
+          action: "Automatic HubSpot handoff failed after approval",
+          status: "failed",
+          reference,
+        });
+
+        return NextResponse.json({
+          ok: true,
+          deal: approvedDeal,
+          message: `Deal approved, but automatic HubSpot delivery failed: ${reference}`,
         });
       }
-
-      return NextResponse.json({
-        ok: true,
-        deal: approvedDeal,
-        hubspot: syncResult.inspection,
-        message: `Deal approved, but HubSpot sync is blocked: ${syncResult.reference}`,
-      });
     }
 
     if (body.status === "synced_to_hubspot") {

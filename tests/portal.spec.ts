@@ -186,11 +186,26 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
   const dealsResponse = await page.request.get("/api/deals");
   expect(dealsResponse.ok()).toBeTruthy();
   const dealsPayload = (await dealsResponse.json()) as {
-    items: Array<{ companyName: string; monthlyRmr: number }>;
+    items: Array<Record<string, unknown> & { companyName: string; monthlyRmr: number; status: string }>;
   };
-  expect(
-    dealsPayload.items.find((deal) => deal.companyName === `Playwright Community ${unique}`)?.monthlyRmr,
-  ).toBe(0);
+  const submittedDeal = dealsPayload.items.find(
+    (deal) => deal.companyName === `Playwright Community ${unique}`,
+  );
+  expect(submittedDeal?.monthlyRmr).toBe(0);
+  expect(JSON.stringify(submittedDeal).toLowerCase()).not.toContain("hubspot");
+
+  for (const path of [
+    "/portal",
+    "/portal/links",
+    "/portal/deals",
+    "/portal/earnings",
+    "/portal/payouts",
+    "/portal/support",
+    "/portal/profile",
+  ]) {
+    await page.goto(path);
+    await expect(page.locator("body")).not.toContainText(/hubspot|crm/i);
+  }
 
   const tamperedRmr = await page.request.post("/api/deals", {
     data: {
@@ -341,6 +356,19 @@ test("GoAccess admin owns monthly RMR before deal approval", async ({ page }) =>
   expect(adminRmr.ok()).toBeTruthy();
   const adminRmrPayload = (await adminRmr.json()) as { deal: { monthlyRmr: number } };
   expect(adminRmrPayload.deal.monthlyRmr).toBe(850);
+
+  const approval = await page.request.patch(`/api/deals/${submissionPayload.deal.id}`, {
+    data: { status: "approved" },
+  });
+  expect(approval.ok()).toBeTruthy();
+  const approvalPayload = (await approval.json()) as {
+    deal: { status: string };
+    hubspot?: { syncDecision?: string };
+    message: string;
+  };
+  expect(approvalPayload.deal.status).toBe("approved");
+  expect(approvalPayload.hubspot?.syncDecision).toBe("blocked_configuration");
+  expect(approvalPayload.message).toContain("Deal approved");
 });
 
 test("vendor mobile navigation keeps grouped destinations accessible", async ({ page }) => {

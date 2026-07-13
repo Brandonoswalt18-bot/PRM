@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireVendorLegalRouteAccess } from "@/lib/auth-guards";
+import {
+  toClientVendorDealRegistration,
+  toClientVendorDealRegistrations,
+} from "@/lib/goaccess-client-data";
 import { listDeals, submitDealForVendor } from "@/lib/goaccess-store";
 
 type DealPayload = {
@@ -25,7 +29,7 @@ export async function GET() {
 
   const session = auth.session;
   const deals = await listDeals(session?.vendorId);
-  return NextResponse.json({ items: deals });
+  return NextResponse.json({ items: toClientVendorDealRegistrations(deals) });
 }
 
 export async function POST(request: Request) {
@@ -120,7 +124,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      deal,
+      deal: toClientVendorDealRegistration(deal),
       message: "Deal registration submitted for GoAccess review.",
     });
   } catch (error) {

@@ -446,7 +446,7 @@ export function AdminDealManager({
 
   function getStageButtonLabel(deal: DealRegistration, stage: (typeof dealStages)[number]) {
     if (stage.actionStatus === "approved" && deal.status === "under_review") {
-      return "Approve & sync";
+      return "Approve deal";
     }
 
     if (stage.actionStatus === "approved" && deal.status === "approved") {

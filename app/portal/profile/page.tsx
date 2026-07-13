@@ -36,7 +36,7 @@ function buildMetrics(dealCount: number, openSupport: number, hasCredentials: bo
     {
       label: "Forecast monthly RMR",
       value: `$${forecast.toLocaleString()}`,
-      delta: "Forecast includes closed won and synced pipeline",
+      delta: "Forecast includes closed won and approved pipeline",
     },
   ];
 }
@@ -62,7 +62,7 @@ function buildSections(vendor: Awaited<ReturnType<typeof getVendorById>>, openDe
       items: [
         `Open deals: ${openDeals}`,
         `Closed won: ${closedWon}`,
-        "Review each new registration before CRM write",
+        "GoAccess reviews each new registration before approval",
       ],
     },
     {

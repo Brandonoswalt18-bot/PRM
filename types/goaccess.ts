@@ -165,6 +165,13 @@ export type DealRegistration = {
   updatedAt: string;
 };
 
+export type ClientVendorDealRegistration = Omit<
+  DealRegistration,
+  "hubspotCompanyId" | "hubspotContactId" | "hubspotDealId" | "status"
+> & {
+  status: Exclude<DealStatus, "synced_to_hubspot">;
+};
+
 export type DealSyncEvent = {
   id: string;
   dealId: string;
@@ -184,6 +191,7 @@ export type VendorNotification = {
   category:
     | "application_received"
     | "application_internal_alert"
+    | "deal_internal_alert"
     | "application_approved"
     | "nda_sent"
     | "credentials_issued"

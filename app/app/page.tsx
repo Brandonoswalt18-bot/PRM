@@ -145,7 +145,7 @@ export default async function VendorDashboardPage() {
             <span className="simple-eyebrow">Deal approval</span>
             <h2 id="approval-flow-title">One decision, one sync</h2>
             <p className="simple-side-copy">
-              When an admin selects <strong>Approve &amp; sync</strong>, the portal checks for duplicates and creates or updates the company, contact, and deal in HubSpot.
+              When an admin selects <strong>Approve deal</strong>, the portal automatically checks for duplicates and creates or updates the company, contact, and deal in HubSpot.
             </p>
             <ol className="simple-mini-flow" aria-label="Deal approval flow">
               <li><span>1</span> Partner submits</li>

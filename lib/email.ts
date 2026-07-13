@@ -44,6 +44,21 @@ export function getApplicationNotificationRecipients() {
     .filter(Boolean);
 }
 
+export function getDealNotificationRecipients() {
+  const raw =
+    process.env.GOACCESS_DEAL_NOTIFICATION_EMAIL ??
+    process.env.GOACCESS_APPLICATION_NOTIFICATION_EMAIL ??
+    process.env.GOACCESS_ADMIN_EMAIL ??
+    "maya@goaccess.com";
+
+  return [...new Set(
+    raw
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean)
+  )];
+}
+
 export async function sendVendorEmail(payload: VendorEmailPayload): Promise<VendorEmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM_ADDRESS;

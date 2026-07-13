@@ -5,21 +5,17 @@ import {
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
 import { formatVendorDealStatusLabel } from "@/lib/goaccess-copy";
-import { buildDealTimeline } from "@/lib/goaccess-timeline";
+import { buildVendorDealTimeline } from "@/lib/goaccess-timeline";
 import {
   formatCurrency,
   listDeals,
-  listSyncEvents,
 } from "@/lib/goaccess-store";
 import { formatDealLocation } from "@/lib/deal-registration";
 
 export default async function PartnerDealsPage() {
   const session = await getWorkspaceSession();
   const vendorId = session?.vendorId;
-  const [deals, syncEvents] = await Promise.all([
-    listDeals(vendorId),
-    listSyncEvents(),
-  ]);
+  const deals = await listDeals(vendorId);
 
   const metrics = [
     {
@@ -29,8 +25,8 @@ export default async function PartnerDealsPage() {
     },
     {
       label: "Approved",
-      value: String(deals.filter((deal) => deal.status === "synced_to_hubspot").length),
-      delta: `${deals.filter((deal) => deal.hubspotDealId).length} deals approved by GoAccess`,
+      value: String(deals.filter((deal) => deal.status === "approved" || deal.status === "synced_to_hubspot").length),
+      delta: "Registrations approved by GoAccess",
     },
     {
       label: "Closed won",
@@ -51,7 +47,7 @@ export default async function PartnerDealsPage() {
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="My deals"
-        subtitle="Track each deal from submission through GoAccess review, HubSpot, and recurring revenue."
+        subtitle="Track each deal from submission through GoAccess review, approval, and recurring revenue."
         primaryLabel="Register new deal"
         primaryHref="/portal/links"
       />
@@ -103,8 +99,8 @@ export default async function PartnerDealsPage() {
             <TimelineSection
               key={deal.id}
               title={deal.companyName}
-              description={`${formatDealLocation(deal)} · ${formatVendorDealStatusLabel(deal.status)}${deal.hubspotDealId ? ` · GoAccess approved` : ""}`}
-              entries={buildDealTimeline(deal, syncEvents)}
+              description={`${formatDealLocation(deal)} · ${formatVendorDealStatusLabel(deal.status)}`}
+              entries={buildVendorDealTimeline(deal)}
             />
           ))}
         </section>

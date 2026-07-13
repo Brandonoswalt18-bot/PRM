@@ -4,16 +4,13 @@ import { DealRegistrationForm } from "@/components/product/deal-registration-for
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
 import { formatDealLocation } from "@/lib/deal-registration";
+import { formatVendorDealStatusLabel } from "@/lib/goaccess-copy";
 import {
   formatCurrency,
   getCurrentMonthlyRmrForVendor,
   getForecastMonthlyRmrForVendor,
   listDeals,
 } from "@/lib/goaccess-store";
-
-function titleCaseStatus(value: string) {
-  return value.replaceAll("_", " ");
-}
 
 export default async function LinksPage() {
   const session = await getWorkspaceSession();
@@ -31,9 +28,9 @@ export default async function LinksPage() {
       delta: `${deals.filter((deal) => deal.status === "submitted" || deal.status === "under_review").length} waiting on review`,
     },
     {
-      label: "Ready for HubSpot",
-      value: String(deals.filter((deal) => deal.status === "approved").length),
-      delta: `${deals.filter((deal) => deal.status === "synced_to_hubspot").length} already active in CRM`,
+      label: "Approved deals",
+      value: String(deals.filter((deal) => deal.status === "approved" || deal.status === "synced_to_hubspot").length),
+      delta: `${deals.filter((deal) => deal.status === "closed_won").length} closed won`,
     },
     {
       label: "Current monthly RMR",
@@ -50,7 +47,7 @@ export default async function LinksPage() {
   const sections = [
     {
       title: "Submission rules",
-      description: "Every vendor deal is reviewed before it is created in HubSpot.",
+      description: "Every vendor deal is reviewed by GoAccess before it is approved.",
       items: [
         "Use the community’s real address, city, state, and contact email",
         "Keep the registration focused on community and contact details",
@@ -63,8 +60,8 @@ export default async function LinksPage() {
       description: "The GoAccess team uses the data below to review and route your deal.",
       items: [
         "Submitted deals move into internal review",
-        "Approved deals are then written to HubSpot",
-        "HubSpot-linked deals remain visible in your portal history",
+        "GoAccess handles all internal follow-through after approval",
+        "Approved deals remain visible in your portal history",
         "Won deals affect your recurring revenue totals",
       ],
     },
@@ -75,7 +72,7 @@ export default async function LinksPage() {
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="Register a deal"
-        subtitle="Submit a clean community registration for GoAccess review and CRM creation."
+        subtitle="Submit a clean community registration for GoAccess review."
         primaryLabel="Start registration"
         primaryHref="#deal-registration-form"
       />
@@ -112,7 +109,7 @@ export default async function LinksPage() {
                 <span>{deal.companyName}</span>
                 <span>{formatDealLocation(deal)}</span>
                 <span>{new Date(deal.createdAt).toLocaleDateString()}</span>
-                <span>{titleCaseStatus(deal.status)}</span>
+                <span>{formatVendorDealStatusLabel(deal.status)}</span>
                   <span>
                     <Link href={`/portal/deals/${deal.id}`}>Open</Link>
                   </span>

@@ -2,12 +2,9 @@ import { MetricGrid, TimelineSection } from "@/components/product/product-page-s
 import { SupportRequestForm } from "@/components/product/support-request-form";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
+import { formatVendorSupportCategoryLabel } from "@/lib/goaccess-copy";
 import { buildSupportTimeline } from "@/lib/goaccess-timeline";
 import { listSupportRequests } from "@/lib/goaccess-store";
-
-function titleCaseStatus(value: string) {
-  return value.replaceAll("_", " ");
-}
 
 export default async function PartnerSupportPage() {
   const session = await getWorkspaceSession();
@@ -41,7 +38,7 @@ export default async function PartnerSupportPage() {
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="Support"
-        subtitle="Open a request for deal review, HubSpot sync, profile corrections, or monthly recurring revenue questions."
+        subtitle="Open a request for deal review, profile corrections, portal access, or monthly recurring revenue questions."
         primaryLabel="Open support request"
         primaryHref="#support-request-form"
       />
@@ -55,7 +52,7 @@ export default async function PartnerSupportPage() {
             <h3>Support categories</h3>
             <ul>
               <li>Deal registration questions</li>
-              <li>HubSpot sync issues or duplicates</li>
+              <li>Deal status or duplicate registration questions</li>
               <li>Profile updates and credential issues</li>
               <li>Monthly RMR or statement questions</li>
             </ul>
@@ -67,7 +64,7 @@ export default async function PartnerSupportPage() {
               <TimelineSection
                 key={request.id}
                 title={request.subject}
-                description={titleCaseStatus(request.category)}
+                description={formatVendorSupportCategoryLabel(request.category)}
                 entries={buildSupportTimeline(request)}
               />
             );

@@ -1,4 +1,10 @@
-import type { ApprovedVendor, ClientApprovedVendor } from "@/types/goaccess";
+import type {
+  ApprovedVendor,
+  ClientApprovedVendor,
+  ClientVendorDealRegistration,
+  DealRegistration,
+  SupportRequest,
+} from "@/types/goaccess";
 
 export function toClientApprovedVendor(vendor: ApprovedVendor): ClientApprovedVendor {
   const clientVendor = { ...vendor };
@@ -17,4 +23,35 @@ export function toClientApprovedVendors(
   vendors: ApprovedVendor[]
 ): ClientApprovedVendor[] {
   return vendors.map(toClientApprovedVendor);
+}
+
+export function toClientVendorDealRegistration(
+  deal: DealRegistration
+): ClientVendorDealRegistration {
+  const clientDeal = { ...deal };
+  delete clientDeal.hubspotCompanyId;
+  delete clientDeal.hubspotContactId;
+  delete clientDeal.hubspotDealId;
+
+  return {
+    ...clientDeal,
+    status: deal.status === "synced_to_hubspot" ? "approved" : deal.status,
+  };
+}
+
+export function toClientVendorDealRegistrations(
+  deals: DealRegistration[]
+): ClientVendorDealRegistration[] {
+  return deals.map(toClientVendorDealRegistration);
+}
+
+export function toClientVendorSupportRequest(request: SupportRequest): SupportRequest {
+  return {
+    ...request,
+    category: request.category === "hubspot_sync" ? "deal_registration" : request.category,
+  };
+}
+
+export function toClientVendorSupportRequests(requests: SupportRequest[]): SupportRequest[] {
+  return requests.map(toClientVendorSupportRequest);
 }

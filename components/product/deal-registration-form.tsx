@@ -228,7 +228,7 @@ export function DealRegistrationForm() {
           aria-live="polite"
         >
           {message ||
-            "Submitted deals stay in the portal review queue first, then move into HubSpot automatically after GoAccess approval."}
+            "Submitted deals go directly to GoAccess for review. We handle every internal step after that."}
         </p>
       </form>
     </article>

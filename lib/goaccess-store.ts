@@ -4,6 +4,7 @@ import {
   buildInviteUrl,
   buildOnboardingUrl,
   getApplicationNotificationRecipients,
+  getDealNotificationRecipients,
   getPortalBaseUrl,
   sendVendorEmail,
 } from "@/lib/email";
@@ -2509,6 +2510,66 @@ export async function submitDealForVendor(vendorId: string, input: CreateDealInp
   });
 
   await writeStore(store);
+
+  const internalRecipients = getDealNotificationRecipients();
+
+  if (internalRecipients.length > 0) {
+    const reviewUrl = `${getPortalBaseUrl()}/app/deal-registrations?queue=review&deal=${encodeURIComponent(deal.id)}`;
+    let notification: VendorNotification;
+
+    try {
+      notification = await recordWorkflowEmail({
+        vendorId: vendor.id,
+        recipientEmail: internalRecipients,
+        subject: `New deal registration: ${deal.companyName}`,
+        category: "deal_internal_alert",
+        reference: reviewUrl,
+        replyTo: vendor.primaryContactEmail,
+        text: [
+          "A vendor submitted a new deal registration for GoAccess review.",
+          "",
+          `Vendor: ${vendor.companyName}`,
+          `Community: ${deal.companyName}`,
+          `Location: ${[deal.city, deal.state].filter(Boolean).join(", ") || "Not provided"}`,
+          `Community contact: ${deal.contactName}`,
+          `Contact email: ${deal.contactEmail}`,
+          `Estimated project value: ${formatCurrency(deal.estimatedValue)}`,
+          "",
+          `Review and approve the deal: ${reviewUrl}`,
+        ].join("\n"),
+        html: [
+          "<p>A vendor submitted a new deal registration for GoAccess review.</p>",
+          "<ul>",
+          `<li><strong>Vendor:</strong> ${escapeHtml(vendor.companyName)}</li>`,
+          `<li><strong>Community:</strong> ${escapeHtml(deal.companyName)}</li>`,
+          `<li><strong>Location:</strong> ${escapeHtml([deal.city, deal.state].filter(Boolean).join(", ") || "Not provided")}</li>`,
+          `<li><strong>Community contact:</strong> ${escapeHtml(deal.contactName)}</li>`,
+          `<li><strong>Contact email:</strong> ${escapeHtml(deal.contactEmail)}</li>`,
+          `<li><strong>Estimated project value:</strong> ${escapeHtml(formatCurrency(deal.estimatedValue))}</li>`,
+          "</ul>",
+          `<p><a href="${escapeHtml(reviewUrl)}">Review and approve this deal</a></p>`,
+        ].join(""),
+      });
+    } catch (error) {
+      notification = buildNotification({
+        vendorId: vendor.id,
+        recipientEmail: internalRecipients.join(", "),
+        subject: `New deal registration: ${deal.companyName}`,
+        category: "deal_internal_alert",
+        reference: error instanceof Error ? error.message : "Admin notification failed",
+        status: "failed",
+      });
+    }
+
+    store.notifications.unshift(notification);
+
+    try {
+      await writeStore(store);
+    } catch (error) {
+      console.error("Failed to persist the deal submission admin notification.", error);
+    }
+  }
+
   return deal;
 }
 

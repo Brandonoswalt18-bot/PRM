@@ -210,6 +210,89 @@ export function buildDealTimeline(
   return entries.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 }
 
+export function buildVendorDealTimeline(deal: DealRegistration): TimelineEntry[] {
+  const entries: TimelineEntry[] = [
+    {
+      title: "Deal submitted",
+      detail: `${deal.companyName} was sent to GoAccess for review.`,
+      timestamp: deal.createdAt,
+      tone: "neutral",
+    },
+  ];
+
+  if (deal.status === "under_review") {
+    entries.push({
+      title: "GoAccess review in progress",
+      detail: "The GoAccess team is reviewing the registration and will handle the next step.",
+      timestamp: deal.updatedAt,
+      tone: "warning",
+    });
+  }
+
+  if (deal.status === "approved" || deal.status === "synced_to_hubspot") {
+    entries.push({
+      title: "Deal approved",
+      detail: "GoAccess approved this registration and is handling the remaining internal steps.",
+      timestamp: deal.updatedAt,
+      tone: "success",
+    });
+  }
+
+  if (deal.status === "rejected") {
+    entries.push({
+      title: "Deal declined",
+      detail: "GoAccess completed its review and declined this registration.",
+      timestamp: deal.updatedAt,
+      tone: "danger",
+    });
+  }
+
+  if (deal.agreementUploadedAt) {
+    entries.push({
+      title: "Dealer agreement ready",
+      detail: deal.agreementFileName
+        ? `${deal.agreementFileName} is available for review.`
+        : "The dealer agreement is available for review.",
+      timestamp: deal.agreementUploadedAt,
+      tone: "neutral",
+    });
+  }
+
+  if (deal.agreementSentAt) {
+    entries.push({
+      title: "Dealer agreement awaiting signature",
+      detail: "Review the agreement and upload the signed copy in the portal.",
+      timestamp: deal.agreementSentAt,
+      tone: "warning",
+    });
+  }
+
+  if (deal.agreementSignedAt) {
+    entries.push({
+      title: "Signed dealer agreement received",
+      detail: deal.signedAgreementFileName
+        ? `${deal.signedAgreementFileName} is stored with this deal.`
+        : "The signed dealer agreement is stored with this deal.",
+      timestamp: deal.agreementSignedAt,
+      tone: "success",
+    });
+  }
+
+  if (deal.status === "closed_won" || deal.status === "closed_lost") {
+    entries.push({
+      title: deal.status === "closed_won" ? "Deal closed won" : "Deal closed lost",
+      detail:
+        deal.status === "closed_won"
+          ? `Recurring revenue of $${deal.monthlyRmr.toLocaleString()} is now active.`
+          : "This opportunity is closed and no longer active in the pipeline.",
+      timestamp: deal.updatedAt,
+      tone: deal.status === "closed_won" ? "success" : "danger",
+    });
+  }
+
+  return entries.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+}
+
 export function buildSupportTimeline(request: SupportRequest): TimelineEntry[] {
   const entries: TimelineEntry[] = [
     {
