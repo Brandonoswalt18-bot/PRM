@@ -202,27 +202,29 @@ export function WorkspaceLayout({
             Public page
           </Link>
         </div>
-        <div className="session-card">
-          <div className="session-card-main">
-            <span aria-hidden="true" className="session-avatar">{sessionInitials}</span>
-            <div>
-              <span className="session-label">Signed in as</span>
-              <span className="session-name">{session.fullName}</span>
-            </div>
-          </div>
-          <div className="session-meta">
-            <span>{session.organization}</span>
-            <span className="session-email">{session.email}</span>
-          </div>
-          <Link
-            className="button button-ghost session-signout"
-            href="/auth/logout"
-            prefetch={false}
-            onClick={() => closeMobileNavigation()}
+        <details className="session-card">
+          <summary
+            aria-label={`Account menu for ${session.fullName}`}
+            className="session-card-main"
           >
-            Sign out
-          </Link>
-        </div>
+            <span aria-hidden="true" className="session-avatar">{sessionInitials}</span>
+            <span className="session-account-copy">
+              <span className="session-name">{session.fullName}</span>
+              <span className="session-email" title={session.email}>{session.email}</span>
+            </span>
+            <span aria-hidden="true" className="session-chevron" />
+          </summary>
+          <div className="session-menu">
+            <Link
+              className="session-signout"
+              href="/auth/logout"
+              prefetch={false}
+              onClick={() => closeMobileNavigation()}
+            >
+              Sign out
+            </Link>
+          </div>
+        </details>
       </aside>
 
       <main className="app-main" id="workspace-main" inert={mobileNavOpen || undefined}>

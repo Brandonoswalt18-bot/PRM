@@ -1379,79 +1379,6 @@ li + li {
   letter-spacing: -0.02em;
 }
 
-.session-card {
-  display: grid;
-  gap: 10px;
-  margin-top: auto;
-  padding: 14px;
-  border-radius: 18px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(245, 248, 252, 0.9));
-  border: 1px solid rgba(0, 74, 173, 0.1);
-  color: var(--muted);
-  font-size: 0.86rem;
-}
-
-.session-card-main {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-}
-
-.session-card-main > div {
-  display: grid;
-  min-width: 0;
-}
-
-.session-avatar {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 11px;
-  background: rgba(0, 74, 173, 0.1);
-  color: var(--signal);
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.session-label {
-  color: var(--signal);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.session-name {
-  color: var(--ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 700;
-}
-
-.session-meta {
-  display: grid;
-  gap: 2px;
-}
-
-.session-role {
-  color: var(--ink);
-  font-weight: 700;
-}
-
-.session-email {
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
-.session-signout {
-  min-height: 36px;
-  margin-top: 2px;
-  width: fit-content;
-}
-
 .sidebar-label {
   color: var(--muted);
   font-size: 0.78rem;
@@ -2797,12 +2724,6 @@ li + li {
     pointer-events: auto;
   }
 
-  .session-card {
-    gap: 10px;
-    padding: 14px;
-    margin-top: auto;
-  }
-
   .app-drawer-links {
     display: grid;
     gap: 8px;
@@ -4055,17 +3976,6 @@ li + li {
   background: transparent;
 }
 
-.session-card {
-  gap: 8px;
-  padding: 12px;
-  border-radius: 16px;
-  box-shadow: none;
-}
-
-.session-meta {
-  font-size: 0.76rem;
-}
-
 .simple-dashboard {
   gap: 18px;
   padding-bottom: 24px;
@@ -4713,16 +4623,6 @@ li + li {
   font-size: 0.86rem;
 }
 
-.session-card {
-  gap: 7px;
-  padding: 10px;
-  border-radius: 14px;
-}
-
-.session-signout {
-  min-height: 38px;
-}
-
 .app-main {
   gap: 16px;
   padding: 10px 0 28px;
@@ -4976,8 +4876,7 @@ li + li {
     max-height: 100dvh;
   }
 
-  .app-nav-item,
-  .session-signout {
+  .app-nav-item {
     min-height: 44px;
   }
 
@@ -5115,5 +5014,145 @@ li + li {
 
   .onboarding-hero h1 {
     font-size: clamp(1.85rem, 9vw, 2.35rem);
+  }
+}
+
+/* Compact account menu, modeled after a familiar desktop identity switcher. */
+.session-card {
+  position: relative;
+  display: block;
+  margin-top: auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 3px 10px rgba(0, 32, 96, 0.07);
+  color: var(--ink);
+  font-size: 0.8rem;
+}
+
+.session-card-main {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 12px;
+  align-items: center;
+  gap: 9px;
+  min-height: 52px;
+  padding: 8px 9px;
+  border-radius: inherit;
+  cursor: pointer;
+  list-style: none;
+}
+
+.session-card-main::-webkit-details-marker {
+  display: none;
+}
+
+.session-card-main:hover {
+  background: var(--brand-off-white);
+}
+
+.session-card-main:focus-visible {
+  outline: 3px solid rgba(0, 74, 173, 0.2);
+  outline-offset: 2px;
+}
+
+.session-avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--signal);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.session-account-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.session-name,
+.session-email {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.session-email {
+  color: var(--muted);
+  font-size: 0.69rem;
+  line-height: 1.35;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.session-chevron {
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
+  transform: rotate(45deg) translate(-1px, -1px);
+  transition: transform 140ms ease;
+}
+
+.session-card[open] .session-chevron {
+  transform: rotate(225deg) translate(-1px, -1px);
+}
+
+.session-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 5;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 32, 96, 0.12);
+}
+
+.session-signout {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 34px;
+  margin: 0;
+  padding: 7px 9px;
+  border-radius: 7px;
+  color: var(--ink);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.session-signout:hover,
+.session-signout:focus-visible {
+  background: var(--brand-off-white);
+  color: var(--signal);
+}
+
+@media (max-width: 760px) {
+  .session-card {
+    width: 100%;
+  }
+
+  .session-card-main {
+    min-height: 54px;
+  }
+
+  .session-signout {
+    min-height: 44px;
   }
 }
