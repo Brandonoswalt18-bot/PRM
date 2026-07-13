@@ -219,6 +219,13 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
     await expect(page.getByText(title, { exact: true })).toBeVisible();
   }
 
+  await page.goto("/portal/learning");
+  await expect(page.locator(".learning-video-panel .training-asset-card")).toHaveCount(4);
+  await expect(page.locator(".learning-document-panel .training-library-empty")).toBeVisible();
+  await expect(page.getByText("4 available", { exact: true })).toBeVisible();
+  await expect(page.getByText("0 available", { exact: true })).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("maya@goaccess.com");
+
   const vendorProfileResponse = await page.request.get("/api/vendor-profile");
   expect(vendorProfileResponse.ok()).toBeTruthy();
   expect(JSON.stringify(await vendorProfileResponse.json()).toLowerCase()).not.toContain("hubspot");
@@ -255,6 +262,7 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
     "/portal/links",
     "/portal/deals",
     "/portal/earnings",
+    "/portal/learning",
     "/portal/payouts",
     "/portal/support",
     "/portal/profile",
