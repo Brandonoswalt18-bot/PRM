@@ -3597,7 +3597,7 @@ li + li {
 .vendor-onboarding-steps {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -3605,15 +3605,15 @@ li + li {
 
 .vendor-onboarding-steps li {
   display: grid;
-  justify-items: center;
-  gap: 8px;
-  padding: 12px 8px;
-  border: 1px solid rgba(0, 74, 173, 0.08);
-  border-radius: 16px;
-  color: var(--muted);
-  text-align: center;
-  font-size: 0.72rem;
-  font-weight: 700;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 78px;
+  padding: 13px;
+  border: 1px solid var(--gray-line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--gray-dark);
 }
 
 .vendor-onboarding-step-marker {
@@ -3622,14 +3622,19 @@ li + li {
   width: 28px;
   height: 28px;
   border-radius: 999px;
-  background: rgba(0, 74, 173, 0.08);
+  border: 1px solid var(--gray-line);
+  background: var(--off-white);
   color: var(--muted);
   font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 
 .vendor-onboarding-steps li.is-current {
-  border-color: rgba(0, 74, 173, 0.24);
-  background: rgba(0, 74, 173, 0.06);
+  border-color: rgba(0, 74, 173, 0.42);
+  border-left: 4px solid var(--signal);
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(0, 74, 173, 0.1);
   color: var(--ink);
 }
 
@@ -3639,12 +3644,40 @@ li + li {
 }
 
 .vendor-onboarding-steps li.is-complete {
+  border-color: rgba(29, 130, 70, 0.28);
+  background: rgba(29, 130, 70, 0.08);
   color: #2d7d4b;
 }
 
 .vendor-onboarding-steps li.is-complete .vendor-onboarding-step-marker {
-  background: rgba(29, 185, 84, 0.12);
-  color: #2d7d4b;
+  border-color: #2d7d4b;
+  background: #2d7d4b;
+  color: #fff;
+}
+
+.vendor-onboarding-steps li.is-upcoming {
+  background: rgba(245, 248, 252, 0.7);
+  color: var(--muted);
+}
+
+.vendor-onboarding-step-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.vendor-onboarding-step-copy strong {
+  color: inherit;
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+.vendor-onboarding-step-copy small {
+  color: inherit;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .login-footer {

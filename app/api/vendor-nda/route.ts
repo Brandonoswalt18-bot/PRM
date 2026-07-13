@@ -54,7 +54,7 @@ export async function POST(request: Request) {
 
   if (body.accepted !== true) {
     return NextResponse.json(
-      { message: "Confirm that you have read and agree to the GoAccess Mutual NDA." },
+      { message: "Confirm that you have read and agree to the GoAccess NDA." },
       { status: 400 }
     );
   }
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       vendor: toClientApprovedVendor(vendor),
-      message: "Mutual NDA accepted and recorded.",
+      message: "NDA accepted and recorded.",
     });
   } catch (error) {
     return NextResponse.json(

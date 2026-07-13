@@ -1,11 +1,11 @@
 export const LEGAL_AGREEMENTS = {
   nda: {
-    name: "GoAccess Mutual NDA",
-    version: "2026-07",
-    url: "/legal/goaccess-mutual-nda.pdf",
-    sha256: "05e43f5d80e8a93b4da1bafa779640c7e454fe4ca78d3d690c8cafa05aed8a7e",
+    name: "GoAccess Non-Disclosure Agreement",
+    version: "2026-07.1",
+    url: "/legal/goaccess-non-disclosure-agreement.pdf",
+    sha256: "28a206cc072f9c2eff9494c537c63f3a335fe74e564093d18f3f37c56af0f2b5",
     acceptanceText:
-      "I have read and agree to the GoAccess Mutual Non-Disclosure Agreement and confirm that I am authorized to accept it on behalf of my company.",
+      "I have read and agree to the GoAccess Non-Disclosure Agreement and confirm that I am authorized to accept it on behalf of my company.",
   },
   terms: {
     name: "GoAccess Channel Partner Service Agreement",

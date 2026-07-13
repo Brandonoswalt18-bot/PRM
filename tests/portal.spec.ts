@@ -61,17 +61,17 @@ test("approved vendor accepts the NDA and Partner Agreement before portal activa
     page.getByRole("heading", { name: "Review and accept both GoAccess agreements." }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: /View NDA PDF/ })).toHaveAttribute(
-    "href", "/legal/goaccess-mutual-nda.pdf",
+    "href", "/legal/goaccess-non-disclosure-agreement.pdf",
   );
   await expect(page.getByRole("link", { name: /View Partner Agreement PDF/ })).toHaveAttribute(
     "href", "/legal/goaccess-partner-terms.pdf",
   );
 
-  const ndaCard = page.locator("article").filter({ hasText: "Accept the Mutual NDA" });
+  const ndaCard = page.locator("article").filter({ hasText: "Accept the NDA" });
   await ndaCard.getByLabel("Title").fill("President");
   await ndaCard.getByRole("checkbox").check();
-  await ndaCard.getByRole("button", { name: "Accept Mutual NDA" }).click();
-  await expect(page.getByText("Mutual NDA accepted and recorded.")).toBeVisible();
+  await ndaCard.getByRole("button", { name: "Accept NDA" }).click();
+  await expect(page.getByText("NDA accepted and recorded.")).toBeVisible();
 
   const termsCard = page.locator("article").filter({ hasText: "Accept the Partner Agreement" });
   await termsCard.getByLabel("Title").fill("President");
@@ -101,8 +101,8 @@ test("approved vendor accepts the NDA and Partner Agreement before portal activa
   expect(accessPayload.vendor).toMatchObject({
     ndaAcceptedBy: "Alex Onboarding",
     ndaAcceptedTitle: "President",
-    ndaDocumentSha256: "05e43f5d80e8a93b4da1bafa779640c7e454fe4ca78d3d690c8cafa05aed8a7e",
-    ndaVersion: "2026-07",
+    ndaDocumentSha256: "28a206cc072f9c2eff9494c537c63f3a335fe74e564093d18f3f37c56af0f2b5",
+    ndaVersion: "2026-07.1",
     termsAcceptedBy: "Alex Onboarding",
     termsAcceptedTitle: "President",
     termsDocumentSha256: "c6386ee3e3325ea2aa366055a750f64826eb00fca587fc2b03bd2431176922d1",
@@ -207,7 +207,7 @@ test("unsigned vendor is limited to required legal onboarding", async ({ page })
   await expect(page.getByRole("heading", { name: "Complete your vendor agreements" })).toBeVisible();
   const legalStatus = page.getByRole("region", { name: "Accept your NDA and Partner Agreement" });
   await expect(legalStatus.getByRole("link", { name: "View NDA PDF" })).toHaveAttribute(
-    "href", "/legal/goaccess-mutual-nda.pdf",
+    "href", "/legal/goaccess-non-disclosure-agreement.pdf",
   );
   await expect(legalStatus.getByRole("link", { name: "View Partner Agreement PDF" })).toHaveAttribute(
     "href", "/legal/goaccess-partner-terms.pdf",
@@ -236,7 +236,12 @@ test("unsigned vendor is limited to required legal onboarding", async ({ page })
   await page.goto("/portal/links");
   await expect(page).toHaveURL(/\/portal\/onboarding\?required=legal$/);
   await expect(page.getByRole("heading", { name: "Onboarding" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Accept Mutual NDA" })).toBeVisible();
+  const progress = page.getByRole("list", { name: "Vendor onboarding progress" });
+  await expect(progress.getByRole("listitem").filter({ hasText: "NDA" })).toContainText("Next");
+  await expect(progress.getByRole("listitem").filter({ hasText: "Partner Agreement" })).toContainText("Upcoming");
+  await expect(progress.getByRole("listitem").filter({ hasText: "Portal access" })).toContainText("Upcoming");
+  await expect(progress.getByRole("listitem").filter({ hasText: "First deal" })).toContainText("Upcoming");
+  await expect(page.getByRole("button", { name: "Accept NDA" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Accept Partner Agreement" })).toBeVisible();
 });
 

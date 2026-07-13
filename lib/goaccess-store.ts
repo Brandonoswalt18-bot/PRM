@@ -1825,7 +1825,7 @@ export function buildApplicationTimeline(
 
   if (vendor?.ndaSignedAt) {
     entries.push({
-      title: "Mutual NDA accepted",
+      title: "NDA accepted",
       detail: `${vendor.ndaAcceptedBy ?? vendor.primaryContactName} accepted version ${vendor.ndaVersion ?? "current"}.`,
       timestamp: vendor.ndaSignedAt,
       tone: "success",
@@ -2221,14 +2221,14 @@ export async function updateVendorApplicationStatus(
           text:
             `Hi ${application.primaryContactName},\n\n` +
             "Thank you for your interest in partnering with GoAccess.\n\n" +
-            "Your next step is to review and accept the Mutual NDA and Partner Agreement.\n\n" +
+            "Your next step is to review and accept the NDA and Partner Agreement.\n\n" +
             "Open your secure onboarding checklist here:\n" +
             `${onboardingUrl}\n\n` +
             "GoAccess",
           html:
             `<p>Hi ${escapeHtml(application.primaryContactName)},</p>` +
             "<p>Thank you for your interest in partnering with GoAccess.</p>" +
-            "<p>Your next step is to review and accept the Mutual NDA and Partner Agreement.</p>" +
+            "<p>Your next step is to review and accept the NDA and Partner Agreement.</p>" +
             `<p><a href="${escapeHtml(onboardingUrl)}">Open your secure onboarding checklist</a></p>` +
             "<p>GoAccess</p>",
         })

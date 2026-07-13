@@ -72,10 +72,10 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
             <span className="onboarding-step-number">1</span>
             <div>
               <span className="onboarding-step-status">{ndaComplete ? "Accepted" : "Required"}</span>
-              <h3>Mutual NDA</h3>
+              <h3>Non-Disclosure Agreement</h3>
             </div>
           </div>
-          <p className="stack-note">Review the complete Mutual Non-Disclosure Agreement before accepting it for your company.</p>
+          <p className="stack-note">Review the complete Non-Disclosure Agreement before accepting it for your company.</p>
           <div className="legal-document-actions">
             <a className="button button-secondary" href={LEGAL_AGREEMENTS.nda.url} target="_blank" rel="noreferrer">
               View NDA PDF
@@ -122,7 +122,7 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
                 <span>{LEGAL_AGREEMENTS.nda.acceptanceText}</span>
               </label>
               <button className="button button-primary" disabled={ndaStatus === "saving"} type="submit">
-                {ndaStatus === "saving" ? "Recording..." : "Accept Mutual NDA"}
+                {ndaStatus === "saving" ? "Recording..." : "Accept NDA"}
               </button>
               <p className={`form-message ${ndaStatus === "success" ? "form-message-success" : ""} ${ndaStatus === "error" ? "form-message-error" : ""}`.trim()} aria-live="polite">
                 {ndaMessage || "This acceptance is recorded as an electronic agreement for your company."}

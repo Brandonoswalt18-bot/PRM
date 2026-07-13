@@ -10,7 +10,7 @@ type OnboardingPageProps = {
 
 function getMessage(error?: string, status?: string) {
   if (status === "nda-accepted") {
-    return { tone: "success", text: "Mutual NDA accepted and recorded." };
+    return { tone: "success", text: "NDA accepted and recorded." };
   }
 
   if (status === "terms-accepted") {
@@ -18,8 +18,8 @@ function getMessage(error?: string, status?: string) {
   }
 
   const errors: Record<string, string> = {
-    "nda-confirmation-required": "Confirm that you have read and agree to the Mutual NDA.",
-    "nda-acceptance-failed": "The Mutual NDA acceptance could not be recorded. Check the form and try again.",
+    "nda-confirmation-required": "Confirm that you have read and agree to the NDA.",
+    "nda-acceptance-failed": "The NDA acceptance could not be recorded. Check the form and try again.",
     "terms-confirmation-required": "Confirm that you have read and agree to the Partner Agreement.",
     "terms-acceptance-failed": "Partner Agreement acceptance could not be recorded. Check the form and try again.",
   };
@@ -91,10 +91,10 @@ export default async function VendorOnboardingPage({ params, searchParams }: Onb
               <span className="onboarding-step-number">1</span>
               <div>
                 <span className="onboarding-step-status">{ndaAccepted ? "Accepted" : "Complete now"}</span>
-                <h2>Accept the Mutual NDA</h2>
+                <h2>Accept the NDA</h2>
               </div>
             </div>
-            <p>Review the complete GoAccess Mutual NDA, then accept it electronically on behalf of your company.</p>
+            <p>Review the complete GoAccess Non-Disclosure Agreement, then accept it electronically on behalf of your company.</p>
             {vendor.ndaDocumentUrl ? (
               <div className="legal-document-actions">
                 <a className="button button-secondary" href={vendor.ndaDocumentUrl} rel="noreferrer" target="_blank">
@@ -130,7 +130,7 @@ export default async function VendorOnboardingPage({ params, searchParams }: Onb
                   <span>{LEGAL_AGREEMENTS.nda.acceptanceText}</span>
                 </label>
                 <button className="button button-primary" disabled={!vendor.ndaDocumentUrl} type="submit">
-                  Accept Mutual NDA
+                  Accept NDA
                   <span aria-hidden="true" className="button-arrow">→</span>
                 </button>
               </form>

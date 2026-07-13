@@ -55,7 +55,7 @@ export function buildApplicationTimeline(
 
   if (vendor?.ndaSignedAt) {
     entries.push({
-      title: "Mutual NDA accepted",
+      title: "NDA accepted",
       detail: `${vendor.ndaAcceptedBy ?? vendor.primaryContactName} accepted version ${vendor.ndaVersion ?? "current"}.`,
       timestamp: vendor.ndaSignedAt,
       tone: "success",

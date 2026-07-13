@@ -20,7 +20,9 @@ export function VendorNextStepCard({
   const termsAccepted = Boolean(vendor.termsAcceptedAt);
   const accessActive = vendor.portalAccess === "active" && vendor.credentialsIssued;
   const legalComplete = ndaAccepted && termsAccepted;
-  const onboardingComplete = legalComplete && accessActive && dealCount > 0;
+  const portalAccessComplete = legalComplete && accessActive;
+  const firstDealComplete = portalAccessComplete && dealCount > 0;
+  const onboardingComplete = firstDealComplete;
 
   if (onboardingComplete && !alwaysShow) {
     return null;
@@ -59,10 +61,19 @@ export function VendorNextStepCard({
             };
 
   const steps = [
-    { label: "NDA", complete: ndaAccepted, current: !ndaAccepted },
-    { label: "Partner Agreement", complete: termsAccepted, current: ndaAccepted && !termsAccepted },
-    { label: "Portal access", complete: accessActive, current: legalComplete && !accessActive },
-    { label: "First deal", complete: dealCount > 0, current: accessActive && dealCount === 0 },
+    { label: "NDA", state: ndaAccepted ? "complete" : "current" },
+    {
+      label: "Partner Agreement",
+      state: termsAccepted ? "complete" : ndaAccepted ? "current" : "upcoming",
+    },
+    {
+      label: "Portal access",
+      state: portalAccessComplete ? "complete" : legalComplete ? "current" : "upcoming",
+    },
+    {
+      label: "First deal",
+      state: firstDealComplete ? "complete" : portalAccessComplete ? "current" : "upcoming",
+    },
   ];
 
   return (
@@ -79,13 +90,23 @@ export function VendorNextStepCard({
       <ol className="vendor-onboarding-steps" aria-label="Vendor onboarding progress">
         {steps.map((step, index) => (
           <li
-            className={`${step.complete ? "is-complete" : ""}${step.current ? " is-current" : ""}`.trim()}
+            aria-current={step.state === "current" ? "step" : undefined}
+            className={`is-${step.state}`}
             key={step.label}
           >
             <span className="vendor-onboarding-step-marker" aria-hidden="true">
-              {step.complete ? "✓" : index + 1}
+              {step.state === "complete" ? "✓" : index + 1}
             </span>
-            <span>{step.label}</span>
+            <span className="vendor-onboarding-step-copy">
+              <strong>{step.label}</strong>
+              <small>
+                {step.state === "complete"
+                  ? "Complete"
+                  : step.state === "current"
+                    ? "Next"
+                    : "Upcoming"}
+              </small>
+            </span>
           </li>
         ))}
       </ol>
