@@ -231,6 +231,15 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
   expect(JSON.stringify(await vendorProfileResponse.json()).toLowerCase()).not.toContain("hubspot");
 
   await page.goto("/portal/links");
+  const dealForm = page.locator("form.deal-registration-form");
+  await expect(dealForm.getByText("Required", { exact: true })).toHaveCount(10);
+  await expect(dealForm.getByText("Optional", { exact: true })).toHaveCount(1);
+  await page.getByRole("button", { name: "Submit deal for review" }).click();
+  await expect(dealForm.getByRole("alert")).toContainText("Check the highlighted fields");
+  await expect(dealForm.locator(".field-error-text")).toHaveCount(10);
+  await expect(dealForm.locator('[name="companyName"]')).toBeFocused();
+  await expect(dealForm.locator('[name="companyName"]')).toHaveAttribute("aria-invalid", "true");
+
   await page.getByLabel("Community name").fill(`Playwright Community ${unique}`);
   await page.getByLabel("Community address").fill("4127 Redwood Terrace");
   await page.getByLabel("Community website or domain").fill("playwright-community.example");
@@ -243,8 +252,28 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
   await page.getByLabel("Estimated project value").fill("25000");
   await expect(page.getByLabel("Estimated monthly RMR")).toHaveCount(0);
   await page.getByLabel("Opportunity notes").fill("Automated isolated browser verification.");
+  await expect(dealForm.locator(".field-error-text")).toHaveCount(0);
+  await expect(dealForm.getByRole("alert")).toHaveCount(0);
   await page.getByRole("button", { name: "Submit deal for review" }).click();
   await expect(page.getByText("Deal registration submitted for GoAccess review.")).toBeVisible();
+
+  const missingEstimate = await page.request.post("/api/deals", {
+    data: {
+      companyName: "Missing Estimate Test",
+      communityAddress: "1 Validation Way",
+      city: "San Diego",
+      state: "CA",
+      domain: "missing-estimate.example",
+      contactName: "Validation Test",
+      contactEmail: "validation@example.com",
+      contactPhone: "555-555-0111",
+      productInterest: "Access control",
+    },
+  });
+  expect(missingEstimate.status()).toBe(400);
+  expect(await missingEstimate.json()).toMatchObject({
+    fieldErrors: { estimatedValue: "Estimated project value is required." },
+  });
 
   const dealsResponse = await page.request.get("/api/deals");
   expect(dealsResponse.ok()).toBeTruthy();
@@ -290,6 +319,23 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
   expect(tamperedRmr.ok()).toBeTruthy();
   const tamperedPayload = (await tamperedRmr.json()) as { deal: { monthlyRmr: number } };
   expect(tamperedPayload.deal.monthlyRmr).toBe(0);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/portal/links");
+  const mobileDealForm = page.locator("form.deal-registration-form");
+  await page.getByRole("button", { name: "Submit deal for review" }).click();
+  await expect(mobileDealForm.getByRole("alert")).toBeVisible();
+  await expect(mobileDealForm.locator('[name="companyName"]')).toBeFocused();
+  await expect(mobileDealForm.locator('[name="companyName"]')).toBeInViewport();
+  await expect(page.getByRole("button", { name: "Submit deal for review" })).toHaveCSS(
+    "min-height",
+    "44px",
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+    ),
+  ).toBeTruthy();
 
   await page.goto("/app");
   await expect(page).toHaveURL(/\/login\?next=%2Fapp/);

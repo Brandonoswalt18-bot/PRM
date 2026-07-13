@@ -20,6 +20,8 @@ type DealPayload = {
   notes?: string;
 };
 
+type DealFieldErrors = Partial<Record<keyof DealPayload, string>>;
+
 export async function GET() {
   const auth = await requireVendorLegalRouteAccess();
 
@@ -57,39 +59,44 @@ export async function POST(request: Request) {
   const contactName = body.contactName?.toString().trim() ?? "";
   const contactEmail = body.contactEmail?.toString().trim().toLowerCase() ?? "";
   const contactPhone = body.contactPhone?.toString().trim() ?? "";
-  const estimatedValue = Number(body.estimatedValue);
+  const estimatedValueInput = body.estimatedValue?.toString().trim() ?? "";
+  const estimatedValue = Number(estimatedValueInput);
   const productInterest = body.productInterest?.toString().trim() ?? "";
   const notes = body.notes?.toString().trim() ?? "";
+  const fieldErrors: DealFieldErrors = {};
+
+  if (!companyName) fieldErrors.companyName = "Community name is required.";
+  if (!communityAddress) fieldErrors.communityAddress = "Community address is required.";
+  if (!domain) fieldErrors.domain = "Community website or domain is required.";
+  if (!city) fieldErrors.city = "City is required.";
+  if (!state) fieldErrors.state = "State is required.";
+  if (!contactName) fieldErrors.contactName = "Contact name is required.";
+  if (!contactEmail) fieldErrors.contactEmail = "Contact email is required.";
+  if (!contactPhone) fieldErrors.contactPhone = "Contact phone is required.";
+  if (!productInterest) fieldErrors.productInterest = "Product interest is required.";
+  if (!estimatedValueInput) {
+    fieldErrors.estimatedValue = "Estimated project value is required.";
+  }
+
+  if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+    fieldErrors.contactEmail = "Enter a valid contact email.";
+  }
 
   if (
-    !companyName ||
-    !communityAddress ||
-    !city ||
-    !state ||
-    !domain ||
-    !contactName ||
-    !contactEmail ||
-    !contactPhone ||
-    !productInterest
+    estimatedValueInput &&
+    (!Number.isFinite(estimatedValue) || estimatedValue < 0)
   ) {
+    fieldErrors.estimatedValue = "Enter a valid project value of 0 or more.";
+  }
+
+  if (Object.keys(fieldErrors).length > 0) {
     return NextResponse.json(
       {
-        message:
-          "Community, location, domain, contact, phone, and product interest are required.",
+        message: "Please complete or correct the highlighted fields.",
+        fieldErrors,
       },
       { status: 400 }
     );
-  }
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
-    return NextResponse.json({ message: "Enter a valid contact email." }, { status: 400 });
-  }
-
-  if (
-    !Number.isFinite(estimatedValue) ||
-    estimatedValue < 0
-  ) {
-    return NextResponse.json({ message: "Enter a valid non-negative project estimate." }, { status: 400 });
   }
 
   if (

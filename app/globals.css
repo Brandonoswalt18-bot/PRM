@@ -2596,6 +2596,181 @@ li + li {
   font-size: 0.8rem;
 }
 
+/* Deal registration: explicit requirements and persistent validation feedback. */
+.deal-registration-form {
+  gap: 14px;
+}
+
+.deal-form-requirements {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #dbe5f1;
+  border-radius: 14px;
+  background: #f4f7fb;
+}
+
+.deal-form-requirements-mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: #e8f1fb;
+  color: var(--signal);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.deal-form-requirements strong {
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+
+.deal-form-requirements p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.deal-form-section {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid #e0e7f0;
+  border-radius: 16px;
+  background: #fbfcfe;
+}
+
+.deal-form-section legend {
+  padding: 0 8px;
+  color: var(--signal-deep);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.field-requirement {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.field-requirement.is-required {
+  background: #e8f1fb;
+  color: var(--signal-deep);
+}
+
+.field-requirement.is-optional {
+  background: #edf1f5;
+  color: #68778b;
+}
+
+.deal-registration-form .field-group.has-error input,
+.deal-registration-form .field-group.has-error textarea {
+  border-color: #cf4c4c;
+  background: #fffafa;
+  box-shadow: 0 0 0 3px rgba(207, 76, 76, 0.1);
+}
+
+.deal-registration-form .field-group.has-error input:focus,
+.deal-registration-form .field-group.has-error textarea:focus {
+  outline: 2px solid rgba(207, 76, 76, 0.22);
+  outline-offset: 2px;
+}
+
+.deal-registration-form .field-group.has-error .field-label {
+  color: #9f3030;
+}
+
+.deal-registration-form .field-group.has-error .field-requirement {
+  background: #fae5e5;
+  color: #9f3030;
+}
+
+.field-error-text {
+  margin-top: -2px;
+  color: #a13030;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.deal-form-error-summary {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgba(207, 76, 76, 0.35);
+  border-left: 4px solid #cf4c4c;
+  border-radius: 14px;
+  background: #fff7f7;
+  color: #872b2b;
+  scroll-margin-top: 20px;
+}
+
+.deal-form-error-summary:focus-visible {
+  outline: 3px solid rgba(207, 76, 76, 0.18);
+  outline-offset: 2px;
+}
+
+.deal-form-error-summary strong {
+  font-size: 0.86rem;
+}
+
+.deal-form-error-summary p {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.deal-form-error-list {
+  font-weight: 700;
+}
+
+.deal-form-submit {
+  width: fit-content;
+  min-width: 210px;
+}
+
+@media (max-width: 760px) {
+  .deal-form-section {
+    padding: 12px;
+  }
+
+  .deal-form-submit {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 420px) {
+  .field-label-row {
+    align-items: flex-start;
+  }
+
+  .field-requirement {
+    margin-top: -1px;
+  }
+}
+
 .timeline-badge {
   display: inline-flex;
   align-items: center;
