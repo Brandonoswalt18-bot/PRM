@@ -7,6 +7,14 @@ import type { ClientApprovedVendor } from "@/types/goaccess";
 
 type SubmissionStatus = "idle" | "saving" | "success" | "error";
 
+const legalDateFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Los_Angeles",
+});
+
+function formatLegalDate(value: string) {
+  return legalDateFormatter.format(new Date(value));
+}
+
 export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | null }) {
   const router = useRouter();
   const defaultName = vendor?.primaryContactName ?? "";
@@ -98,7 +106,7 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
           {ndaComplete ? (
             <p className="onboarding-complete-note">
               Accepted by {vendor?.ndaAcceptedBy ?? vendor?.primaryContactName}
-              {vendor?.ndaAcceptedTitle ? `, ${vendor.ndaAcceptedTitle}` : ""} on {new Date(vendor!.ndaSignedAt!).toLocaleDateString()}.
+              {vendor?.ndaAcceptedTitle ? `, ${vendor.ndaAcceptedTitle}` : ""} on {formatLegalDate(vendor!.ndaSignedAt!)}.
             </p>
           ) : (
             <form
@@ -162,7 +170,7 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
           {termsComplete ? (
             <p className="onboarding-complete-note">
               Accepted by {vendor?.termsAcceptedBy ?? vendor?.primaryContactName}
-              {vendor?.termsAcceptedTitle ? `, ${vendor.termsAcceptedTitle}` : ""} on {new Date(vendor!.termsAcceptedAt!).toLocaleDateString()}.
+              {vendor?.termsAcceptedTitle ? `, ${vendor.termsAcceptedTitle}` : ""} on {formatLegalDate(vendor!.termsAcceptedAt!)}.
             </p>
           ) : (
             <form

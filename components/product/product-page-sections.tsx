@@ -64,7 +64,7 @@ type TableSectionProps<T> = {
   actionHref?: string;
   headers: string[];
   rows: T[];
-  renderRow: (row: T) => ReactNode;
+  renderRow: (row: T, index: number) => ReactNode;
 };
 
 export function TableSection<T>({
@@ -123,9 +123,9 @@ export function PartnerRow(partner: PartnerRecord) {
   );
 }
 
-export function CommissionRow(row: CommissionActivity) {
+export function CommissionRow(row: CommissionActivity, index: number) {
   return (
-    <div className="table-row table-cols-5" key={`${row.partner}-${row.event}`}>
+    <div className="table-row table-cols-5" key={`${row.partner}-${row.event}-${index}`}>
       <span>{row.partner}</span>
       <span>{row.program}</span>
       <span>{row.event}</span>

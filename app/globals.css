@@ -5058,3 +5058,62 @@ li + li {
     width: 100%;
   }
 }
+
+/* A calmer type scale keeps the workspaces dense without sacrificing mobile readability. */
+@media (min-width: 761px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+.app-title {
+  font-size: clamp(1.55rem, 1.85vw, 2rem);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+}
+
+.app-subtitle {
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.vendor-next-step-copy h2 {
+  font-size: clamp(1.6rem, 2vw, 2.15rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.vendor-next-step-copy p {
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.public-application-intro h1 {
+  font-size: clamp(1.9rem, 3vw, 2.4rem);
+}
+
+.onboarding-hero h1 {
+  font-size: clamp(1.95rem, 3.2vw, 2.8rem);
+}
+
+.login-aside-copy h1 {
+  font-size: clamp(2.1rem, 3.4vw, 3.1rem);
+}
+
+@media (max-width: 760px) {
+  .app-title {
+    font-size: clamp(1.55rem, 7vw, 1.8rem);
+  }
+
+  .vendor-next-step-copy h2 {
+    font-size: clamp(1.55rem, 7vw, 1.8rem);
+  }
+
+  .public-application-intro h1 {
+    font-size: clamp(1.8rem, 8vw, 2.15rem);
+  }
+
+  .onboarding-hero h1 {
+    font-size: clamp(1.85rem, 9vw, 2.35rem);
+  }
+}
