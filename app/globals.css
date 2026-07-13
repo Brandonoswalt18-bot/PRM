@@ -4524,11 +4524,429 @@ li + li {
   }
 }
 
+/* Compact product rhythm */
+.public-application-shell {
+  --max: 1120px;
+  padding-bottom: 28px;
+}
+
+.public-application-shell .topbar {
+  margin-top: 16px;
+}
+
+.public-application-main {
+  gap: 18px;
+  width: min(960px, 100%);
+  margin-top: 32px;
+}
+
+.public-application-intro {
+  gap: 6px;
+}
+
+.public-application-intro .access-label {
+  margin-bottom: 0;
+}
+
+.public-application-intro h1 {
+  font-size: clamp(2.15rem, 3.7vw, 2.8rem);
+  line-height: 1;
+}
+
+.public-application-intro p {
+  max-width: 760px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.public-application-card-simple {
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 32, 96, 0.06);
+}
+
+.vendor-application-form {
+  gap: 14px;
+}
+
+.vendor-application-fields {
+  gap: 12px 14px;
+}
+
+.vendor-application-form .public-form-field {
+  gap: 5px;
+}
+
+.vendor-application-form .public-form-field input,
+.vendor-application-form > .button {
+  min-height: 44px;
+  border-radius: 9px;
+}
+
+.app-frame {
+  grid-template-columns: 212px minmax(0, 1fr);
+  gap: 20px;
+  padding: 12px;
+}
+
+.app-sidebar {
+  top: 12px;
+  min-height: calc(100dvh - 24px);
+  max-height: calc(100dvh - 24px);
+  gap: 14px;
+  padding: 14px;
+  border-radius: 20px;
+  box-shadow: 0 8px 28px rgba(0, 32, 96, 0.07);
+}
+
+.approved-brand-logo-workspace {
+  width: 146px;
+}
+
+.app-nav {
+  gap: 12px;
+}
+
+.app-nav-group {
+  gap: 5px;
+}
+
+.app-nav-group-items {
+  gap: 2px;
+}
+
+.app-nav-item {
+  min-height: 36px;
+  padding: 7px 9px;
+  border-radius: 10px;
+  font-size: 0.86rem;
+}
+
+.session-card {
+  gap: 7px;
+  padding: 10px;
+  border-radius: 14px;
+}
+
+.session-signout {
+  min-height: 38px;
+}
+
+.app-main {
+  gap: 16px;
+  padding: 10px 0 28px;
+}
+
+.app-topbar {
+  gap: 14px;
+  padding: 4px 0 10px;
+}
+
+.app-title-copy {
+  gap: 2px;
+}
+
+.app-title {
+  font-size: clamp(1.7rem, 2.5vw, 2.3rem);
+}
+
+.app-subtitle {
+  max-width: 680px;
+  font-size: 0.84rem;
+  line-height: 1.42;
+}
+
+.app-topbar-actions {
+  flex: 0 0 auto;
+}
+
+.workspace-search-bar {
+  min-height: 46px;
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(0, 32, 96, 0.06);
+}
+
+.app-content,
+.simple-dashboard {
+  gap: 14px;
+}
+
+.app-content > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.dashboard-metrics,
+.dashboard-grid {
+  gap: 14px;
+}
+
+.glass-card,
+.feature-card,
+.workspace-card,
+.flow-card,
+.integration-card,
+.arch-card,
+.roadmap-card,
+.price-card,
+.cta-card,
+.placeholder-card {
+  padding: 18px;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0, 32, 96, 0.06);
+}
+
+.metric-card {
+  min-height: 112px;
+  padding: 16px;
+}
+
+.card-header-row,
+.simple-panel-header {
+  margin-bottom: 12px;
+}
+
+.card-header-row p {
+  margin-top: 6px;
+}
+
+.stack-list {
+  gap: 10px;
+}
+
+.stack-card {
+  padding: 14px;
+  border-radius: 16px;
+}
+
+.data-table {
+  gap: 8px;
+}
+
+.legal-status-banner {
+  gap: 18px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  box-shadow: inset 3px 0 0 var(--signal), 0 6px 20px rgba(0, 32, 96, 0.05);
+}
+
+.legal-status-banner.is-complete {
+  box-shadow: inset 3px 0 0 var(--green), 0 6px 20px rgba(0, 32, 96, 0.05);
+}
+
+.legal-status-actions {
+  gap: 14px;
+}
+
+.portal-summary-strip {
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 32, 96, 0.045);
+}
+
+.portal-summary-item {
+  padding: 16px 18px;
+}
+
+.portal-summary-item > strong {
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+}
+
+.simple-dashboard-grid,
+.admin-dashboard-grid {
+  gap: 14px;
+}
+
+.simple-panel {
+  padding: 18px;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 32, 96, 0.045);
+}
+
+.simple-deal-row {
+  min-height: 62px;
+  padding: 10px 2px;
+}
+
+.simple-action-row {
+  min-height: 60px;
+  padding: 10px 2px;
+}
+
+.simple-step-list,
+.simple-mini-flow {
+  margin-top: 14px;
+}
+
+.simple-step-list li {
+  padding-bottom: 16px;
+}
+
+.simple-side-panel > .button {
+  margin-top: 14px;
+}
+
+.onboarding-shell {
+  padding: 16px;
+}
+
+.onboarding-layout {
+  gap: 16px;
+  width: min(1040px, 100%);
+}
+
+.onboarding-header {
+  padding: 4px 0;
+}
+
+.onboarding-hero {
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 24px;
+  padding: 28px;
+  border-radius: 22px;
+  box-shadow: 0 10px 32px rgba(0, 32, 96, 0.08);
+}
+
+.onboarding-hero h1 {
+  font-size: clamp(2.1rem, 4vw, 3.35rem);
+}
+
+.onboarding-hero p {
+  margin-top: 12px;
+  font-size: 0.92rem;
+}
+
+.onboarding-progress-card {
+  padding: 16px;
+  border-radius: 16px;
+}
+
+.onboarding-step-grid {
+  gap: 14px;
+}
+
+.onboarding-step-card {
+  gap: 14px;
+  padding: 20px;
+}
+
+.onboarding-step-card,
+.onboarding-next-card,
+.onboarding-expired-card {
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0, 32, 96, 0.06);
+}
+
+.onboarding-form {
+  gap: 12px;
+  padding-top: 14px;
+}
+
+.onboarding-next-card {
+  padding: 20px;
+}
+
+@media (max-width: 760px) {
+  .public-application-shell {
+    width: min(100% - 20px, var(--max));
+    padding-bottom: 20px;
+  }
+
+  .public-application-shell .topbar {
+    margin-top: 12px;
+  }
+
+  .public-application-main {
+    gap: 16px;
+    margin-top: 28px;
+  }
+
+  .public-application-intro h1 {
+    font-size: clamp(2rem, 9.5vw, 2.45rem);
+  }
+
+  .public-application-card-simple {
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  .vendor-application-fields {
+    gap: 12px;
+  }
+
+  .app-frame {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 0 10px;
+  }
+
+  .app-sidebar {
+    top: 0;
+    min-height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  .app-nav-item,
+  .session-signout {
+    min-height: 44px;
+  }
+
+  .app-main {
+    gap: 14px;
+    padding: 8px 0 24px;
+  }
+
+  .app-topbar {
+    gap: 12px;
+    padding-top: 0;
+  }
+
+  .app-content,
+  .simple-dashboard {
+    gap: 12px;
+  }
+
+  .legal-status-banner,
+  .simple-panel {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .portal-summary-item {
+    padding: 14px 16px;
+  }
+
+  .simple-deal-row,
+  .admin-deal-row {
+    padding: 12px 2px;
+  }
+
+  .onboarding-shell {
+    padding: 10px;
+  }
+
+  .onboarding-layout {
+    gap: 14px;
+  }
+
+  .onboarding-hero {
+    gap: 18px;
+    padding: 20px;
+    border-radius: 18px;
+  }
+
+  .onboarding-step-card,
+  .onboarding-next-card,
+  .onboarding-expired-card {
+    padding: 18px;
+    border-radius: 16px;
+  }
+}
+
 @media (max-width: 520px) {
   .legal-status-banner,
   .simple-panel {
-    padding: 18px;
-    border-radius: 18px;
+    padding: 16px;
+    border-radius: 14px;
   }
 
   .legal-checklist {
@@ -4537,6 +4955,6 @@ li + li {
   }
 
   .portal-summary-strip {
-    border-radius: 18px;
+    border-radius: 14px;
   }
 }
