@@ -32,7 +32,6 @@ export default async function PartnerLayout({
 
   return (
     <WorkspaceLayout
-      brand="GoAccess"
       workspace="VENDOR PORTAL"
       navItems={partnerNavigation}
       session={session}

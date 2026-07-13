@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GoAccessLogo } from "@/components/brand/goaccess-logo";
 
 type LoginPageProps = {
   searchParams?: Promise<{
@@ -33,9 +34,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <main className="login-shell auth-login-shell">
       <div className="login-layout auth-login-layout">
         <section aria-labelledby="login-title" className="login-card auth-login-card">
-          <Link className="brand auth-login-brand" href="/">
-            <span className="brand-mark">G</span>
-            <span className="brand-text">GoAccess</span>
+          <Link aria-label="GoAccess home" className="approved-brand-link auth-login-brand" href="/">
+            <GoAccessLogo className="approved-brand-logo" priority />
           </Link>
           <div className="login-card-heading">
             <h1 id="login-title">Sign in</h1>

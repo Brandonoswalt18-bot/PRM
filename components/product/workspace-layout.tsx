@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { GoAccessLogo } from "@/components/brand/goaccess-logo";
 import {
   GlobalWorkspaceSearch,
   type GlobalSearchRecord,
@@ -10,7 +11,6 @@ import {
 import type { WorkspaceNavItem, WorkspaceSession } from "@/types/prm";
 
 type WorkspaceLayoutProps = {
-  brand: string;
   workspace: string;
   navItems: WorkspaceNavItem[];
   session: WorkspaceSession;
@@ -58,7 +58,6 @@ function WorkspaceNavIcon({ icon }: { icon: WorkspaceNavItem["icon"] }) {
 }
 
 export function WorkspaceLayout({
-  brand,
   workspace,
   navItems,
   session,
@@ -156,9 +155,8 @@ export function WorkspaceLayout({
       >
         <div className="app-sidebar-top">
           <div>
-            <Link className="brand" href="/">
-              <span className="brand-mark">G</span>
-              <span className="brand-text">{brand}</span>
+            <Link aria-label="GoAccess home" className="approved-brand-link" href="/">
+              <GoAccessLogo className="approved-brand-logo approved-brand-logo-workspace" priority />
             </Link>
             <div className="sidebar-label">{workspace}</div>
           </div>
@@ -254,7 +252,7 @@ export function WorkspaceLayout({
           </button>
           <div className="mobile-workspace-copy">
             <span className="mobile-workspace-label">{workspace}</span>
-            <strong className="mobile-workspace-title">{activeItem?.label ?? brand}</strong>
+            <strong className="mobile-workspace-title">{activeItem?.label ?? workspace}</strong>
           </div>
         </div>
         {globalSearchRecords && globalSearchRecords.length > 0 ? (

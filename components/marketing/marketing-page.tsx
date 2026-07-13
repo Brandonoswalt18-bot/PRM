@@ -1,13 +1,13 @@
 import Link from "next/link";
+import { GoAccessLogo } from "@/components/brand/goaccess-logo";
 import { DemoRequestForm } from "@/components/marketing/demo-request-form";
 
 export function MarketingPage() {
   return (
     <div className="site-shell public-shell public-application-shell">
       <header className="topbar topbar-minimal">
-        <Link className="brand brand-light" href="/">
-          <span className="brand-mark brand-mark-light">G</span>
-          <span className="brand-text">GoAccess</span>
+        <Link aria-label="GoAccess home" className="approved-brand-link" href="/">
+          <GoAccessLogo className="approved-brand-logo" priority />
         </Link>
         <nav aria-label="Public navigation" className="public-nav">
           <span>Already a vendor?</span>

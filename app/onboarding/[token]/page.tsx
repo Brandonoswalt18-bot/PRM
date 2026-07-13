@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GoAccessLogo } from "@/components/brand/goaccess-logo";
 import { getVendorByInviteToken } from "@/lib/goaccess-store";
 
 type OnboardingPageProps = {
@@ -54,9 +55,8 @@ export default async function VendorOnboardingPage({ params, searchParams }: Onb
     <main className="onboarding-shell">
       <div className="onboarding-layout">
         <header className="onboarding-header">
-          <Link className="brand" href="/">
-            <span className="brand-mark">G</span>
-            <span className="brand-text">GoAccess</span>
+          <Link aria-label="GoAccess home" className="approved-brand-link" href="/">
+            <GoAccessLogo className="approved-brand-logo" priority />
           </Link>
           <span className="onboarding-secure-label">Secure vendor onboarding</span>
         </header>

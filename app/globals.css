@@ -153,6 +153,23 @@ textarea {
   font-size: 0.82rem;
 }
 
+.approved-brand-link {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.approved-brand-logo {
+  display: block;
+  width: 168px;
+  height: auto;
+}
+
+.approved-brand-logo-workspace {
+  width: 156px;
+}
+
 .nav {
   display: inline-flex;
   gap: 28px;
@@ -3643,13 +3660,6 @@ li + li {
   text-decoration: none;
 }
 
-.auth-login-brand .brand-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  box-shadow: none;
-}
-
 .auth-login-card .login-card-heading {
   gap: 6px;
 }
@@ -3860,6 +3870,10 @@ li + li {
 
   .auth-login-brand {
     margin-bottom: 36px;
+  }
+
+  .approved-brand-logo {
+    width: 156px;
   }
 }
 

@@ -131,7 +131,6 @@ export default async function VendorLayout({
 
   return (
     <WorkspaceLayout
-      brand="GoAccess"
       workspace="VENDOR ADMIN"
       navItems={vendorNavigation}
       session={session}
