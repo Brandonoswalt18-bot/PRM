@@ -477,8 +477,17 @@ export function AdminApplicationManager({
                     </div>
                     <div className="detail-link-row">
                       {vendor?.ndaDocumentUrl ? (
-                        <a className="detail-link-chip" href={vendor.ndaDocumentUrl} target="_blank" rel="noreferrer">
-                          Open NDA doc
+                        <a
+                          className="detail-link-chip"
+                          href={
+                            vendor.ndaStatus === "signed"
+                              ? `/api/legal-agreements/nda/file?vendorId=${encodeURIComponent(vendor.id)}`
+                              : vendor.ndaDocumentUrl
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {vendor.ndaStatus === "signed" ? "View accepted NDA" : "Open NDA doc"}
                         </a>
                       ) : null}
                       {vendor?.signedNdaFileUrl ? (
@@ -487,8 +496,17 @@ export function AdminApplicationManager({
                         </a>
                       ) : null}
                       {vendor?.termsDocumentUrl ? (
-                        <a className="detail-link-chip" href={vendor.termsDocumentUrl} target="_blank" rel="noreferrer">
-                          Open Partner Agreement
+                        <a
+                          className="detail-link-chip"
+                          href={
+                            vendor.termsAcceptedAt
+                              ? `/api/legal-agreements/terms/file?vendorId=${encodeURIComponent(vendor.id)}`
+                              : vendor.termsDocumentUrl
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {vendor.termsAcceptedAt ? "View accepted Partner Agreement" : "Open Partner Agreement"}
                         </a>
                       ) : null}
                       {vendor && (vendor.ndaStatus === "sent" || vendor.credentialsIssued) ? (

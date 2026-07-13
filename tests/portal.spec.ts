@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { PDFDocument } from "pdf-lib";
 
 test("public vendor application is accepted and protected APIs reject anonymous access", async ({
   page,
@@ -72,6 +73,15 @@ test("approved vendor accepts the NDA and Partner Agreement before portal activa
   await ndaCard.getByRole("checkbox").check();
   await ndaCard.getByRole("button", { name: "Accept NDA" }).click();
   await expect(page.getByText("NDA accepted and recorded.")).toBeVisible();
+  const acceptedNdaLink = page.getByRole("link", { name: "View accepted NDA" });
+  const acceptedNdaHref = await acceptedNdaLink.getAttribute("href");
+  expect(acceptedNdaHref).toMatch(/^\/api\/legal-agreements\/nda\/file\?token=/);
+  const acceptedNdaResponse = await page.request.get(acceptedNdaHref!);
+  expect(acceptedNdaResponse.ok()).toBeTruthy();
+  expect(acceptedNdaResponse.headers()["content-type"]).toBe("application/pdf");
+  const acceptedNdaPdf = await PDFDocument.load(await acceptedNdaResponse.body());
+  expect(acceptedNdaPdf.getPageCount()).toBe(3);
+  expect(acceptedNdaPdf.getTitle()).toContain("Accepted");
 
   const termsCard = page.locator("article").filter({ hasText: "Accept the Partner Agreement" });
   await termsCard.getByLabel("Title").fill("President");
@@ -79,6 +89,15 @@ test("approved vendor accepts the NDA and Partner Agreement before portal activa
   await termsCard.getByRole("button", { name: "Accept Partner Agreement" }).click();
   await expect(page.getByText("Partner Agreement accepted and recorded.")).toBeVisible();
   await expect(page.locator(".onboarding-progress-card strong")).toHaveText("2 of 2 complete");
+  const acceptedTermsLink = page.getByRole("link", { name: "View accepted Partner Agreement" });
+  const acceptedTermsHref = await acceptedTermsLink.getAttribute("href");
+  expect(acceptedTermsHref).toMatch(/^\/api\/legal-agreements\/terms\/file\?token=/);
+  const acceptedTermsResponse = await page.request.get(acceptedTermsHref!);
+  expect(acceptedTermsResponse.ok()).toBeTruthy();
+  expect(acceptedTermsResponse.headers()["content-type"]).toBe("application/pdf");
+  const acceptedTermsPdf = await PDFDocument.load(await acceptedTermsResponse.body());
+  expect(acceptedTermsPdf.getPageCount()).toBe(8);
+  expect(acceptedTermsPdf.getTitle()).toContain("Accepted");
 
   const issueAccess = await page.request.patch(
     `/api/vendor-applications/${submissionPayload.application.id}`,

@@ -51,6 +51,13 @@ export default async function VendorOnboardingPage({ params, searchParams }: Onb
   const ndaAccepted = vendor.ndaStatus === "signed";
   const termsAccepted = Boolean(vendor.termsAcceptedAt);
   const completedCount = Number(ndaAccepted) + Number(termsAccepted);
+  const encodedToken = encodeURIComponent(token);
+  const ndaDocumentUrl = ndaAccepted
+    ? `/api/legal-agreements/nda/file?token=${encodedToken}`
+    : vendor.ndaDocumentUrl;
+  const termsDocumentUrl = termsAccepted
+    ? `/api/legal-agreements/terms/file?token=${encodedToken}`
+    : vendor.termsDocumentUrl;
 
   return (
     <main className="onboarding-shell">
@@ -95,14 +102,14 @@ export default async function VendorOnboardingPage({ params, searchParams }: Onb
               </div>
             </div>
             <p>Review the complete GoAccess Non-Disclosure Agreement, then accept it electronically on behalf of your company.</p>
-            {vendor.ndaDocumentUrl ? (
+            {ndaDocumentUrl ? (
               <div className="legal-document-actions">
-                <a className="button button-secondary" href={vendor.ndaDocumentUrl} rel="noreferrer" target="_blank">
-                  View NDA PDF
+                <a className="button button-secondary" href={ndaDocumentUrl} rel="noreferrer" target="_blank">
+                  {ndaAccepted ? "View accepted NDA" : "View NDA PDF"}
                   <span aria-hidden="true" className="button-arrow">↗</span>
                 </a>
-                <a className="simple-text-link" download href={vendor.ndaDocumentUrl}>
-                  Download PDF <span aria-hidden="true">↓</span>
+                <a className="simple-text-link" download href={ndaDocumentUrl}>
+                  {ndaAccepted ? "Download accepted copy" : "Download PDF"} <span aria-hidden="true">↓</span>
                 </a>
               </div>
             ) : (
@@ -129,7 +136,7 @@ export default async function VendorOnboardingPage({ params, searchParams }: Onb
                   <input name="accepted" required type="checkbox" value="yes" />
                   <span>{LEGAL_AGREEMENTS.nda.acceptanceText}</span>
                 </label>
-                <button className="button button-primary" disabled={!vendor.ndaDocumentUrl} type="submit">
+                <button className="button button-primary" disabled={!ndaDocumentUrl} type="submit">
                   Accept NDA
                   <span aria-hidden="true" className="button-arrow">→</span>
                 </button>
@@ -146,14 +153,14 @@ export default async function VendorOnboardingPage({ params, searchParams }: Onb
               </div>
             </div>
             <p>Review the current GoAccess Channel Partner Service Agreement, then accept it electronically for your company.</p>
-            {vendor.termsDocumentUrl ? (
+            {termsDocumentUrl ? (
               <div className="legal-document-actions">
-                <a className="button button-secondary" href={vendor.termsDocumentUrl} rel="noreferrer" target="_blank">
-                  View Partner Agreement PDF
+                <a className="button button-secondary" href={termsDocumentUrl} rel="noreferrer" target="_blank">
+                  {termsAccepted ? "View accepted Partner Agreement" : "View Partner Agreement PDF"}
                   <span aria-hidden="true" className="button-arrow">↗</span>
                 </a>
-                <a className="simple-text-link" download href={vendor.termsDocumentUrl}>
-                  Download PDF <span aria-hidden="true">↓</span>
+                <a className="simple-text-link" download href={termsDocumentUrl}>
+                  {termsAccepted ? "Download accepted copy" : "Download PDF"} <span aria-hidden="true">↓</span>
                 </a>
               </div>
             ) : (
@@ -180,7 +187,7 @@ export default async function VendorOnboardingPage({ params, searchParams }: Onb
                   <input name="accepted" required type="checkbox" value="yes" />
                   <span>{LEGAL_AGREEMENTS.terms.acceptanceText}</span>
                 </label>
-                <button className="button button-primary" disabled={!vendor.termsDocumentUrl} type="submit">
+                <button className="button button-primary" disabled={!termsDocumentUrl} type="submit">
                   Accept Partner Agreement
                   <span aria-hidden="true" className="button-arrow">→</span>
                 </button>

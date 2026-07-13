@@ -55,6 +55,12 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
 
   const ndaComplete = vendor?.ndaStatus === "signed";
   const termsComplete = Boolean(vendor?.termsAcceptedAt);
+  const ndaDocumentUrl = ndaComplete
+    ? "/api/legal-agreements/nda/file"
+    : LEGAL_AGREEMENTS.nda.url;
+  const termsDocumentUrl = termsComplete
+    ? "/api/legal-agreements/terms/file"
+    : LEGAL_AGREEMENTS.terms.url;
 
   return (
     <article className="workspace-card wide-card">
@@ -62,7 +68,7 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
         <div>
           <span className="section-kicker">Required legal onboarding</span>
           <h3>Review and accept both agreements</h3>
-          <p>Both PDFs are hosted by GoAccess. Your name, title, acceptance time, and document version are recorded with each acceptance.</p>
+          <p>Both PDFs are hosted by GoAccess. Accepted copies are automatically completed with your company, signature, and recorded acceptance date.</p>
         </div>
       </div>
 
@@ -77,11 +83,11 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
           </div>
           <p className="stack-note">Review the complete Non-Disclosure Agreement before accepting it for your company.</p>
           <div className="legal-document-actions">
-            <a className="button button-secondary" href={LEGAL_AGREEMENTS.nda.url} target="_blank" rel="noreferrer">
-              View NDA PDF
+            <a className="button button-secondary" href={ndaDocumentUrl} target="_blank" rel="noreferrer">
+              {ndaComplete ? "View accepted NDA" : "View NDA PDF"}
             </a>
-            <a className="simple-text-link" download href={LEGAL_AGREEMENTS.nda.url}>
-              Download PDF <span aria-hidden="true">↓</span>
+            <a className="simple-text-link" download href={ndaDocumentUrl}>
+              {ndaComplete ? "Download accepted copy" : "Download PDF"} <span aria-hidden="true">↓</span>
             </a>
           </div>
           <div className="stack-meta-grid">
@@ -141,11 +147,11 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
           </div>
           <p className="stack-note">Review the complete Channel Partner Service Agreement before accepting it for your company.</p>
           <div className="legal-document-actions">
-            <a className="button button-secondary" href={LEGAL_AGREEMENTS.terms.url} target="_blank" rel="noreferrer">
-              View Partner Agreement PDF
+            <a className="button button-secondary" href={termsDocumentUrl} target="_blank" rel="noreferrer">
+              {termsComplete ? "View accepted Partner Agreement" : "View Partner Agreement PDF"}
             </a>
-            <a className="simple-text-link" download href={LEGAL_AGREEMENTS.terms.url}>
-              Download PDF <span aria-hidden="true">↓</span>
+            <a className="simple-text-link" download href={termsDocumentUrl}>
+              {termsComplete ? "Download accepted copy" : "Download PDF"} <span aria-hidden="true">↓</span>
             </a>
           </div>
           <div className="stack-meta-grid">
