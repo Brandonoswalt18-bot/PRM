@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const port = 3100;
+const isolatedStorePath = `.tmp/playwright-store-${process.pid}.json`;
 
 export default defineConfig({
   testDir: "./tests",
@@ -28,7 +29,7 @@ export default defineConfig({
       AUTH_SECRET: "goaccess-e2e-auth-secret",
       GOACCESS_ADMIN_EMAIL: "maya@goaccess.com",
       GOACCESS_ADMIN_PASSWORD: "goaccess-admin-demo",
-      GOACCESS_STORE_PATH: ".tmp/playwright-clickthrough-store.json",
+      GOACCESS_STORE_PATH: isolatedStorePath,
       GOACCESS_PORTAL_BASE_URL: `http://127.0.0.1:${port}`,
       SUPABASE_URL: "",
       SUPABASE_SERVICE_ROLE_KEY: "",

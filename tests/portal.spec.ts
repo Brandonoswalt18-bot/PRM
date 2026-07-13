@@ -241,8 +241,32 @@ test("unsigned vendor is limited to required legal onboarding", async ({ page })
   await expect(progress.getByRole("listitem").filter({ hasText: "Partner Agreement" })).toContainText("Upcoming");
   await expect(progress.getByRole("listitem").filter({ hasText: "Portal access" })).toContainText("Upcoming");
   await expect(progress.getByRole("listitem").filter({ hasText: "First deal" })).toContainText("Upcoming");
-  await expect(page.getByRole("button", { name: "Accept NDA" })).toBeVisible();
+  const ndaCard = page.locator("section.legal-acceptance-card").filter({ hasText: "Non-Disclosure Agreement" });
+  await ndaCard.getByLabel("Title").fill("Test Vendor");
+  await ndaCard.getByRole("checkbox").check();
+  await ndaCard.getByRole("button", { name: "Accept NDA" }).click();
+  await expect(progress.getByRole("listitem").filter({ hasText: "NDA" })).toContainText("Complete");
+  await expect(progress.getByRole("listitem").filter({ hasText: "Partner Agreement" })).toContainText("Next");
+  await expect(progress.getByRole("listitem").filter({ hasText: "Portal access" })).toContainText("Upcoming");
+  await expect(progress.getByRole("listitem").filter({ hasText: "First deal" })).toContainText("Upcoming");
   await expect(page.getByRole("button", { name: "Accept Partner Agreement" })).toBeVisible();
+
+  const stillBlocked = await page.request.post("/api/deals", {
+    data: {
+      companyName: "NDA Only Block Test",
+      communityAddress: "2 Test Way",
+      city: "San Diego",
+      state: "CA",
+      domain: "nda-only-blocked.example",
+      contactName: "Blocked Contact",
+      contactEmail: "nda-only-blocked@example.com",
+      contactPhone: "555-0101",
+      estimatedValue: 1000,
+      productInterest: "Access control",
+      notes: "The Partner Agreement is still required.",
+    },
+  });
+  expect(stillBlocked.status()).toBe(403);
 });
 
 test("GoAccess admin owns monthly RMR before deal approval", async ({ page }) => {

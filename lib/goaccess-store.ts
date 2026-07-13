@@ -676,11 +676,14 @@ function normalizeApprovedVendor(vendor: ApprovedVendor): ApprovedVendor {
     };
   }
 
-  if (
-    normalized.termsAcceptedAt ||
-    normalized.ndaStatus !== "signed" ||
-    !normalized.credentialsIssued
-  ) {
+  const needsLegacyTermsBackfill =
+    !normalized.termsAcceptedAt &&
+    normalized.ndaStatus === "signed" &&
+    normalized.credentialsIssued &&
+    normalized.ndaVersion === "legacy-prelaunch" &&
+    !normalized.ndaAcceptanceText;
+
+  if (!needsLegacyTermsBackfill) {
     return normalized;
   }
 
