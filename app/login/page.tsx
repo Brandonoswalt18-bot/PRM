@@ -14,9 +14,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const error = params.error;
   const message =
     error === "invalid-credentials"
-      ? "Email or password is incorrect."
+      ? "Email, username, or password is incorrect."
       : error === "missing-credentials"
-        ? "Enter both email and password."
+        ? "Enter your email or username and password."
         : error === "admin-not-configured"
           ? "Admin login is not configured yet. Add GOACCESS_ADMIN_PASSWORD in Vercel."
           : error === "auth-not-configured"
@@ -26,8 +26,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           : error === "rate-limited"
             ? "Too many sign-in attempts. Wait a few minutes, then try again."
             : error === "not-found"
-            ? "We could not match that email to an active GoAccess portal account."
-            : "Use the same email that received your GoAccess portal invite.";
+            ? "We could not match that login to an active GoAccess portal account."
+            : "Use your vendor email or assigned test username.";
   const showError = Boolean(error);
 
   return (
@@ -44,14 +44,16 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
           <form action="/auth/login" className="login-form" method="post">
             <label className="login-field">
-              <span>Email address</span>
+              <span>Email address or username</span>
               <input
-                autoComplete="email"
+                autoCapitalize="none"
+                autoComplete="username"
                 className="login-input"
                 name="email"
-                placeholder="name@company.com"
+                placeholder="name@company.com or username"
                 required
-                type="email"
+                spellCheck={false}
+                type="text"
               />
             </label>
             <label className="login-field">

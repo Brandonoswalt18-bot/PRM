@@ -297,8 +297,8 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
 
 test("unsigned vendor is limited to required legal onboarding", async ({ page }) => {
   await page.goto("/login");
-  await page.getByLabel("Email address").fill("unsigned.vendor@goaccess.com");
-  await page.getByLabel("Password").fill("goaccess-unsigned-demo");
+  await page.getByLabel("Email address or username").fill("Alex");
+  await page.getByLabel("Password").fill("12345678");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/portal$/);
 

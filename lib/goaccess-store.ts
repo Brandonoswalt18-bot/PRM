@@ -397,10 +397,10 @@ const seedStore: PortalStore = {
       credentialsIssuedAt: "2026-07-12T12:00:00.000Z",
       portalAccess: "active",
       inviteAcceptedAt: "2026-07-12T12:00:00.000Z",
-      // Seeded unsigned vendor test login: unsigned.vendor@goaccess.com / goaccess-unsigned-demo
-      passwordSalt: "goaccess-unsigned-demo-salt",
+      // Seeded unsigned vendor test login: Alex / 12345678
+      passwordSalt: "goaccess-alex-test-salt",
       passwordHash:
-        "d9d3e2eeb75e5d0a7ba436aee09020a1e8454973c781832dc87b10f4445bfa901a23f7373843690c16004705c83d040dff1983cdeb4c665230472280934176aa",
+        "a500553381369acb6ee341b3725bf256dbca27ddc67660eca14e9935dfd90aa059e523cc74b6b04805c898d65fbe3aff2a3fe7a48ea09c2274fc001f4ef0907c",
       passwordConfiguredAt: "2026-07-12T12:00:00.000Z",
       hubspotPartnerId: "GA-VENDOR-TEST-001",
       hubspotCompanySyncStatus: "not_started",
@@ -2596,8 +2596,11 @@ export async function setVendorPasswordFromInvite(inviteToken: string, password:
   return vendor;
 }
 
-export async function verifyVendorPassword(email: string, password: string) {
-  const vendor = await getVendorByEmail(email);
+export async function verifyVendorPassword(loginIdentifier: string, password: string) {
+  const normalizedLogin = loginIdentifier.trim().toLowerCase();
+  const vendor =
+    (await getVendorByEmail(normalizedLogin)) ??
+    (normalizedLogin === "alex" ? await getVendorById("vendor-unsigned-demo") : null);
 
   if (
     !vendor ||

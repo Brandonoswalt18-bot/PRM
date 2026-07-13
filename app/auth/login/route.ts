@@ -58,7 +58,7 @@ function buildLoginRedirect(request: Request, error: string, next?: string | nul
 
 export async function POST(request: Request) {
   const formData = await request.formData();
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const loginIdentifier = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
   const next = String(formData.get("next") ?? "");
 
@@ -70,27 +70,29 @@ export async function POST(request: Request) {
     return response;
   }
 
-  if (!email || !password) {
+  if (!loginIdentifier || !password) {
     return NextResponse.redirect(buildLoginRedirect(request, "missing-credentials", next), 303);
   }
 
   let role: "admin" | "vendor" | null = null;
   let vendorId: string | undefined;
+  let sessionEmail = loginIdentifier;
   const adminPassword = getAdminPassword();
   const adminEmail = getAdminEmail();
 
-  if (!adminPassword && email === adminEmail) {
+  if (!adminPassword && loginIdentifier === adminEmail) {
     return NextResponse.redirect(buildLoginRedirect(request, "admin-not-configured", next), 303);
   }
 
-  if (adminPassword && email === adminEmail && password === adminPassword) {
+  if (adminPassword && loginIdentifier === adminEmail && password === adminPassword) {
     role = "admin";
   } else {
-    const vendor = await verifyVendorPassword(email, password);
+    const vendor = await verifyVendorPassword(loginIdentifier, password);
 
     if (vendor) {
       role = "vendor";
       vendorId = vendor.id;
+      sessionEmail = vendor.primaryContactEmail;
     }
   }
 
@@ -103,7 +105,7 @@ export async function POST(request: Request) {
   try {
     sessionToken = await createSignedSession({
       role,
-      email,
+      email: sessionEmail,
       vendorId,
     });
   } catch (error) {
