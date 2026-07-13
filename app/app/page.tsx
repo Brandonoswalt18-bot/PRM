@@ -1,125 +1,90 @@
 import Link from "next/link";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
-import { MetricGrid } from "@/components/product/product-page-sections";
+import { formatDealStatusLabel } from "@/lib/goaccess-copy";
 import {
   formatCurrency,
   listApprovedVendors,
   listDeals,
-  listSupportRequests,
-  listSyncEvents,
   listVendorApplications,
 } from "@/lib/goaccess-store";
-
-function titleCaseStatus(value: string) {
-  return value.replaceAll("_", " ");
-}
+import type { DealStatus } from "@/types/goaccess";
 
 function formatShortDate(value: string) {
   return new Date(value).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
+    year: "numeric",
   });
 }
 
-function formatCountLabel(count: number, singular: string, plural: string) {
+function getStatusTone(status: DealStatus) {
+  if (status === "closed_won" || status === "synced_to_hubspot") {
+    return "status-pill-success";
+  }
+
+  if (status === "rejected" || status === "closed_lost") {
+    return "status-pill-danger";
+  }
+
+  return "status-pill-warning";
+}
+
+function formatCount(count: number, singular: string, plural: string) {
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
 export default async function VendorDashboardPage() {
-  const [applications, vendors, deals, syncEvents, supportRequests] = await Promise.all([
+  const [applications, vendors, deals] = await Promise.all([
     listVendorApplications(),
     listApprovedVendors(),
     listDeals(),
-    listSyncEvents(),
-    listSupportRequests(),
   ]);
 
+  const vendorsById = new Map(vendors.map((vendor) => [vendor.id, vendor]));
   const pendingApplications = applications.filter(
-    (application) => application.status === "submitted" || application.status === "under_review"
+    (application) => application.status === "submitted" || application.status === "under_review",
   );
-  const onboardingVendors = vendors.filter(
-    (vendor) => vendor.ndaStatus !== "signed" || !vendor.termsAcceptedAt || !vendor.credentialsIssued
+  const legalHolds = vendors.filter(
+    (vendor) => vendor.ndaStatus !== "signed" || !vendor.termsAcceptedAt || !vendor.credentialsIssued,
   );
-  const reviewDeals = deals.filter((deal) =>
-    ["submitted", "under_review", "approved"].includes(deal.status)
+  const dealsNeedingReview = deals.filter(
+    (deal) => deal.status === "submitted" || deal.status === "under_review",
   );
-  const outstandingSupportRequests = supportRequests.filter(
-    (request) => request.status !== "resolved"
-  );
+  const hubspotHolds = deals.filter((deal) => deal.status === "approved");
   const activeRmr = deals
     .filter((deal) => deal.status === "closed_won")
     .reduce((sum, deal) => sum + deal.monthlyRmr, 0);
   const forecastRmr = deals
     .filter((deal) => deal.status === "closed_won" || deal.status === "synced_to_hubspot")
-    .reduce((sum, deal) => sum + deal.monthlyRmr, 0);
-  const hubspotFollowUpDeals = deals.filter((deal) => deal.status === "approved");
-  const agreementUploadDeals = deals.filter(
-    (deal) => deal.status === "closed_won" && deal.agreementStatus === "not_started"
-  );
-  const agreementSignatureDeals = deals.filter(
-    (deal) => deal.status === "closed_won" && deal.agreementStatus === "sent"
-  );
-  const attentionItems = [
-    {
-      title: formatCountLabel(pendingApplications.length, "application needs review", "applications need review"),
-      detail: "Start with the pending queue and move new vendors into review or onboarding.",
-      href: "/app/programs?queue=pending",
-    },
-    {
-      title: formatCountLabel(hubspotFollowUpDeals.length, "approved deal needs HubSpot follow-up", "approved deals need HubSpot follow-up"),
-      detail: "These deals are approved but still need internal sync attention.",
-      href: "/app/deal-registrations?queue=hubspot",
-    },
-    {
-      title: formatCountLabel(agreementUploadDeals.length, "closed won deal needs agreement upload", "closed won deals need agreement upload"),
-      detail: "Upload the dealer agreement and economics so the vendor can review it.",
-      href: "/app/deal-registrations?queue=closed",
-    },
-    {
-      title: formatCountLabel(agreementSignatureDeals.length, "agreement is awaiting signature", "agreements are awaiting signature"),
-      detail: "The agreement has been sent. Watch for the signed copy to return in the portal.",
-      href: "/app/deal-registrations?queue=closed",
-    },
-    {
-      title: formatCountLabel(outstandingSupportRequests.length, "support request needs attention", "support requests need attention"),
-      detail: "Keep vendor blockers visible so onboarding and deals can keep moving.",
-      href: "/app/settings?queue=open",
-    },
-  ];
+    .reduce((sum, deal) => sum + (deal.expectedMonthlyRmr || deal.monthlyRmr), 0);
+  const recentDeals = [...deals]
+    .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
+    .slice(0, 6);
 
-  const metrics = [
+  const actionItems = [
     {
-      label: "Pending applications",
-      value: String(pendingApplications.length),
-      delta: `${vendors.length} approved vendors in portal`,
+      count: pendingApplications.length,
+      title: "Review partner applications",
+      detail: formatCount(pendingApplications.length, "application is waiting", "applications are waiting"),
       href: "/app/programs?queue=pending",
     },
     {
-      label: "Legal or access holds",
-      value: String(onboardingVendors.length),
-      delta: `${vendors.filter((vendor) => vendor.credentialsIssued).length} vendors have credentials`,
+      count: legalHolds.length,
+      title: "Complete partner onboarding",
+      detail: formatCount(legalHolds.length, "partner needs a legal or access step", "partners need a legal or access step"),
       href: "/app/programs?queue=onboarding",
     },
     {
-      label: "Deal review queue",
-      value: String(reviewDeals.length),
-      delta: `${syncEvents.length} HubSpot sync events logged`,
+      count: dealsNeedingReview.length,
+      title: "Approve registered deals",
+      detail: "Approval automatically creates or updates the HubSpot records.",
       href: "/app/deal-registrations?queue=review",
     },
     {
-      label: "Projected monthly RMR",
-      value: formatCurrency(forecastRmr),
-      delta: `${formatCurrency(activeRmr)} closed won`,
-      href: "/app/payouts",
-    },
-    {
-      label: "Outstanding support tickets",
-      value: String(outstandingSupportRequests.length),
-      delta:
-        outstandingSupportRequests.length > 0
-          ? `${outstandingSupportRequests.filter((request) => request.status === "in_progress").length} already in progress`
-          : "No unresolved vendor support tickets",
-      href: "/app/settings?queue=open",
+      count: hubspotHolds.length,
+      title: "Resolve HubSpot sync holds",
+      detail: formatCount(hubspotHolds.length, "approved deal needs attention", "approved deals need attention"),
+      href: "/app/deal-registrations?queue=hubspot",
     },
   ];
 
@@ -127,94 +92,116 @@ export default async function VendorDashboardPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
-        title="GoAccess vendor operations"
-        subtitle="Run the vendor flow from review through legal onboarding, credentials, deal approval, HubSpot, and monthly RMR."
-        primaryLabel="Review applications"
-        primaryHref="/app/programs"
+        title="Partner operations"
+        subtitle="Approve partners, review deals, and keep HubSpot and monthly RMR in sync."
+        primaryLabel="Review deals"
+        primaryHref="/app/deal-registrations?queue=review"
       />
-      <div className="app-content">
-        <MetricGrid metrics={metrics} />
-
-        <section className="dashboard-grid dashboard-grid-single">
-          <article className="workspace-card">
-            <div className="card-header-row">
-              <div>
-                <h3>Application and onboarding queue</h3>
-                <p>Review, legal onboarding, credentials, then active vendor access.</p>
-              </div>
-              <a href="/app/programs" className="button button-secondary">
-                Open applications
-              </a>
-            </div>
-            <div className="data-table">
-              <div className="table-head table-cols-4">
-                <span>Vendor</span>
-                <span>Application</span>
-                <span>Legal / access</span>
-                <span>Last update</span>
-              </div>
-              {applications.slice(0, 6).map((application) => {
-                const vendor = vendors.find((item) => item.applicationId === application.id);
-
-                return (
-                  <div className="table-row table-cols-4" key={application.id}>
-                    <span>{application.companyName}</span>
-                    <span>{titleCaseStatus(application.status)}</span>
-                    <span>
-                      {vendor
-                        ? `NDA ${vendor.ndaStatus} / Terms ${vendor.termsAcceptedAt ? "accepted" : "pending"} / ${vendor.credentialsIssued ? "access issued" : "access pending"}`
-                        : "Awaiting approval"}
-                    </span>
-                    <span>{formatShortDate(application.updatedAt)}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </article>
+      <div className="app-content simple-dashboard">
+        <section className="portal-summary-strip admin-summary-strip" aria-label="Admin summary">
+          <Link className="portal-summary-item" href="/app/deal-registrations?queue=review" prefetch={false}>
+            <span>Deals awaiting decision</span>
+            <strong>{dealsNeedingReview.length}</strong>
+            <small>Approve and send to HubSpot</small>
+          </Link>
+          <Link className="portal-summary-item" href="/app/programs?queue=onboarding" prefetch={false}>
+            <span>Partners onboarding</span>
+            <strong>{legalHolds.length}</strong>
+            <small>NDA, terms, or access incomplete</small>
+          </Link>
+          <Link className="portal-summary-item" href="/app/payouts" prefetch={false}>
+            <span>Current monthly RMR</span>
+            <strong>{formatCurrency(activeRmr)}</strong>
+            <small>{formatCurrency(forecastRmr)} forecast</small>
+          </Link>
         </section>
 
-        <section className="dashboard-grid">
-          <article className="workspace-card wide-card">
-            <div className="card-header-row">
+        <section className="simple-dashboard-grid admin-dashboard-grid">
+          <article className="simple-panel">
+            <div className="simple-panel-header">
               <div>
-                <span className="section-kicker">Command center</span>
-                <h3>What needs attention</h3>
-                <p>The highest-priority work across applications, deal operations, agreements, and support.</p>
+                <span className="simple-eyebrow">Priority queue</span>
+                <h2>What needs action</h2>
+                <p>Start here. Each row opens the exact queue that needs attention.</p>
               </div>
-              <Link href="/app/deal-registrations?queue=review" className="button button-secondary">
-                Open review queue
-              </Link>
             </div>
-            <div className="attention-list">
-              {attentionItems.map((item) => (
-                <a className="attention-card" href={item.href} key={item.title}>
-                  <strong>{item.title}</strong>
-                  <span>{item.detail}</span>
-                </a>
+            <div className="simple-action-list">
+              {actionItems.map((item) => (
+                <Link className="simple-action-row" href={item.href} key={item.title} prefetch={false}>
+                  <span className={item.count > 0 ? "simple-action-count has-items" : "simple-action-count"}>
+                    {item.count}
+                  </span>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <span>{item.detail}</span>
+                  </div>
+                  <span className="simple-row-arrow" aria-hidden="true">→</span>
+                </Link>
               ))}
             </div>
           </article>
 
-          <article className="workspace-card">
-            <span className="section-kicker">Recent activity</span>
-            <h3>Recent activity</h3>
-            {syncEvents.length > 0 ? (
-              <ul className="summary-list">
-                {syncEvents.slice(0, 4).map((event) => (
-                  <li key={event.id}>
-                    <strong>{event.action}</strong>
-                    <span>{formatShortDate(event.createdAt)} · {titleCaseStatus(event.status)}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="empty-state-card">
-                <span className="section-kicker">Clear</span>
-                <p>No recent sync activity.</p>
-              </div>
-            )}
-          </article>
+          <aside className="simple-panel simple-side-panel" aria-labelledby="approval-flow-title">
+            <span className="simple-eyebrow">Deal approval</span>
+            <h2 id="approval-flow-title">One decision, one sync</h2>
+            <p className="simple-side-copy">
+              When an admin selects <strong>Approve &amp; sync</strong>, the portal checks for duplicates and creates or updates the company, contact, and deal in HubSpot.
+            </p>
+            <ol className="simple-mini-flow" aria-label="Deal approval flow">
+              <li><span>1</span> Partner submits</li>
+              <li><span>2</span> Admin approves</li>
+              <li><span>3</span> HubSpot updates</li>
+            </ol>
+            <Link className="button button-primary" href="/app/deal-registrations?queue=review" prefetch={false}>
+              Open deal approvals
+            </Link>
+          </aside>
         </section>
+
+        <article className="simple-panel simple-panel-primary">
+          <div className="simple-panel-header">
+            <div>
+              <span className="simple-eyebrow">Pipeline</span>
+              <h2>Recent deal registrations</h2>
+              <p>A clean view of the newest partner opportunities and their CRM status.</p>
+            </div>
+            <Link href="/app/deal-registrations" className="simple-text-link" prefetch={false}>
+              View all
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+          <div className="simple-deal-list">
+            {recentDeals.map((deal) => {
+              const vendor = vendorsById.get(deal.vendorId);
+
+              return (
+                <Link
+                  className="simple-deal-row admin-deal-row"
+                  href={`/app/deal-registrations?deal=${encodeURIComponent(deal.id)}#deal-${encodeURIComponent(deal.id)}`}
+                  key={deal.id}
+                  prefetch={false}
+                >
+                  <div className="simple-deal-main">
+                    <strong>{deal.companyName}</strong>
+                    <span>{vendor?.companyName ?? "Unknown partner"} · Updated {formatShortDate(deal.updatedAt)}</span>
+                  </div>
+                  <span className={`status-pill ${getStatusTone(deal.status)}`}>
+                    {formatDealStatusLabel(deal.status)}
+                  </span>
+                  <div className="simple-deal-value">
+                    <strong>{formatCurrency(deal.expectedMonthlyRmr || deal.monthlyRmr)}</strong>
+                    <span>Monthly RMR</span>
+                  </div>
+                  <div className="simple-deal-value simple-hubspot-state">
+                    <strong>{deal.hubspotDealId ? "Synced" : deal.status === "approved" ? "Needs attention" : "Pending"}</strong>
+                    <span>HubSpot</span>
+                  </div>
+                  <span className="simple-row-arrow" aria-hidden="true">→</span>
+                </Link>
+              );
+            })}
+          </div>
+        </article>
       </div>
     </>
   );
