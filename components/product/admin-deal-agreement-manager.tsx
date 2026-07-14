@@ -20,7 +20,25 @@ async function readApiMessage(response: Response) {
   }
 }
 
-export function AdminDealAgreementManager({ deal }: { deal: DealRegistration }) {
+function getAgreementStatusTone(status: DealRegistration["agreementStatus"]) {
+  if (status === "signed") {
+    return "status-pill-success";
+  }
+
+  if (status === "uploaded" || status === "sent") {
+    return "status-pill-warning";
+  }
+
+  return "status-pill-neutral";
+}
+
+export function AdminDealAgreementManager({
+  deal,
+  embedded = false,
+}: {
+  deal: DealRegistration;
+  embedded?: boolean;
+}) {
   const router = useRouter();
   const isClosedDeal = deal.status === "closed_won";
   const [file, setFile] = useState<File | null>(null);
@@ -65,17 +83,20 @@ export function AdminDealAgreementManager({ deal }: { deal: DealRegistration }) 
   }
 
   return (
-    <article className="workspace-card wide-card">
+    <article className={embedded ? "workspace-detail-section" : "workspace-card workspace-panel wide-card"}>
       <div className="card-header-row">
         <div>
           <span className="section-kicker">Dealer agreement</span>
           <h3>Closed-deal agreement workflow</h3>
           <p>Upload the deal-specific agreement, share it with the vendor, and track the signed copy.</p>
         </div>
-        <span className="status-pill">{formatDealAgreementStatusLabel(deal.agreementStatus)}</span>
+        <span className={`status-pill ${getAgreementStatusTone(deal.agreementStatus)}`}>
+          {formatDealAgreementStatusLabel(deal.agreementStatus)}
+        </span>
       </div>
 
-      <div className="stack-card">
+      <div className="workspace-layout workspace-layout-balanced">
+      <div className="workspace-row stack-card">
         <div className="stack-card-header">
           <div>
             <h3>Agreement status</h3>
@@ -105,14 +126,14 @@ export function AdminDealAgreementManager({ deal }: { deal: DealRegistration }) 
         </div>
       </div>
 
-      <div className="stack-card">
+      <div className="workspace-row stack-card">
           <h3>Upload agreement</h3>
           <p className="stack-note">Upload the deal-specific file and GoAccess will immediately share it with the vendor.</p>
-          <form className="login-form" onSubmit={handleUpload}>
-            <label className="login-field">
+          <form className="login-form workspace-form" onSubmit={handleUpload}>
+            <label className="login-field workspace-field">
               <span className="access-label">Dealer agreement file</span>
               <input
-                className="login-input"
+                className="login-input workspace-control"
                 type="file"
                 accept=".pdf,.doc,.docx"
                 disabled={!isClosedDeal}
@@ -133,6 +154,7 @@ export function AdminDealAgreementManager({ deal }: { deal: DealRegistration }) 
                 ? "Closed won deals can carry their own uploaded dealer agreement and send it automatically to the vendor."
                 : "Mark the deal closed won before uploading its dealer agreement.")}
           </p>
+      </div>
       </div>
     </article>
   );

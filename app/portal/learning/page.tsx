@@ -19,12 +19,12 @@ export default async function VendorLearningPage() {
         workspace="VENDOR PORTAL"
         title="Training"
         subtitle="Open the training videos and documents your team needs to start selling and supporting GoAccess."
-        primaryLabel={latestAsset ? "Open latest training" : "Training"}
-        primaryHref={latestAssetHref}
+        primaryLabel={latestAsset ? "Open latest training" : undefined}
+        primaryHref={latestAsset ? latestAssetHref : undefined}
       />
-      <div className="app-content learning-page">
-        <section className="learning-library-layout">
-          <article className="workspace-card learning-panel learning-video-panel">
+      <div className="app-content workspace-page learning-page">
+        <section className="learning-library-layout workspace-layout workspace-layout-sidebar">
+          <article className="workspace-card workspace-panel learning-panel learning-video-panel">
             <div className="learning-panel-header">
               <div>
                 <span className="learning-panel-eyebrow">Video library</span>
@@ -37,11 +37,12 @@ export default async function VendorLearningPage() {
               assets={videos}
               emptyMessage="No videos have been published yet."
               emptyTitle="Training videos"
+              emptyIcon="video"
               variant="vendor"
             />
           </article>
 
-          <article className="workspace-card learning-panel learning-document-panel">
+          <article className="workspace-card workspace-panel learning-panel learning-document-panel">
             <div className="learning-panel-header">
               <div>
                 <span className="learning-panel-eyebrow">Downloads</span>
@@ -54,6 +55,7 @@ export default async function VendorLearningPage() {
               assets={documents}
               emptyMessage="No documents have been published yet."
               emptyTitle="Training documents"
+              emptyIcon="document"
               variant="vendor"
             />
           </article>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { GoAccessLogo } from "@/components/brand/goaccess-logo";
+import { BrandedAuthShell } from "@/components/marketing/branded-auth-shell";
 import { getVendorByInviteToken } from "@/lib/goaccess-store";
 import { LEGAL_AGREEMENTS } from "@/lib/legal-agreements";
 
@@ -35,16 +36,20 @@ export default async function VendorOnboardingPage({ params, searchParams }: Onb
 
   if (!vendor) {
     return (
-      <main className="onboarding-shell">
-        <section className="onboarding-expired-card">
+      <BrandedAuthShell labelledBy="onboarding-expired-title">
+        <div className="login-card-heading">
           <span className="eyebrow">ONBOARDING LINK EXPIRED</span>
-          <h1>Request a fresh onboarding link.</h1>
-          <p>This secure link may have expired or already been replaced. Contact GoAccess to continue vendor onboarding.</p>
+          <h1 id="onboarding-expired-title">Request a fresh onboarding link.</h1>
+          <p>
+            This secure link may have expired or already been replaced. Contact GoAccess to continue vendor onboarding.
+          </p>
+        </div>
+        <div className="login-actions">
           <Link className="button button-primary" href="/">
             Return to GoAccess
           </Link>
-        </section>
-      </main>
+        </div>
+      </BrandedAuthShell>
     );
   }
 

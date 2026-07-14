@@ -5,6 +5,18 @@ import { startTransition, useState } from "react";
 import { formatDealAgreementStatusLabel } from "@/lib/goaccess-copy";
 import type { ClientVendorDealRegistration } from "@/types/goaccess";
 
+function getAgreementStatusTone(status: ClientVendorDealRegistration["agreementStatus"]) {
+  if (status === "signed") {
+    return "status-pill-success";
+  }
+
+  if (status === "sent") {
+    return "status-pill-warning";
+  }
+
+  return "status-pill-neutral";
+}
+
 export function VendorDealAgreementManager({ deal }: { deal: ClientVendorDealRegistration }) {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
@@ -49,17 +61,19 @@ export function VendorDealAgreementManager({ deal }: { deal: ClientVendorDealReg
   }
 
   return (
-    <article className="workspace-card wide-card">
+    <article className="workspace-card workspace-panel">
       <div className="card-header-row">
         <div>
           <span className="section-kicker">Dealer agreement</span>
           <h3>Dealer agreement</h3>
           <p>Review the uploaded agreement, then upload the signed copy back into the portal.</p>
         </div>
-        <span className="status-pill">{formatDealAgreementStatusLabel(deal.agreementStatus)}</span>
+        <span className={`status-pill ${getAgreementStatusTone(deal.agreementStatus)}`}>
+          {formatDealAgreementStatusLabel(deal.agreementStatus)}
+        </span>
       </div>
 
-      <div className="stack-card">
+      <div className="workspace-row stack-card">
         <div className="stack-card-header">
           <div>
             <h3>Agreement status</h3>
@@ -87,14 +101,14 @@ export function VendorDealAgreementManager({ deal }: { deal: ClientVendorDealReg
         </div>
       </div>
 
-      <div className="stack-card">
+      <div className="workspace-row stack-card">
         <h3>Upload signed agreement</h3>
         <p className="stack-note">Upload the completed signed agreement as a PDF, DOC, or DOCX file. Max size 15 MB.</p>
-        <form className="login-form" onSubmit={handleUpload}>
-          <label className="login-field">
+        <form className="login-form workspace-form" onSubmit={handleUpload}>
+          <label className="login-field workspace-field">
             <span className="access-label">Signed agreement file</span>
             <input
-              className="login-input"
+              className="login-input workspace-control"
               type="file"
               accept=".pdf,.doc,.docx"
               disabled={!deal.agreementFileName || deal.agreementStatus === "uploaded" || deal.agreementStatus === "not_started"}

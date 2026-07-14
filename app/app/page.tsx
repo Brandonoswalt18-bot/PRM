@@ -92,12 +92,12 @@ export default async function VendorDashboardPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
-        title="Partner operations"
+        title="Overview"
         subtitle="Approve partners, review deals, and keep HubSpot and monthly RMR in sync."
         primaryLabel="Review deals"
         primaryHref="/app/deal-registrations?queue=review"
       />
-      <div className="app-content simple-dashboard">
+      <div className="app-content workspace-page simple-dashboard">
         <section className="portal-summary-strip admin-summary-strip" aria-label="Admin summary">
           <Link className="portal-summary-item" href="/app/deal-registrations?queue=review" prefetch={false}>
             <span>Deals awaiting decision</span>
@@ -116,8 +116,8 @@ export default async function VendorDashboardPage() {
           </Link>
         </section>
 
-        <section className="simple-dashboard-grid admin-dashboard-grid">
-          <article className="simple-panel">
+        <section className="workspace-layout workspace-layout-sidebar simple-dashboard-grid admin-dashboard-grid">
+          <article className="workspace-card workspace-panel simple-panel">
             <div className="simple-panel-header">
               <div>
                 <span className="simple-eyebrow">Priority queue</span>
@@ -127,7 +127,7 @@ export default async function VendorDashboardPage() {
             </div>
             <div className="simple-action-list">
               {actionItems.map((item) => (
-                <Link className="simple-action-row" href={item.href} key={item.title} prefetch={false}>
+                <Link className="workspace-row simple-action-row" href={item.href} key={item.title} prefetch={false}>
                   <span className={item.count > 0 ? "simple-action-count has-items" : "simple-action-count"}>
                     {item.count}
                   </span>
@@ -141,7 +141,7 @@ export default async function VendorDashboardPage() {
             </div>
           </article>
 
-          <aside className="simple-panel simple-side-panel" aria-labelledby="approval-flow-title">
+          <aside className="workspace-card workspace-panel simple-panel simple-side-panel" aria-labelledby="approval-flow-title">
             <span className="simple-eyebrow">Deal approval</span>
             <h2 id="approval-flow-title">One decision, one sync</h2>
             <p className="simple-side-copy">
@@ -152,13 +152,13 @@ export default async function VendorDashboardPage() {
               <li><span>2</span> Admin approves</li>
               <li><span>3</span> HubSpot updates</li>
             </ol>
-            <Link className="button button-primary" href="/app/deal-registrations?queue=review" prefetch={false}>
+            <Link className="button button-secondary" href="/app/deal-registrations?queue=review" prefetch={false}>
               Open deal approvals
             </Link>
           </aside>
         </section>
 
-        <article className="simple-panel simple-panel-primary">
+        <article className="workspace-card workspace-panel simple-panel simple-panel-primary">
           <div className="simple-panel-header">
             <div>
               <span className="simple-eyebrow">Pipeline</span>
@@ -176,7 +176,7 @@ export default async function VendorDashboardPage() {
 
               return (
                 <Link
-                  className="simple-deal-row admin-deal-row"
+                  className="workspace-row simple-deal-row admin-deal-row"
                   href={`/app/deal-registrations?deal=${encodeURIComponent(deal.id)}#deal-${encodeURIComponent(deal.id)}`}
                   key={deal.id}
                   prefetch={false}

@@ -1,0 +1,1264 @@
+/*
+ * GoAccess product design system
+ *
+ * This file is intentionally imported after the legacy stylesheet. It is the
+ * single canonical layer for shared typography, color, spacing, surfaces,
+ * controls, navigation, and responsive workspace behavior.
+ */
+
+:root {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "SFMono-Regular", Consolas, monospace;
+
+  --ui-brand: #004aad;
+  --ui-brand-hover: #003a8c;
+  --ui-brand-deep: #002060;
+  --ui-text: #1a2744;
+  --ui-muted: #4a5568;
+  --ui-muted-soft: #6f7d91;
+  --ui-canvas: #f5f8fc;
+  --ui-page: #f1f5fa;
+  --ui-surface: #ffffff;
+  --ui-surface-subtle: #f8fafc;
+  --ui-border: #e4eaf3;
+  --ui-border-strong: #c5d9f2;
+
+  --ui-success: #246c42;
+  --ui-success-surface: #e8f5ee;
+  --ui-success-border: #c9e8d5;
+  --ui-warning: #855a15;
+  --ui-warning-surface: #fbf3df;
+  --ui-warning-border: #ecd8a8;
+  --ui-danger: #9b2f2f;
+  --ui-danger-surface: #fdecec;
+  --ui-danger-border: #efc7c7;
+  --ui-neutral-surface: #eef2f7;
+
+  --ui-space-1: 4px;
+  --ui-space-2: 8px;
+  --ui-space-3: 12px;
+  --ui-space-4: 16px;
+  --ui-space-5: 20px;
+  --ui-space-6: 24px;
+  --ui-space-8: 32px;
+
+  --ui-radius-control: 9px;
+  --ui-radius-row: 12px;
+  --ui-radius-card: 16px;
+  --ui-radius-shell: 20px;
+  --ui-shadow-card: 0 8px 24px rgba(0, 32, 96, 0.06);
+  --ui-shadow-float: 0 16px 36px rgba(0, 32, 96, 0.1);
+
+  --ui-text-xs: 0.72rem;
+  --ui-text-sm: 0.82rem;
+  --ui-text-body: 0.9rem;
+  --ui-text-lg: 1.05rem;
+  --ui-text-h3: 1.15rem;
+  --ui-text-h2: 1.4rem;
+  --ui-text-h1: clamp(1.65rem, 2.2vw, 1.95rem);
+
+  --brand-blue: var(--ui-brand);
+  --brand-blue-dark: var(--ui-brand-hover);
+  --brand-navy: var(--ui-brand-deep);
+  --brand-off-white: var(--ui-canvas);
+  --brand-gray-line: var(--ui-border);
+  --brand-gray-dark: var(--ui-muted);
+  --bg: var(--ui-canvas);
+  --surface: var(--ui-surface);
+  --surface-strong: var(--ui-surface);
+  --ink: var(--ui-text);
+  --muted: var(--ui-muted);
+  --line: var(--ui-border);
+  --line-strong: var(--ui-border-strong);
+  --signal: var(--ui-brand);
+  --signal-deep: var(--ui-brand-hover);
+  --shadow: var(--ui-shadow-card);
+  --shadow-soft: var(--ui-shadow-card);
+  --radius-xl: var(--ui-radius-shell);
+  --radius-lg: var(--ui-radius-card);
+  --radius-md: var(--ui-radius-row);
+}
+
+html {
+  font-size: 15px;
+}
+
+body {
+  min-height: 100dvh;
+  color: var(--ui-text);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(0, 74, 173, 0.045), transparent 26rem),
+    linear-gradient(180deg, #ffffff 0%, var(--ui-canvas) 52%, #edf4fb 100%);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
+body::before {
+  opacity: 0.45;
+  background-size: 44px 44px;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  text-wrap: pretty;
+}
+
+p,
+li,
+small {
+  line-height: 1.55;
+}
+
+span {
+  line-height: inherit;
+}
+
+.app-frame :is(h1, h2, h3, h4),
+.auth-login-card :is(h1, h2, h3),
+.login-card :is(h1, h2, h3),
+.onboarding-layout :is(h1, h2, h3) {
+  max-width: none;
+}
+
+/* Actions */
+.button {
+  min-height: 42px;
+  padding: 0.68rem 1rem;
+  border-radius: var(--ui-radius-control);
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.1;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.button-primary {
+  border-color: var(--ui-brand);
+  background: var(--ui-brand);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(0, 74, 173, 0.16);
+}
+
+.button-primary:hover,
+.button-primary:focus-visible {
+  border-color: var(--ui-brand-hover);
+  background: var(--ui-brand-hover);
+  box-shadow: 0 10px 22px rgba(0, 58, 140, 0.2);
+}
+
+.button-secondary,
+.button-ghost {
+  border-color: var(--ui-border-strong);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  box-shadow: none;
+}
+
+.button-secondary:hover,
+.button-secondary:focus-visible,
+.button-ghost:hover,
+.button-ghost:focus-visible {
+  border-color: var(--ui-brand);
+  background: #f7fbff;
+  color: var(--ui-brand-hover);
+}
+
+.button-inline-danger {
+  border-color: var(--ui-danger-border);
+  background: var(--ui-surface);
+  color: var(--ui-danger);
+}
+
+.button-arrow-back {
+  order: -1;
+}
+
+/* Public application and compact auth surfaces */
+.site-shell,
+.public-shell,
+.public-application-shell {
+  width: min(960px, calc(100% - 32px));
+}
+
+.public-container {
+  width: min(960px, 100%);
+  margin-inline: auto;
+}
+
+.topbar,
+.topbar-minimal {
+  width: 100%;
+}
+
+.topbar-minimal {
+  margin-top: 14px;
+}
+
+.public-application-main {
+  width: 100%;
+  margin-top: 28px;
+}
+
+.public-application-intro {
+  max-width: 820px;
+}
+
+.public-application-intro h1 {
+  max-width: 22ch;
+  margin: 0;
+  font-size: clamp(1.9rem, 3vw, 2.35rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+}
+
+.public-application-intro p {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-body);
+  line-height: 1.55;
+}
+
+.public-application-card,
+.public-application-card-simple {
+  padding: var(--ui-space-6);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-card);
+}
+
+.auth-login-shell,
+.login-shell {
+  min-height: 100dvh;
+  padding: var(--ui-space-6);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0, 74, 173, 0.07), transparent 24rem),
+    var(--ui-canvas);
+}
+
+.auth-login-layout,
+.login-layout,
+.login-layout-single {
+  width: min(430px, 100%);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.auth-login-card,
+.login-card {
+  width: 100%;
+  padding: var(--ui-space-8);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-card);
+}
+
+.auth-login-card .approved-brand-logo,
+.login-card .approved-brand-logo {
+  width: 154px;
+}
+
+.auth-login-brand {
+  margin-bottom: 0;
+}
+
+.auth-login-card .login-card-heading,
+.login-card .login-card-heading {
+  margin-top: 28px;
+}
+
+.auth-login-card .login-card-heading .eyebrow,
+.login-card .login-card-heading .eyebrow {
+  margin: 0;
+}
+
+.login-card h1,
+.auth-login-card h1 {
+  margin: 0;
+  font-size: 1.55rem;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+.login-card p,
+.auth-login-card p {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-body);
+  line-height: 1.55;
+}
+
+/* Shared workspace shell */
+.app-frame {
+  min-height: 100dvh;
+  grid-template-columns: 212px minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+  padding: 12px;
+}
+
+.app-sidebar {
+  top: 12px;
+  gap: 14px;
+  min-height: calc(100dvh - 24px);
+  max-height: calc(100dvh - 24px);
+  padding: 14px;
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-shell);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--ui-shadow-card);
+}
+
+.approved-brand-logo-workspace {
+  width: 146px;
+}
+
+.sidebar-label {
+  margin-top: 7px;
+  color: var(--ui-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.app-nav {
+  gap: 12px;
+}
+
+.app-nav-group {
+  gap: 5px;
+}
+
+.app-nav-group-items {
+  gap: 2px;
+}
+
+.app-nav-group-label {
+  padding-inline: 9px;
+  color: #6f7d91;
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+}
+
+.app-nav-item {
+  min-height: 38px;
+  padding: 8px 9px;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ui-muted);
+  font-size: 0.84rem;
+}
+
+.app-nav-item:hover,
+.app-nav-item:focus-visible {
+  border-color: var(--ui-border);
+  background: var(--ui-surface-subtle);
+  color: var(--ui-text);
+  transform: none;
+}
+
+.app-nav-item.is-active {
+  border-color: var(--ui-brand);
+  background: var(--ui-brand);
+  color: #fff;
+}
+
+.session-card {
+  border-color: var(--ui-border);
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 32, 96, 0.055);
+}
+
+.session-card-main {
+  min-height: 52px;
+}
+
+.app-main {
+  align-content: start;
+  grid-auto-rows: max-content;
+  gap: 14px;
+  min-height: 0;
+  padding: 10px 0 32px;
+}
+
+.workspace-search-shell {
+  z-index: 20;
+}
+
+.workspace-search-bar {
+  min-height: 44px;
+  padding-inline: 13px;
+  border-color: var(--ui-border);
+  border-radius: 12px;
+  background: var(--ui-surface);
+  box-shadow: 0 5px 16px rgba(0, 32, 96, 0.045);
+}
+
+.workspace-search-results {
+  border-color: var(--ui-border);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-float);
+}
+
+.workspace-search-result,
+.workspace-search-empty {
+  border-color: var(--ui-border);
+  border-radius: var(--ui-radius-row);
+  background: var(--ui-surface-subtle);
+}
+
+.app-topbar {
+  align-items: center;
+  gap: 16px;
+  padding: 4px 0 12px;
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.app-topbar.is-actionless {
+  grid-template-columns: 1fr;
+}
+
+.app-title-copy {
+  gap: 2px;
+}
+
+.app-workspace-label,
+.simple-eyebrow,
+.section-kicker,
+.learning-panel-eyebrow,
+.access-label,
+.field-label,
+.stack-section-label,
+.detail-banner-label,
+.metric-label,
+.page-kicker {
+  color: var(--ui-brand);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.085em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.app-title {
+  margin: 0;
+  color: var(--ui-text);
+  font-size: var(--ui-text-h1);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.032em;
+}
+
+.app-subtitle {
+  max-width: 760px;
+  color: var(--ui-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.app-topbar-actions {
+  flex: 0 0 auto;
+}
+
+/* Canonical workspace page anatomy */
+.app-content,
+.simple-dashboard {
+  gap: 14px;
+  min-width: 0;
+}
+
+.workspace-page,
+.updates-page,
+.learning-page,
+.deal-registration-page,
+.admin-updates-page {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(0, 74, 173, 0.08);
+  border-radius: var(--ui-radius-shell);
+  background: var(--ui-page);
+}
+
+.workspace-layout,
+.workspace-layout-balanced,
+.workspace-layout-sidebar {
+  display: grid;
+  align-items: start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.workspace-layout-balanced {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.workspace-layout-sidebar {
+  grid-template-columns: minmax(0, 2fr) minmax(250px, 0.85fr);
+}
+
+.workspace-side-stack,
+.workspace-detail-section {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.workspace-detail-section {
+  padding-top: 14px;
+  border-top: 1px solid var(--ui-border);
+}
+
+.workspace-panel,
+.workspace-page > .workspace-card,
+.workspace-page > .feature-card,
+.workspace-page > .simple-panel,
+.workspace-page .learning-panel,
+.workspace-page .updates-feed-panel,
+.workspace-page .deal-registration-card,
+.workspace-page .performance-card,
+.workspace-page .side-section-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-card);
+}
+
+.workspace-panel-header,
+.card-header-row,
+.simple-panel-header,
+.learning-panel-header,
+.updates-feed-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.workspace-panel h2,
+.workspace-panel h3,
+.workspace-page .workspace-card h2,
+.workspace-page .workspace-card h3,
+.workspace-page .simple-panel h2,
+.workspace-page .simple-panel h3,
+.workspace-page .feature-card h2,
+.workspace-page .feature-card h3 {
+  color: var(--ui-text);
+  line-height: 1.2;
+  letter-spacing: -0.018em;
+}
+
+.workspace-panel h2,
+.workspace-page .workspace-card h2,
+.workspace-page .simple-panel h2,
+.workspace-page .feature-card h2 {
+  font-size: 1.15rem;
+}
+
+.workspace-panel h3,
+.workspace-page .workspace-card h3,
+.workspace-page .simple-panel h3,
+.workspace-page .feature-card h3 {
+  font-size: 1rem;
+}
+
+.workspace-panel p,
+.workspace-page .workspace-card p,
+.workspace-page .simple-panel p,
+.workspace-page .feature-card p {
+  color: var(--ui-muted);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.workspace-panel :is(p, li, dd, a, strong, span),
+.workspace-row :is(p, li, dd, a, strong, span),
+.mini-stack,
+.mini-stack > div,
+.mini-stack li {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.workspace-row,
+.workspace-page .stack-card,
+.workspace-page .timeline-card,
+.workspace-page .detail-fact,
+.workspace-page .training-asset-card,
+.workspace-page .vendor-update-card,
+.workspace-page .admin-update-row {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-row);
+  background: var(--ui-surface-subtle);
+  box-shadow: none;
+}
+
+.workspace-kv,
+.detail-fact-grid,
+.stack-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.workspace-kv > *,
+.detail-fact,
+.stack-meta-grid > * {
+  min-width: 0;
+}
+
+dl.workspace-row {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.workspace-kv dt,
+.workspace-kv dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.workspace-kv dt {
+  color: var(--ui-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.workspace-kv dd {
+  color: var(--ui-text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.workspace-kv > .workspace-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1.3fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-primary-layout dl.workspace-kv {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.dashboard-metrics,
+.portal-summary-strip,
+.performance-grid,
+.workspace-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-border);
+  box-shadow: var(--ui-shadow-card);
+}
+
+.portal-summary-strip.workspace-panel,
+.performance-grid.workspace-panel,
+.workspace-metrics.workspace-panel {
+  padding: 0;
+}
+
+.metric-card,
+.portal-summary-item,
+.performance-card,
+.workspace-metric {
+  min-height: 100px;
+  padding: 15px 16px;
+  border: 0;
+  border-radius: 0;
+  background: var(--ui-surface);
+  box-shadow: none;
+}
+
+.metric-value,
+.portal-summary-item > strong,
+.performance-card > strong,
+.workspace-metric > strong {
+  color: var(--ui-text);
+  font-size: clamp(1.28rem, 2vw, 1.65rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+.metric-delta,
+.portal-summary-item > span,
+.performance-card > span,
+.workspace-metric > span {
+  color: var(--ui-muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+/* Forms */
+.workspace-form,
+.login-form,
+.cta-form,
+.deal-registration-form,
+.onboarding-form {
+  gap: 14px;
+}
+
+.workspace-field,
+.login-field,
+.form-field,
+.field-group,
+.public-form-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.workspace-control,
+.login-input,
+.cta-select,
+.cta-textarea,
+.form-field input,
+.form-field select,
+.form-field textarea,
+.field-group input,
+.field-group select,
+.field-group textarea,
+.public-form-field input,
+.public-form-field select,
+.public-form-field textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-control);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font-size: 0.9rem;
+  line-height: 1.35;
+  outline: none;
+  box-shadow: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.workspace-control:focus,
+.login-input:focus,
+.cta-select:focus,
+.cta-textarea:focus,
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus,
+.field-group input:focus,
+.field-group select:focus,
+.field-group textarea:focus,
+.public-form-field input:focus,
+.public-form-field select:focus,
+.public-form-field textarea:focus {
+  border-color: var(--ui-brand);
+  box-shadow: 0 0 0 3px rgba(0, 74, 173, 0.1);
+}
+
+.workspace-help,
+.field-hint,
+.stack-note,
+.table-note {
+  color: var(--ui-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.form-message,
+.update-form-message {
+  min-height: 0;
+  color: var(--ui-muted);
+  font-size: 0.76rem;
+}
+
+.form-message-success,
+.update-form-message.is-success {
+  color: var(--ui-success);
+}
+
+.form-message-error,
+.field-error-text,
+.update-form-message.is-error {
+  color: var(--ui-danger);
+}
+
+.form-message-error,
+.deal-form-error-summary,
+.decision-notice-danger {
+  border-color: var(--ui-danger-border);
+  border-radius: var(--ui-radius-row);
+  background: var(--ui-danger-surface);
+}
+
+/* Status and lifecycle semantics */
+.status-pill,
+.update-status-label,
+.learning-panel-count {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 26px;
+  padding: 4px 9px;
+  border: 1px solid var(--ui-border);
+  border-radius: 999px;
+  background: var(--ui-neutral-surface);
+  color: var(--ui-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.status-pill-neutral,
+.update-status-label.is-archived,
+.learning-panel-count.is-neutral {
+  border-color: var(--ui-border);
+  background: var(--ui-neutral-surface);
+  color: var(--ui-muted);
+}
+
+.status-pill-success,
+.update-status-label.is-published {
+  border-color: var(--ui-success-border);
+  background: var(--ui-success-surface);
+  color: var(--ui-success);
+}
+
+.status-pill-warning {
+  border-color: var(--ui-warning-border);
+  background: var(--ui-warning-surface);
+  color: var(--ui-warning);
+}
+
+.status-pill-danger {
+  border-color: var(--ui-danger-border);
+  background: var(--ui-danger-surface);
+  color: var(--ui-danger);
+}
+
+.stage-pill {
+  min-height: 34px;
+  border-radius: var(--ui-radius-control);
+  font-size: 0.72rem;
+}
+
+.stage-pill-completed {
+  border-color: var(--ui-success-border);
+  background: var(--ui-success-surface);
+  color: var(--ui-success);
+}
+
+.stage-pill-current {
+  border-color: var(--ui-brand);
+  background: #e8f1fb;
+  color: var(--ui-brand-hover);
+}
+
+.stage-pill-pending {
+  border-color: var(--ui-border);
+  background: var(--ui-neutral-surface);
+  color: var(--ui-muted);
+}
+
+.stage-pill-rejected {
+  border-color: var(--ui-danger-border);
+  background: var(--ui-danger-surface);
+  color: var(--ui-danger);
+}
+
+/* Tables, queues, filters, and resource feeds */
+.data-table,
+.stack-list,
+.simple-deal-list,
+.simple-action-list,
+.training-asset-list,
+.vendor-update-feed {
+  gap: 9px;
+}
+
+.table-head {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eaf1fa;
+  color: var(--ui-brand-hover);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+}
+
+.table-row,
+.simple-deal-row,
+.simple-action-row,
+.partner-deal-row {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-row);
+  background: var(--ui-surface-subtle);
+}
+
+.simple-text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  color: var(--ui-brand);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.queue-filter-row,
+.update-filter-tabs,
+.workspace-filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--ui-border);
+  border-radius: 11px;
+  background: var(--ui-surface-subtle);
+}
+
+.queue-filter-row a,
+.update-filter-tab,
+.workspace-filter-tabs > * {
+  min-height: 36px;
+  border-radius: 8px;
+}
+
+.workspace-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.update-filter-tab.is-active {
+  border-color: var(--ui-brand);
+  background: var(--ui-brand);
+  color: #fff;
+  box-shadow: none;
+}
+
+.updates-page,
+.learning-page,
+.deal-registration-page {
+  padding: 14px;
+  border-radius: var(--ui-radius-shell);
+  background: var(--ui-page);
+}
+
+.learning-library-layout,
+.deal-registration-layout,
+.admin-updates-layout {
+  gap: 14px;
+}
+
+.featured-update-card,
+.updates-feed-panel,
+.learning-panel,
+.deal-registration-card {
+  border-color: var(--ui-border);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-card);
+}
+
+.featured-update-card {
+  background:
+    radial-gradient(circle at 92% 8%, rgba(0, 74, 173, 0.07), transparent 28%),
+    var(--ui-surface);
+}
+
+.featured-update-card.workspace-panel {
+  padding: 0;
+}
+
+.vendor-update-card,
+.admin-update-row,
+.training-asset-card {
+  border-color: var(--ui-border);
+  border-radius: var(--ui-radius-row);
+  background: var(--ui-surface-subtle);
+}
+
+.updates-feed-header,
+.learning-panel-header,
+.featured-update-footer {
+  border-color: var(--ui-border);
+}
+
+/* Public legal onboarding */
+.onboarding-shell {
+  background: var(--ui-canvas);
+}
+
+.onboarding-layout {
+  width: min(1040px, 100%);
+  gap: 14px;
+}
+
+.onboarding-hero,
+.onboarding-step-card,
+.onboarding-next-card,
+.onboarding-expired-card,
+.onboarding-progress-card {
+  border-color: var(--ui-border);
+  border-radius: var(--ui-radius-card);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-card);
+}
+
+.onboarding-step-card.is-current {
+  border-color: var(--ui-brand);
+  box-shadow: inset 3px 0 0 var(--ui-brand), var(--ui-shadow-card);
+}
+
+.onboarding-step-card.is-complete {
+  border-color: var(--ui-success-border);
+  box-shadow: inset 3px 0 0 var(--ui-success), var(--ui-shadow-card);
+}
+
+@media (max-width: 1080px) {
+  .workspace-layout-sidebar,
+  .deal-registration-layout,
+  .admin-updates-layout,
+  .learning-library-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workspace-layout-balanced {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-topbar-actions .button {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 760px) {
+  .site-shell,
+  .public-shell,
+  .public-application-shell {
+    width: min(100% - 20px, 960px);
+  }
+
+  .public-application-main {
+    margin-top: 24px;
+  }
+
+  .public-application-card,
+  .public-application-card-simple,
+  .auth-login-card,
+  .login-card {
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  .auth-login-shell,
+  .login-shell {
+    padding: 10px;
+  }
+
+  .app-frame {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 0 10px;
+  }
+
+  .app-sidebar {
+    top: 0;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0 18px 18px 0;
+  }
+
+  .app-nav-item {
+    min-height: 44px;
+  }
+
+  .app-main {
+    gap: 12px;
+    padding: 8px 0 24px;
+  }
+
+  .mobile-workspace-bar {
+    min-height: 54px;
+    padding-top: 2px;
+  }
+
+  .mobile-nav-toggle {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    box-shadow: 0 5px 14px rgba(0, 32, 96, 0.08);
+  }
+
+  .app-topbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 0;
+  }
+
+  .app-topbar-actions,
+  .app-topbar-actions .button {
+    width: 100%;
+  }
+
+  .app-title {
+    font-size: 1.65rem;
+  }
+
+  .workspace-page,
+  .updates-page,
+  .learning-page,
+  .deal-registration-page,
+  .admin-updates-page {
+    gap: 12px;
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .workspace-panel,
+  .workspace-page > .workspace-card,
+  .workspace-page > .feature-card,
+  .workspace-page > .simple-panel,
+  .workspace-page .learning-panel,
+  .workspace-page .updates-feed-panel,
+  .workspace-page .deal-registration-card,
+  .workspace-page .performance-card,
+  .workspace-page .side-section-card {
+    padding: 15px;
+    border-radius: 14px;
+  }
+
+  .workspace-panel-header,
+  .card-header-row,
+  .simple-panel-header,
+  .learning-panel-header,
+  .updates-feed-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .dashboard-metrics,
+  .portal-summary-strip,
+  .performance-grid,
+  .workspace-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .workspace-kv,
+  .detail-fact-grid,
+  .stack-meta-grid,
+  .inline-form-grid,
+  .field-grid,
+  .vendor-application-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workspace-control,
+  .login-input,
+  .cta-select,
+  .cta-textarea,
+  .form-field input,
+  .form-field select,
+  .form-field textarea,
+  .field-group input,
+  .field-group select,
+  .field-group textarea,
+  .public-form-field input,
+  .public-form-field select,
+  .public-form-field textarea,
+  .workspace-search-input {
+    font-size: 16px;
+  }
+
+  .table-row,
+  .table-head {
+    min-width: 0;
+  }
+
+  .stage-pill-row {
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+  }
+
+  .stage-pill-row > * {
+    scroll-snap-align: start;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard-metrics,
+  .portal-summary-strip,
+  .performance-grid,
+  .workspace-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .metric-card,
+  .portal-summary-item,
+  .performance-card,
+  .workspace-metric {
+    min-height: 86px;
+  }
+
+  .workspace-row,
+  .workspace-page .stack-card,
+  .workspace-page .timeline-card,
+  .workspace-page .detail-fact,
+  .workspace-page .training-asset-card,
+  .workspace-page .vendor-update-card,
+  .workspace-page .admin-update-row {
+    padding: 12px;
+  }
+
+  .button {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

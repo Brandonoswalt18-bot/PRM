@@ -130,6 +130,8 @@ export default async function VendorLayout({
 
   return (
     <WorkspaceLayout
+      accountItems={[{ label: "Support & system", href: "/app/settings" }]}
+      homeHref="/app"
       workspace="VENDOR ADMIN"
       navItems={vendorNavigation}
       session={session}

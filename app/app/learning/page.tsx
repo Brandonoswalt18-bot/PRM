@@ -9,12 +9,12 @@ export default async function AdminLearningPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
-        title="Learning"
+        title="Training"
         subtitle="Upload training videos and documents for approved vendors."
-        primaryLabel="Manage library"
-        primaryHref="/app/learning"
+        primaryLabel="Add training"
+        primaryHref="#training-composer"
       />
-      <div className="app-content">
+      <div className="app-content workspace-page">
         <AdminLearningManager assets={assets} />
       </div>
     </>

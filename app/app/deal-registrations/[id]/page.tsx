@@ -9,7 +9,7 @@ import { AdminDealAgreementManager } from "@/components/product/admin-deal-agree
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { formatDealLocation } from "@/lib/deal-registration";
 import { buildDealTimeline } from "@/lib/goaccess-timeline";
-import { formatDealAgreementStatusLabel } from "@/lib/goaccess-copy";
+import { formatDealAgreementStatusLabel, formatDealStatusLabel } from "@/lib/goaccess-copy";
 import { inspectDealRegistrationForHubSpot } from "@/lib/hubspot";
 import {
   formatCurrency,
@@ -19,10 +19,6 @@ import {
   listSupportRequests,
   listSyncEvents,
 } from "@/lib/goaccess-store";
-
-function titleCase(value: string) {
-  return value.replaceAll("_", " ");
-}
 
 function formatOptionalCurrency(value: number) {
   return value > 0 ? formatCurrency(value) : "Not provided";
@@ -73,15 +69,8 @@ export default async function AdminDealDetailPage({
   const metrics = [
     {
       label: "Deal status",
-      value: titleCase(deal.status),
+      value: formatDealStatusLabel(deal.status),
       delta: deal.hubspotDealId ? `HubSpot #${deal.hubspotDealId}` : "No HubSpot deal yet",
-    },
-    {
-      label: "Estimated value",
-      value: formatOptionalCurrency(deal.estimatedValue),
-      delta: deal.estimatedValue > 0
-        ? "Current HubSpot opportunity value"
-        : "Available after an amount is added in HubSpot",
     },
     {
       label: "Monthly RMR",
@@ -96,14 +85,6 @@ export default async function AdminDealDetailPage({
           ? "Signed copy is stored on this deal"
           : "Uploaded and waiting on vendor signature"
         : "No agreement uploaded yet",
-    },
-    {
-      label: "Expected vendor earnings",
-      value: formatOptionalCurrency(deal.expectedVendorMonthlyRevenue),
-      delta:
-        deal.expectedMonthlyRmr > 0
-          ? `${formatCurrency(deal.expectedMonthlyRmr)} expected monthly RMR`
-          : "Set when the dealer agreement is uploaded",
     },
     {
       label: "Open support issues",
@@ -124,7 +105,28 @@ export default async function AdminDealDetailPage({
     { label: "State", value: deal.state || "Not provided" },
     { label: "Buyer contact", value: deal.contactName },
     { label: "Buyer email", value: deal.contactEmail },
+    { label: "Estimated HubSpot value", value: formatOptionalCurrency(deal.estimatedValue) },
+    { label: "Expected monthly RMR", value: formatOptionalCurrency(deal.expectedMonthlyRmr) },
+    {
+      label: "Expected vendor monthly earnings",
+      value: formatOptionalCurrency(deal.expectedVendorMonthlyRevenue),
+    },
   ];
+
+  const syncReadinessLabel = !hubspotInspection
+    ? "Vendor missing"
+    : hubspotInspection.ready
+      ? "Ready"
+      : hubspotInspection.enabled
+        ? "Held for review"
+        : "Not configured";
+  const syncReadinessTone = !hubspotInspection
+    ? "status-pill-danger"
+    : hubspotInspection.ready
+      ? "status-pill-success"
+      : hubspotInspection.enabled
+        ? "status-pill-warning"
+        : "status-pill-neutral";
 
   if (deal.domain) {
     profileRows.push({ label: "Domain", value: deal.domain });
@@ -161,12 +163,13 @@ export default async function AdminDealDetailPage({
         workspace="VENDOR ADMIN"
         title={deal.companyName}
         subtitle={`Inspect the full registration for ${formatDealLocation(deal)}, vendor context, and HubSpot sync history before taking action.`}
-        primaryLabel="Back to review queue"
+        primaryLabel="Deal approvals"
         primaryHref="/app/deal-registrations"
+        actionVariant="back"
       />
-      <div className="app-content">
+      <div className="app-content workspace-page">
         <MetricGrid metrics={metrics} />
-        <section className="dashboard-grid">
+        <section className="workspace-layout workspace-layout-sidebar dashboard-grid">
           <TableSection
             title="Registration record"
             description="The exact account details submitted through the vendor portal."
@@ -176,8 +179,11 @@ export default async function AdminDealDetailPage({
             rows={profileRows}
             renderRow={ProfileRow}
           />
-          <article className="workspace-card">
-            <h3>HubSpot sync readiness</h3>
+          <article className="workspace-card workspace-panel">
+            <div className="card-header-row">
+              <h3>HubSpot sync readiness</h3>
+              <span className={`status-pill ${syncReadinessTone}`}>{syncReadinessLabel}</span>
+            </div>
             <ul>
               <li>Decision: {hubspotInspection?.decisionSummary ?? "Vendor missing"}</li>
               <li>
@@ -223,18 +229,18 @@ export default async function AdminDealDetailPage({
             </ul>
           </article>
         </section>
-        <section className="dashboard-grid">
+        <section className="workspace-layout dashboard-grid">
           {deal.status === "closed_won" || deal.agreementStatus !== "not_started" ? (
             <AdminDealAgreementManager deal={deal} />
           ) : (
-            <article className="workspace-card wide-card">
+            <article className="workspace-card workspace-panel wide-card">
               <span className="section-kicker">Dealer agreement</span>
               <h3>Available after closed won</h3>
               <p>Complete the deal review first. Agreement upload and payout terms begin after the opportunity closes won.</p>
             </article>
           )}
         </section>
-        <section className="dashboard-grid">
+        <section className="workspace-layout workspace-layout-balanced dashboard-grid">
           <TimelineSection
             title="Review and sync timeline"
             description="Recorded submission, review, HubSpot, agreement, and outcome events."

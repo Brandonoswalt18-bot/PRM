@@ -75,14 +75,12 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
-        title="Support and delivery"
+        title="Support & system"
         subtitle="Use the support queue for quick triage. Open one request only when you need the full message and history."
-        primaryLabel="Open deal review"
-        primaryHref="/app/deal-registrations?queue=review"
       />
-      <div className="app-content">
+      <div className="app-content workspace-page">
         <MetricGrid metrics={metrics} />
-        <section className="dashboard-grid">
+        <section className="workspace-layout workspace-layout-sidebar dashboard-grid">
           <AdminSupportManager
             supportRequests={filteredRequests}
             vendors={toClientApprovedVendors(vendors)}
@@ -95,7 +93,8 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
               resolved: resolvedRequests.length,
             }}
           />
-          <article className="workspace-card">
+          <aside className="workspace-side-stack">
+          <article className="workspace-card workspace-panel">
             <h3>Email status</h3>
             <ul>
               <li>
@@ -124,7 +123,7 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
               <li>{notifications.filter((item) => item.status === "sent").length} workflow emails were accepted by Resend.</li>
             </ul>
           </article>
-          <article className="workspace-card">
+          <article className="workspace-card workspace-panel">
             <h3>HubSpot readiness</h3>
             <ul>
               <li>
@@ -179,6 +178,7 @@ export default async function VendorSettingsPage({ searchParams }: VendorSetting
               </div>
             </div>
           </article>
+          </aside>
         </section>
       </div>
     </>

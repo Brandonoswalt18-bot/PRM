@@ -124,8 +124,8 @@ export function AdminLearningManager({ assets }: { assets: TrainingAsset[] }) {
   }
 
   return (
-    <section className="dashboard-grid">
-      <article className="workspace-card wide-card">
+    <section className="workspace-layout workspace-layout-sidebar dashboard-grid">
+      <article className="workspace-card workspace-panel wide-card">
         <div className="card-header-row">
           <div>
             <h3>Training library</h3>
@@ -139,30 +139,30 @@ export function AdminLearningManager({ assets }: { assets: TrainingAsset[] }) {
         />
       </article>
 
-      <article className="workspace-card">
+      <article className="workspace-card workspace-panel" id="training-composer">
         <div className="card-header-row">
           <div>
             <h3>Add training</h3>
             <p>Only admin accounts can publish or upload learning content.</p>
           </div>
         </div>
-        <form className="login-form" onSubmit={handleSubmit}>
-          <label className="login-field">
+        <form className="login-form workspace-form" onSubmit={handleSubmit}>
+          <label className="login-field workspace-field">
             <span className="access-label">Title</span>
-            <input className="login-input" name="title" required type="text" />
+            <input className="login-input workspace-control" name="title" required type="text" />
           </label>
-          <label className="login-field">
+          <label className="login-field workspace-field">
             <span className="access-label">Description</span>
-            <textarea className="login-input" name="description" rows={4} />
+            <textarea className="login-input workspace-control" name="description" rows={4} />
           </label>
-          <label className="login-field">
+          <label className="login-field workspace-field">
             <span className="access-label">Type</span>
-            <select className="login-input" name="type" defaultValue="video">
+            <select className="login-input workspace-control" name="type" defaultValue="video">
               <option value="video">Video</option>
               <option value="document">Document</option>
             </select>
           </label>
-          <div className="queue-filter-row" aria-label="Training source">
+          <div className="queue-filter-row workspace-filter-tabs" aria-label="Training source">
             <button
               className={`queue-filter-pill${source === "upload" ? " queue-filter-pill-active" : ""}`}
               onClick={() => setSource("upload")}
@@ -179,14 +179,14 @@ export function AdminLearningManager({ assets }: { assets: TrainingAsset[] }) {
             </button>
           </div>
           {source === "upload" ? (
-            <label className="login-field">
+            <label className="login-field workspace-field">
               <span className="access-label">File</span>
-              <input className="login-input" name="file" required type="file" />
+              <input className="login-input workspace-control" name="file" required type="file" />
             </label>
           ) : (
-            <label className="login-field">
+            <label className="login-field workspace-field">
               <span className="access-label">External URL</span>
-              <input className="login-input" name="externalUrl" placeholder="https://..." required type="url" />
+              <input className="login-input workspace-control" name="externalUrl" placeholder="https://..." required type="url" />
             </label>
           )}
           <button className="button button-primary login-submit" disabled={status === "submitting"} type="submit">

@@ -1,8 +1,4 @@
-import {
-  ProfileRow,
-  SideSections,
-  TableSection,
-} from "@/components/product/product-page-sections";
+import Link from "next/link";
 import { VendorProfileForm } from "@/components/product/vendor-profile-form";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
@@ -65,22 +61,43 @@ export default async function PartnerProfilePage() {
         subtitle="Keep your company and primary contact details current."
         primaryLabel="Back to home"
         primaryHref="/portal"
+        actionVariant="back"
       />
-      <div className="app-content">
-        <section className="dashboard-grid">
+      <div className="app-content workspace-page">
+        <section className="workspace-layout workspace-layout-balanced profile-primary-layout">
           {vendor ? <VendorProfileForm vendor={toClientApprovedVendor(vendor)} /> : null}
-          <TableSection
-            title="Account snapshot"
-            description="The approved vendor information GoAccess uses for agreements and deal review."
-            actionLabel="Open agreements"
-            actionHref="/portal/onboarding"
-            headers={["Field", "Value"]}
-            rows={profileRows}
-            renderRow={ProfileRow}
-          />
+          <article className="workspace-card workspace-panel">
+            <div className="card-header-row">
+              <div>
+                <span className="section-kicker">Reference</span>
+                <h3>Account snapshot</h3>
+                <p>The approved vendor information GoAccess uses for agreements and deal review.</p>
+              </div>
+              <Link href="/portal/onboarding" className="button button-secondary" prefetch={false}>
+                Open agreements
+              </Link>
+            </div>
+            <dl className="workspace-kv">
+              {profileRows.map((row) => (
+                <div className="workspace-row" key={row.label}>
+                  <dt>{row.label}</dt>
+                  <dd>{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </article>
         </section>
-        <section className="dashboard-grid">
-          <SideSections sections={buildSections(vendor)} />
+        <section className="workspace-layout workspace-layout-balanced">
+          {buildSections(vendor).map((section) => (
+            <article className="workspace-card workspace-panel side-section-card" key={section.title}>
+              <span className="section-kicker">At a glance</span>
+              <h3>{section.title}</h3>
+              {section.description ? <p>{section.description}</p> : null}
+              <ul className="soft-list">
+                {section.items.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </article>
+          ))}
         </section>
       </div>
     </>

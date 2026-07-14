@@ -11,14 +11,15 @@ export default function NewDealPage() {
         subtitle="Share the community and contact details GoAccess needs to review the opportunity."
         primaryLabel="View your deals"
         primaryHref="/portal/deals"
+        actionVariant="back"
       />
-      <div className="app-content deal-registration-page">
-        <section className="deal-registration-layout">
-          <div id="deal-registration-form">
+      <div className="app-content workspace-page deal-registration-page">
+        <section className="deal-registration-layout workspace-layout workspace-layout-sidebar">
+          <div className="workspace-side-stack" id="deal-registration-form">
             <DealRegistrationForm />
           </div>
           <aside
-            className="simple-panel simple-side-panel deal-review-panel"
+            className="workspace-card workspace-panel simple-panel simple-side-panel deal-review-panel"
             aria-labelledby="deal-review-steps-title"
           >
             <span className="simple-eyebrow">After submission</span>

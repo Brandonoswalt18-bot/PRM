@@ -73,18 +73,19 @@ export function VendorProfileForm({ vendor }: VendorProfileFormProps) {
   }
 
   return (
-    <article className="workspace-card wide-card">
+    <article className="workspace-card workspace-panel">
       <div className="card-header-row">
         <div>
           <h3>Update company details</h3>
           <p>Keep your business and contact details current so GoAccess can review deals and support your account without delays.</p>
         </div>
       </div>
-      <form className="cta-form" onSubmit={handleSubmit}>
+      <form className="cta-form workspace-form" onSubmit={handleSubmit}>
         <div className="inline-form-grid">
-          <label className="form-field">
+          <label className="form-field workspace-field">
             <span className="access-label">Company name</span>
             <input
+              className="workspace-control"
               maxLength={160}
               placeholder="Company name"
               type="text"
@@ -93,9 +94,10 @@ export function VendorProfileForm({ vendor }: VendorProfileFormProps) {
               required
             />
           </label>
-          <label className="form-field">
+          <label className="form-field workspace-field">
             <span className="access-label">Website</span>
             <input
+              className="workspace-control"
               maxLength={300}
               placeholder="Website"
               type="text"
@@ -105,9 +107,10 @@ export function VendorProfileForm({ vendor }: VendorProfileFormProps) {
           </label>
         </div>
         <div className="inline-form-grid">
-          <label className="form-field">
+          <label className="form-field workspace-field">
             <span className="access-label">City</span>
             <input
+              className="workspace-control"
               maxLength={100}
               placeholder="City"
               type="text"
@@ -116,9 +119,10 @@ export function VendorProfileForm({ vendor }: VendorProfileFormProps) {
               required
             />
           </label>
-          <label className="form-field">
+          <label className="form-field workspace-field">
             <span className="access-label">State</span>
             <input
+              className="workspace-control"
               maxLength={100}
               placeholder="State"
               type="text"
@@ -129,9 +133,10 @@ export function VendorProfileForm({ vendor }: VendorProfileFormProps) {
           </label>
         </div>
         <div className="inline-form-grid">
-          <label className="form-field">
+          <label className="form-field workspace-field">
             <span className="access-label">Primary contact</span>
             <input
+              className="workspace-control"
               maxLength={120}
               placeholder="Primary contact"
               type="text"
@@ -140,9 +145,10 @@ export function VendorProfileForm({ vendor }: VendorProfileFormProps) {
               required
             />
           </label>
-          <label className="form-field">
+          <label className="form-field workspace-field">
             <span className="access-label">Primary contact email</span>
             <input
+              className="workspace-control"
               maxLength={254}
               placeholder="Primary contact email"
               type="email"

@@ -148,12 +148,12 @@ export default async function CommissionsPage() {
         workspace="VENDOR ADMIN"
         title="HubSpot sync"
         subtitle="Watch the CRM queue, failed writes, and environment readiness."
-        primaryLabel="Open HubSpot-ready deals"
+        primaryLabel="Review sync"
         primaryHref="/app/deal-registrations?queue=hubspot"
       />
-      <div className="app-content">
+      <div className="app-content workspace-page">
         <MetricGrid metrics={metrics} />
-        <section className="dashboard-grid">
+        <section className="workspace-layout workspace-layout-sidebar dashboard-grid">
           <TableSection
             title="Sync activity"
             description="Each event shows what was reviewed, written, held, or failed."

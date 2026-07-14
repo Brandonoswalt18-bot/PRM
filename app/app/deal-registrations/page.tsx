@@ -30,12 +30,10 @@ export default async function DealRegistrationsPage({ searchParams }: DealRegist
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
-        title="Deal registrations"
+        title="Deal approvals"
         subtitle="Run the daily deal operation from one place: see the numbers, filter to what needs action, search the queue, and finish the next step fast."
-        primaryLabel="Show full queue"
-        primaryHref="/app/deal-registrations"
       />
-      <div className="app-content">
+      <div className="app-content workspace-page">
         <AdminDealManager
           applications={applications}
           deals={deals}

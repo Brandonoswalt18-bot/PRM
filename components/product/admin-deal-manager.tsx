@@ -153,6 +153,18 @@ function getDealNextAction(deal: DealRegistration) {
   return "This deal is no longer active in the queue.";
 }
 
+function getDealStatusTone(status: DealStatus) {
+  if (status === "closed_won" || status === "synced_to_hubspot") {
+    return "status-pill-success";
+  }
+
+  if (status === "closed_lost" || status === "rejected") {
+    return "status-pill-danger";
+  }
+
+  return "status-pill-warning";
+}
+
 function mapLegacyQueueToActionFilter(queue: AdminDealManagerProps["activeQueue"]): ActionQueueFilter {
   if (queue === "review") {
     return "needs_review";
@@ -459,14 +471,15 @@ export function AdminDealManager({
   }
 
   return (
-    <article className="workspace-card wide-card">
+    <div className="workspace-layout">
+    <section className="workspace-card workspace-panel">
       <div className="card-header-row performance-header-row">
         <div>
           <span className="stack-section-label">Performance</span>
           <h3>Deal operations command center</h3>
           <p>Watch the pace of new work, jump into the next required action, and keep the queue moving without digging.</p>
         </div>
-        <div className="performance-toggle" role="group" aria-label="Deal review performance timeframe">
+        <div className="performance-toggle workspace-filter-tabs" role="group" aria-label="Deal review performance timeframe">
           {(["daily", "weekly", "monthly"] as const).map((range) => (
             <button
               key={range}
@@ -482,13 +495,15 @@ export function AdminDealManager({
       </div>
       <div className="performance-grid">
         {performanceCards.map((card) => (
-          <div className="performance-card" key={card.label}>
+          <div className="workspace-row performance-card" key={card.label}>
             <span>{card.label}</span>
             <strong>{card.value}</strong>
             <p>{card.detail}</p>
           </div>
         ))}
       </div>
+    </section>
+    <section className="workspace-card workspace-panel">
       <div className="card-header-row">
         <div>
           <span className="stack-section-label">Deal review</span>
@@ -511,12 +526,12 @@ export function AdminDealManager({
           />
         </label>
       </div>
-      <div className="action-filter-grid" aria-label="Operational deal queue filters">
+      <div className="action-filter-grid workspace-filter-grid" aria-label="Operational deal queue filters">
         {actionFilters.map((filter) => (
           <button
             aria-pressed={actionFilter === filter.id}
             key={filter.id}
-            className={`action-filter-card${actionFilter === filter.id ? " action-filter-card-active" : ""}`}
+            className={`workspace-row action-filter-card${actionFilter === filter.id ? " action-filter-card-active" : ""}`}
             type="button"
             onClick={() => setActionFilter(filter.id)}
           >
@@ -528,7 +543,7 @@ export function AdminDealManager({
       </div>
       {message ? <p className="table-note" aria-live="polite" role="status">{message}</p> : null}
       {visibleDeals.length === 0 ? (
-        <div className="empty-state-card">
+        <div className="workspace-row empty-state-card">
           <span className="section-kicker">Queue clear</span>
           <h3>No deals match this view.</h3>
           <p>Try a different action filter or broaden the search to pull more records back into the queue.</p>
@@ -548,7 +563,7 @@ export function AdminDealManager({
             const isSelected = selectedDealId === deal.id;
             return (
               <div
-                className={`stack-card application-queue-card${isSelected ? " application-queue-card-selected" : ""}`}
+                className={`workspace-row stack-card application-queue-card${isSelected ? " application-queue-card-selected" : ""}`}
                 id={`deal-${deal.id}`}
                 key={deal.id}
               >
@@ -563,7 +578,7 @@ export function AdminDealManager({
                     <p>{formatDealLocation(deal)} · {deal.contactName} · {deal.contactEmail}</p>
                   </div>
                   <div className="stage-actions-topline">
-                    <span className={`status-pill ${isRejected ? "status-pill-danger" : "status-pill-neutral"}`}>
+                    <span className={`status-pill ${getDealStatusTone(deal.status)}`}>
                       {isRejected ? "Declined" : formatDealStatusLabel(deal.status)}
                     </span>
                     <Link className="button button-secondary" href={buildDealsHref(activeQueue, isSelected ? undefined : deal.id)}>
@@ -594,7 +609,7 @@ export function AdminDealManager({
                 ) : null}
                 {isSelected ? (
                   <>
-                    <div className="detail-banner">
+                    <div className="workspace-layout workspace-layout-balanced detail-banner">
                       <div>
                         <span className="detail-banner-label">Current state</span>
                         <strong>{formatDealStatusLabel(deal.status)}</strong>
@@ -613,40 +628,41 @@ export function AdminDealManager({
                       </div>
                     </div>
                     <div className="detail-fact-grid admin-review-facts" aria-label="Submitted deal details">
-                      <div className="detail-fact">
+                      <div className="detail-fact workspace-kv">
                         <span>HubSpot estimated value</span>
                         <strong>{deal.estimatedValue > 0 ? formatCurrency(deal.estimatedValue) : "Not provided"}</strong>
                       </div>
-                      <div className="detail-fact">
+                      <div className="detail-fact workspace-kv">
                         <span>Community domain</span>
                         <strong>{deal.domain || "Not provided"}</strong>
                       </div>
-                      <div className="detail-fact">
+                      <div className="detail-fact workspace-kv">
                         <span>Contact phone</span>
                         <strong>{deal.contactPhone || "Not provided"}</strong>
                       </div>
-                      <div className="detail-fact">
+                      <div className="detail-fact workspace-kv">
                         <span>Product interest</span>
                         <strong>{deal.productInterest || "Not provided"}</strong>
                       </div>
                     </div>
                     {deal.notes ? (
-                      <div className="admin-review-notes">
+                      <div className="workspace-row admin-review-notes">
                         <span className="detail-banner-label">Vendor notes</span>
                         <p>{deal.notes}</p>
                       </div>
                     ) : null}
                     {deal.declineReason ? (
-                      <div className="admin-review-notes admin-review-notes-danger">
+                      <div className="workspace-row admin-review-notes admin-review-notes-danger">
                         <span className="detail-banner-label">Reason shared with vendor</span>
                         <p>{deal.declineReason}</p>
                       </div>
                     ) : null}
-                    <div className="admin-rmr-control">
-                      <label className="field-group">
+                    <div className="workspace-row admin-rmr-control">
+                      <label className="field-group workspace-field">
                         <span className="field-label">Monthly RMR (optional, internal)</span>
                         <input
                           aria-label={`Monthly RMR for ${deal.companyName}`}
+                          className="workspace-control"
                           disabled={Boolean(deal.hubspotDealId)}
                           min="0"
                           placeholder="Add monthly RMR when known"
@@ -709,11 +725,12 @@ export function AdminDealManager({
                       </button>
                     </div>
                     {declineOpenId === deal.id ? (
-                      <div className="decline-decision-panel">
-                        <label className="field-group">
+                      <div className="workspace-row decline-decision-panel">
+                        <label className="field-group workspace-field">
                           <span className="field-label">Reason shared with vendor (optional)</span>
                           <textarea
-                            maxLength={1000}
+                          maxLength={1000}
+                          className="workspace-control"
                             placeholder="Briefly explain why this registration cannot be approved."
                             value={declineReasons[deal.id] ?? ""}
                             onChange={(event) =>
@@ -748,24 +765,24 @@ export function AdminDealManager({
                       </div>
                     ) : null}
                     <div className="detail-fact-grid">
-                      <div className="detail-fact">
+                      <div className="detail-fact workspace-kv">
                         <span>Status</span>
                         <strong>{formatDealStatusLabel(deal.status)}</strong>
                       </div>
-                      <div className="detail-fact">
+                      <div className="detail-fact workspace-kv">
                         <span>Vendor</span>
                         <strong>{vendor?.companyName ?? "Unknown vendor"}</strong>
                       </div>
-                      <div className="detail-fact">
+                      <div className="detail-fact workspace-kv">
                         <span>Location</span>
                         <strong>{formatDealLocation(deal)}</strong>
                       </div>
-                      <div className="detail-fact">
+                      <div className="detail-fact workspace-kv">
                         <span>HubSpot</span>
                         <strong>{deal.hubspotDealId ? `#${deal.hubspotDealId}` : "Not synced"}</strong>
                       </div>
                       {deal.decisionAt ? (
-                        <div className="detail-fact">
+                        <div className="detail-fact workspace-kv">
                           <span>Decision recorded</span>
                           <strong>{new Date(deal.decisionAt).toLocaleString()}</strong>
                         </div>
@@ -778,12 +795,12 @@ export function AdminDealManager({
                     </div>
                     {deal.status === "closed_won" ? (
                       <div className="embedded-detail-section">
-                        <AdminDealAgreementManager deal={deal} />
+                        <AdminDealAgreementManager deal={deal} embedded />
                       </div>
                     ) : null}
                     <div className="timeline-stack compact-timeline">
                       {timeline.map((entry) => (
-                        <div className="timeline-card" key={`${deal.id}-${entry.timestamp}-${entry.title}`}>
+                        <div className="workspace-row timeline-card" key={`${deal.id}-${entry.timestamp}-${entry.title}`}>
                           <div className="timeline-card-topline">
                             <strong>{entry.title}</strong>
                             <span className={`timeline-badge timeline-${entry.tone ?? "neutral"}`}>
@@ -801,6 +818,7 @@ export function AdminDealManager({
           })()
         ))}
       </div>
-    </article>
+    </section>
+    </div>
   );
 }

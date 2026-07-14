@@ -71,21 +71,16 @@ export default async function ProgramsPage({ searchParams }: ProgramsPageProps) 
   const selectedApplicationId = filteredApplications.some((application) => application.id === params.application)
     ? params.application
     : undefined;
-  const primaryLabel = activeQueue === "all" ? "Review applications" : "Show full queue";
-  const primaryHref = activeQueue === "all" ? "/app/programs" : "/app/programs";
-
   return (
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
-        title="Vendor applications"
+        title="Applications"
         subtitle="Use the queue for quick triage, then open a partner when you need the NDA, Partner Agreement, and portal access trail."
-        primaryLabel={primaryLabel}
-        primaryHref={primaryHref}
       />
-      <div className="app-content">
+      <div className="app-content workspace-page">
         <MetricGrid metrics={metrics} />
-        <section className="dashboard-grid dashboard-grid-single">
+        <section className="workspace-layout dashboard-grid dashboard-grid-single">
           <AdminApplicationManager
             applications={filteredApplications}
             vendors={toClientApprovedVendors(vendors)}

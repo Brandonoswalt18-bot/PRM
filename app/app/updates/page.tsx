@@ -14,7 +14,7 @@ export default async function AdminUpdatesPage() {
         primaryLabel="Create update"
         primaryHref="#update-composer"
       />
-      <div className="app-content admin-updates-page">
+      <div className="app-content workspace-page admin-updates-page">
         <AdminUpdatesManager initialUpdates={updates} />
       </div>
     </>

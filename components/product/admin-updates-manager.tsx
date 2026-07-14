@@ -70,7 +70,7 @@ function formFromUpdate(update: PartnerUpdate): UpdateFormState {
 
 function UpdatePreview({ form }: { form: UpdateFormState }) {
   return (
-    <article className={`update-preview-card is-${form.category}`}>
+    <article className={`workspace-row update-preview-card is-${form.category}`}>
       <div className="update-card-meta">
         <span className={`update-category-pill is-${form.category}`}>
           {CATEGORY_LABELS[form.category]}
@@ -261,8 +261,8 @@ export function AdminUpdatesManager({ initialUpdates }: { initialUpdates: Partne
   }
 
   return (
-    <div className="admin-updates-layout">
-      <section className="simple-panel admin-updates-library" aria-labelledby="updates-library-title">
+    <div className="workspace-layout workspace-layout-sidebar admin-updates-layout">
+      <section className="workspace-card workspace-panel simple-panel admin-updates-library" aria-labelledby="updates-library-title">
         <div className="simple-panel-header admin-updates-header">
           <div>
             <span className="simple-eyebrow">Vendor communications</span>
@@ -274,7 +274,7 @@ export function AdminUpdatesManager({ initialUpdates }: { initialUpdates: Partne
           </button>
         </div>
 
-        <div className="update-filter-tabs" aria-label="Filter updates" role="group">
+        <div className="update-filter-tabs workspace-filter-tabs" aria-label="Filter updates" role="group">
           {(["draft", "published", "archived"] as const).map((status) => (
             <button
               aria-pressed={activeFilter === status}
@@ -293,7 +293,7 @@ export function AdminUpdatesManager({ initialUpdates }: { initialUpdates: Partne
           <div className="admin-update-list">
             {filteredUpdates.map((update) => (
               <article
-                className={`admin-update-row${selectedId === update.id ? " is-selected" : ""}`}
+                className={`workspace-row admin-update-row${selectedId === update.id ? " is-selected" : ""}`}
                 key={update.id}
               >
                 <div className="update-card-meta">
@@ -319,7 +319,7 @@ export function AdminUpdatesManager({ initialUpdates }: { initialUpdates: Partne
             ))}
           </div>
         ) : (
-          <div className="updates-empty-state">
+          <div className="workspace-row updates-empty-state">
             <span className="updates-empty-icon" aria-hidden="true">◎</span>
             <div>
               <h3>No {STATUS_LABELS[activeFilter].toLowerCase()} updates</h3>
@@ -335,7 +335,7 @@ export function AdminUpdatesManager({ initialUpdates }: { initialUpdates: Partne
         )}
       </section>
 
-      <section className="simple-panel update-composer" id="update-composer" ref={composerRef} aria-labelledby="update-composer-title">
+      <section className="workspace-card workspace-panel simple-panel update-composer" id="update-composer" ref={composerRef} aria-labelledby="update-composer-title">
         <div className="update-composer-heading">
           <div>
             <span className="simple-eyebrow">
@@ -354,12 +354,12 @@ export function AdminUpdatesManager({ initialUpdates }: { initialUpdates: Partne
           ) : null}
         </div>
 
-        <form className="update-composer-form" onSubmit={handleSave} ref={formRef}>
+        <form className="workspace-form update-composer-form" onSubmit={handleSave} ref={formRef}>
           <fieldset className="update-form-fields" disabled={selectedUpdate?.status === "archived"}>
-          <label className="login-field">
+          <label className="login-field workspace-field">
             <span className="access-label">Category</span>
             <select
-              className="login-input"
+              className="login-input workspace-control"
               name="category"
               value={form.category}
               onChange={(event) => setField("category", event.target.value as PartnerUpdateCategory)}
@@ -369,10 +369,10 @@ export function AdminUpdatesManager({ initialUpdates }: { initialUpdates: Partne
               <option value="operational_notice">Operational notice</option>
             </select>
           </label>
-          <label className="login-field">
+          <label className="login-field workspace-field">
             <span className="access-label">Title</span>
             <input
-              className="login-input"
+              className="login-input workspace-control"
               maxLength={120}
               name="title"
               placeholder="What should partners know?"
@@ -382,10 +382,10 @@ export function AdminUpdatesManager({ initialUpdates }: { initialUpdates: Partne
               onChange={(event) => setField("title", event.target.value)}
             />
           </label>
-          <label className="login-field">
+          <label className="login-field workspace-field">
             <span className="access-label">Summary</span>
             <textarea
-              className="login-input update-summary-input"
+              className="login-input workspace-control update-summary-input"
               maxLength={280}
               name="summary"
               placeholder="Give partners the takeaway in one or two sentences."
@@ -395,10 +395,10 @@ export function AdminUpdatesManager({ initialUpdates }: { initialUpdates: Partne
               onChange={(event) => setField("summary", event.target.value)}
             />
           </label>
-          <label className="login-field">
+          <label className="login-field workspace-field">
             <span className="access-label">Details</span>
             <textarea
-              className="login-input update-body-input"
+              className="login-input workspace-control update-body-input"
               maxLength={6000}
               name="body"
               placeholder="Add the useful details, next steps, and timing."
@@ -409,10 +409,10 @@ export function AdminUpdatesManager({ initialUpdates }: { initialUpdates: Partne
             />
           </label>
           <div className="update-resource-fields">
-            <label className="login-field">
+            <label className="login-field workspace-field">
               <span className="access-label">Resource label <small>Optional</small></span>
               <input
-                className="login-input"
+                className="login-input workspace-control"
                 maxLength={80}
                 name="resourceLabel"
                 placeholder="Download sales guide"
@@ -421,10 +421,10 @@ export function AdminUpdatesManager({ initialUpdates }: { initialUpdates: Partne
                 onChange={(event) => setField("resourceLabel", event.target.value)}
               />
             </label>
-            <label className="login-field">
+            <label className="login-field workspace-field">
               <span className="access-label">Resource URL <small>Optional</small></span>
               <input
-                className="login-input"
+                className="login-input workspace-control"
                 name="resourceUrl"
                 placeholder="https://..."
                 type="url"
@@ -433,7 +433,7 @@ export function AdminUpdatesManager({ initialUpdates }: { initialUpdates: Partne
               />
             </label>
           </div>
-          <label className="update-pin-control">
+          <label className="workspace-row update-pin-control">
             <input
               checked={form.isPinned}
               name="isPinned"
@@ -453,7 +453,7 @@ export function AdminUpdatesManager({ initialUpdates }: { initialUpdates: Partne
           </fieldset>
 
           {selectedUpdate?.status === "archived" ? (
-            <div className="archived-update-note">
+            <div className="workspace-row archived-update-note">
               <strong>This update is archived</strong>
               <span>It is no longer visible to vendors. Republish it to restore the same message.</span>
               <button

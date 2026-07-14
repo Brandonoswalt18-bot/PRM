@@ -57,6 +57,14 @@ function getSupportStageState(
   return "pending";
 }
 
+function getSupportStatusTone(status: SupportRequestStatus) {
+  if (status === "resolved") {
+    return "status-pill-success";
+  }
+
+  return status === "open" ? "status-pill-warning" : "status-pill-neutral";
+}
+
 function buildSupportHref(
   activeQueue: "all" | "open" | "in_progress" | "resolved",
   requestId?: string
@@ -117,14 +125,14 @@ export function AdminSupportManager({
   }
 
   return (
-    <article className="workspace-card wide-card">
+    <article className="workspace-card workspace-panel wide-card">
       <div className="card-header-row">
         <div>
           <h3>Support operations queue</h3>
           <p>Keep support triage short. Open one request when you need the full message and history.</p>
         </div>
       </div>
-      <div className="queue-filter-row" aria-label="Support queue filters">
+      <div className="queue-filter-row workspace-filter-tabs" aria-label="Support queue filters">
         <Link
           aria-current={activeQueue === "all" ? "page" : undefined}
           className={`queue-filter-pill${activeQueue === "all" ? " queue-filter-pill-active" : ""}`}
@@ -159,7 +167,13 @@ export function AdminSupportManager({
         </Link>
       </div>
       {message ? <p className="table-note" aria-live="polite" role="status">{message}</p> : null}
-      {supportRequests.length === 0 ? <p className="table-note">No support requests in this queue.</p> : null}
+      {supportRequests.length === 0 ? (
+        <div className="workspace-row empty-state-card">
+          <span className="section-kicker">Queue clear</span>
+          <h3>No support requests in this queue.</h3>
+          <p>New vendor requests will appear here with their current response status.</p>
+        </div>
+      ) : null}
       <div className="stack-list">
         {supportRequests.map((request) => {
           const vendor = vendors.find((item) => item.id === request.vendorId);
@@ -168,7 +182,7 @@ export function AdminSupportManager({
           const isSelected = selectedRequestId === request.id;
 
           return (
-            <div className={`stack-card application-queue-card${isSelected ? " application-queue-card-selected" : ""}`} key={request.id}>
+            <div className={`workspace-row stack-card application-queue-card${isSelected ? " application-queue-card-selected" : ""}`} key={request.id}>
               <div className="stack-card-header">
                 <div>
                   <h3>
@@ -182,7 +196,9 @@ export function AdminSupportManager({
                   <p>{vendor?.companyName ?? "Unknown vendor"} · {titleCase(request.category)}</p>
                 </div>
                 <div className="stage-actions-topline">
-                  <span className="status-pill status-pill-neutral">{titleCase(request.status)}</span>
+                  <span className={`status-pill ${getSupportStatusTone(request.status)}`}>
+                    {titleCase(request.status)}
+                  </span>
                   <Link
                     className="button button-secondary"
                     href={buildSupportHref(activeQueue, isSelected ? undefined : request.id)}
@@ -217,19 +233,19 @@ export function AdminSupportManager({
                   </div>
                   <p className="stack-note">{request.message}</p>
                   <div className="detail-fact-grid">
-                    <div className="detail-fact">
+                    <div className="detail-fact workspace-kv">
                       <span>Created</span>
                       <strong>{new Date(request.createdAt).toLocaleDateString()}</strong>
                     </div>
-                    <div className="detail-fact">
+                    <div className="detail-fact workspace-kv">
                       <span>Updated</span>
                       <strong>{new Date(request.updatedAt).toLocaleDateString()}</strong>
                     </div>
-                    <div className="detail-fact">
+                    <div className="detail-fact workspace-kv">
                       <span>Vendor</span>
                       <strong>{vendor?.companyName ?? "Unknown vendor"}</strong>
                     </div>
-                    <div className="detail-fact">
+                    <div className="detail-fact workspace-kv">
                       <span>Status</span>
                       <strong>{titleCase(request.status)}</strong>
                     </div>
@@ -243,7 +259,7 @@ export function AdminSupportManager({
                   ) : null}
                   <div className="timeline-stack compact-timeline">
                     {timeline.map((entry) => (
-                      <div className="timeline-card" key={`${request.id}-${entry.timestamp}-${entry.title}`}>
+                      <div className="workspace-row timeline-card" key={`${request.id}-${entry.timestamp}-${entry.title}`}>
                         <div className="timeline-card-topline">
                           <strong>{entry.title}</strong>
                           <span className={`timeline-badge timeline-${entry.tone ?? "neutral"}`}>

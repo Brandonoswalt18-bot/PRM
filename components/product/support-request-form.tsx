@@ -69,17 +69,18 @@ export function SupportRequestForm() {
   }
 
   return (
-    <article className="workspace-card wide-card">
+    <article className="workspace-card workspace-panel">
       <div className="card-header-row">
         <div>
           <h3>Support request</h3>
           <p>Use this for deal questions, profile changes, portal access, or general help.</p>
         </div>
       </div>
-      <form className="cta-form" onSubmit={handleSubmit}>
-        <label className="form-field">
+      <form className="cta-form workspace-form" onSubmit={handleSubmit}>
+        <label className="form-field workspace-field">
           <span className="access-label">Subject</span>
           <input
+            className="workspace-control"
             maxLength={160}
             placeholder="Subject"
             type="text"
@@ -88,10 +89,10 @@ export function SupportRequestForm() {
             required
           />
         </label>
-        <label className="form-field">
+        <label className="form-field workspace-field">
           <span className="access-label">Category</span>
           <select
-            className="cta-select"
+            className="cta-select workspace-control"
             value={form.category}
             onChange={(event) => update("category", event.target.value as SupportRequestCategory)}
           >
@@ -102,10 +103,10 @@ export function SupportRequestForm() {
             ))}
           </select>
         </label>
-        <label className="form-field">
+        <label className="form-field workspace-field">
           <span className="access-label">Details</span>
           <textarea
-            className="cta-textarea"
+            className="cta-textarea workspace-control"
             maxLength={4000}
             placeholder="Describe what you need help with"
             rows={5}

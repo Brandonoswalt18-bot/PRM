@@ -23,6 +23,18 @@ function formatLabel(value: string) {
     .join(" ");
 }
 
+function getStatusTone(value: string) {
+  if (value === "active" || value === "closed_won" || value === "closed") {
+    return "status-pill-success";
+  }
+
+  if (value === "closed_lost" || value === "rejected") {
+    return "status-pill-danger";
+  }
+
+  return "status-pill-warning";
+}
+
 function buildStatementKey(periodKey: string, type: string) {
   return `${periodKey}:${type}`;
 }
@@ -114,15 +126,13 @@ export default async function VendorPayoutsPage({
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
-        title="Monthly RMR ledger"
+        title="Monthly RMR"
         subtitle="Track recurring monthly revenue by approved vendor and keep month-over-month totals tied back to underlying deals."
-        primaryLabel="Open deal review"
-        primaryHref="/app/deal-registrations"
       />
-      <div className="app-content">
+      <div className="app-content workspace-page">
         <MetricGrid metrics={metrics} />
-        <section className="dashboard-grid">
-          <article className="workspace-card wide-card">
+        <section className="workspace-layout workspace-layout-sidebar dashboard-grid">
+          <article className="workspace-card workspace-panel wide-card">
             <div className="card-header-row">
               <div>
                 <h3>Vendor RMR breakdown</h3>
@@ -138,11 +148,15 @@ export default async function VendorPayoutsPage({
                 <span>Latest statement</span>
               </div>
               {vendorRows.map((vendor) => (
-                <div className="table-row table-cols-5" key={vendor.id}>
+                <div className="workspace-row table-row table-cols-5" key={vendor.id}>
                   <span>{vendor.companyName}</span>
                   <span>{formatCurrency(vendor.currentRmr)}</span>
                   <span>{formatCurrency(vendor.forecastRmr)}</span>
-                  <span>{formatLabel(vendor.status)}</span>
+                  <span>
+                    <span className={`status-pill ${getStatusTone(vendor.status)}`}>
+                      {formatLabel(vendor.status)}
+                    </span>
+                  </span>
                   <span>
                     {vendor.statements[0] ? (
                       <Link
@@ -161,7 +175,7 @@ export default async function VendorPayoutsPage({
               ))}
             </div>
           </article>
-          <article className="workspace-card">
+          <article className="workspace-card workspace-panel">
             <h3>RMR review rules</h3>
             <ul>
               <li>Recognized totals come from closed won accounts only.</li>
@@ -173,8 +187,8 @@ export default async function VendorPayoutsPage({
           </article>
         </section>
         {selectedVendor && selectedStatement ? (
-          <section className="dashboard-grid">
-            <article className="workspace-card wide-card">
+          <section className="workspace-layout dashboard-grid">
+            <article className="workspace-card workspace-panel wide-card">
               <div className="card-header-row">
                 <div>
                   <h3>
@@ -200,9 +214,13 @@ export default async function VendorPayoutsPage({
                   <span>Detail</span>
                 </div>
                 {selectedStatementDeals.map((deal) => (
-                  <div className="table-row table-cols-6" key={deal.id}>
+                  <div className="workspace-row table-row table-cols-6" key={deal.id}>
                     <span>{deal.companyName}</span>
-                    <span>{formatLabel(deal.status)}</span>
+                    <span>
+                      <span className={`status-pill ${getStatusTone(deal.status)}`}>
+                        {formatLabel(deal.status)}
+                      </span>
+                    </span>
                     <span>{new Date(deal.updatedAt).toLocaleDateString()}</span>
                     <span>{formatCurrency(deal.monthlyRmr)}</span>
                     <span>{deal.hubspotDealId ? `#${deal.hubspotDealId}` : "Pending"}</span>
@@ -212,7 +230,7 @@ export default async function VendorPayoutsPage({
                   </div>
                 ))}
                 {selectedStatementDeals.length === 0 ? (
-                  <div className="table-row table-cols-6">
+                  <div className="workspace-row table-row table-cols-6">
                     <span>No deals matched this statement</span>
                     <span>Review pending</span>
                     <span>-</span>

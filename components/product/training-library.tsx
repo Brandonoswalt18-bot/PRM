@@ -10,18 +10,22 @@ export function TrainingLibrary({
   assets,
   emptyTitle,
   emptyMessage,
+  emptyIcon = "document",
   variant = "default",
 }: {
   assets: TrainingAsset[];
   emptyTitle: string;
   emptyMessage: string;
+  emptyIcon?: "video" | "document";
   variant?: "default" | "vendor";
 }) {
   if (variant === "vendor") {
     if (assets.length === 0) {
       return (
-        <div className="training-library-empty">
-          <span className="training-library-empty-icon" aria-hidden="true">PDF</span>
+        <div className="workspace-row training-library-empty">
+          <span className={`training-library-empty-icon is-${emptyIcon}`} aria-hidden="true">
+            {emptyIcon === "video" ? "▶" : "PDF"}
+          </span>
           <div>
             <span className="training-library-empty-label">Resource library</span>
             <h3>{emptyTitle}</h3>
@@ -41,7 +45,7 @@ export function TrainingLibrary({
               : `/api/training-assets/file?id=${asset.id}`;
 
           return (
-            <article className={`training-asset-card is-${asset.type}`} key={asset.id}>
+            <article className={`workspace-row training-asset-card is-${asset.type}`} key={asset.id}>
               <span className="training-asset-icon" aria-hidden="true">
                 {asset.type === "video" ? "▶" : "PDF"}
               </span>

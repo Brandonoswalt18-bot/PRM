@@ -11,10 +11,10 @@ export default async function VendorUpdatesPage() {
         workspace="VENDOR PORTAL"
         title="Updates"
         subtitle="Stay current on GoAccess products, partner resources, and important program notices."
-        primaryLabel={updates.length > 0 ? "Open latest update" : "Back to home"}
-        primaryHref={updates.length > 0 ? "#latest-update" : "/portal"}
+        primaryLabel={updates.length > 0 ? "Open latest update" : undefined}
+        primaryHref={updates.length > 0 ? "#latest-update" : undefined}
       />
-      <div className="app-content updates-page">
+      <div className="app-content workspace-page updates-page">
         <VendorUpdatesLibrary updates={updates} />
       </div>
     </>

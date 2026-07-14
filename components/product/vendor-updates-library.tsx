@@ -67,7 +67,7 @@ export function VendorUpdatesLibrary({ updates }: { updates: ClientPartnerUpdate
   if (!featuredUpdate) {
     return (
       <section className="updates-page-shell">
-        <div className="updates-empty-state updates-empty-state-vendor">
+        <div className="workspace-card workspace-panel updates-empty-state updates-empty-state-vendor">
           <span className="updates-empty-icon" aria-hidden="true">◎</span>
           <div>
             <span className="simple-eyebrow">Updates from GoAccess</span>
@@ -81,7 +81,7 @@ export function VendorUpdatesLibrary({ updates }: { updates: ClientPartnerUpdate
 
   return (
     <div className="updates-page-shell">
-      <article className={`featured-update-card is-${featuredUpdate.category}`} id="latest-update">
+      <article className={`workspace-card workspace-panel featured-update-card is-${featuredUpdate.category}`} id="latest-update">
         <div className="featured-update-accent" aria-hidden="true" />
         <div className="featured-update-content">
           <div className="update-card-meta">
@@ -105,7 +105,7 @@ export function VendorUpdatesLibrary({ updates }: { updates: ClientPartnerUpdate
         </div>
       </article>
 
-      <section className="updates-feed-panel" aria-labelledby="updates-feed-title">
+      <section className="workspace-card workspace-panel updates-feed-panel" aria-labelledby="updates-feed-title">
         <div className="updates-feed-header">
           <div>
             <span className="simple-eyebrow">Latest from GoAccess</span>
@@ -118,7 +118,7 @@ export function VendorUpdatesLibrary({ updates }: { updates: ClientPartnerUpdate
         {feedUpdates.length > 0 ? (
           <div className="vendor-update-feed">
             {feedUpdates.map((update) => (
-              <article className={`vendor-update-card is-${update.category}`} id={`update-${update.id}`} key={update.id}>
+              <article className={`workspace-row vendor-update-card is-${update.category}`} id={`update-${update.id}`} key={update.id}>
                 <div className="update-card-meta">
                   <span className={`update-category-pill is-${update.category}`}>
                     {CATEGORY_LABELS[update.category]}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { GoAccessLogo } from "@/components/brand/goaccess-logo";
+import { BrandedAuthShell } from "@/components/marketing/branded-auth-shell";
 
 type LoginPageProps = {
   searchParams?: Promise<{
@@ -31,61 +31,54 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const showError = Boolean(error);
 
   return (
-    <main className="login-shell auth-login-shell">
-      <div className="login-layout auth-login-layout">
-        <section aria-labelledby="login-title" className="login-card auth-login-card">
-          <Link aria-label="GoAccess home" className="approved-brand-link auth-login-brand" href="/">
-            <GoAccessLogo className="approved-brand-logo" priority />
-          </Link>
-          <div className="login-card-heading">
-            <h1 id="login-title">Sign in</h1>
-            <p>Enter your GoAccess portal credentials.</p>
-          </div>
-
-          <form action="/auth/login" className="login-form" method="post">
-            <label className="login-field">
-              <span>Email address or username</span>
-              <input
-                autoCapitalize="none"
-                autoComplete="username"
-                className="login-input"
-                name="email"
-                placeholder="name@company.com or username"
-                required
-                spellCheck={false}
-                type="text"
-              />
-            </label>
-            <label className="login-field">
-              <span>Password</span>
-              <input
-                autoComplete="current-password"
-                className="login-input"
-                name="password"
-                placeholder="Enter your password"
-                required
-                type="password"
-              />
-            </label>
-            {nextPath ? <input name="next" type="hidden" value={nextPath} /> : null}
-            <button className="button button-primary login-submit" type="submit">
-              Sign in
-            </button>
-          </form>
-
-          <p
-            className={`form-message ${showError ? "form-message-error" : ""}`.trim()}
-            aria-live="polite"
-          >
-            {message}
-          </p>
-
-          <div className="login-footer">
-            <span>Need vendor access?</span>
-            <Link href="/#application">Apply here</Link>
-          </div>
-        </section>
+    <BrandedAuthShell labelledBy="login-title">
+      <div className="login-card-heading">
+        <h1 id="login-title">Sign in</h1>
+        <p>Enter your GoAccess portal credentials.</p>
       </div>
-    </main>
+
+      <form action="/auth/login" className="login-form" method="post">
+        <label className="login-field">
+          <span>Email address or username</span>
+          <input
+            autoCapitalize="none"
+            autoComplete="username"
+            className="login-input"
+            name="email"
+            placeholder="name@company.com or username"
+            required
+            spellCheck={false}
+            type="text"
+          />
+        </label>
+        <label className="login-field">
+          <span>Password</span>
+          <input
+            autoComplete="current-password"
+            className="login-input"
+            name="password"
+            placeholder="Enter your password"
+            required
+            type="password"
+          />
+        </label>
+        {nextPath ? <input name="next" type="hidden" value={nextPath} /> : null}
+        <button className="button button-primary login-submit" type="submit">
+          Sign in
+        </button>
+      </form>
+
+      <p
+        className={`form-message ${showError ? "form-message-error" : ""}`.trim()}
+        aria-live="polite"
+      >
+        {message}
+      </p>
+
+      <div className="login-footer">
+        <span>Need vendor access?</span>
+        <Link href="/#application">Apply here</Link>
+      </div>
+    </BrandedAuthShell>
   );
 }

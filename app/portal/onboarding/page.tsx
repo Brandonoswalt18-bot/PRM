@@ -23,9 +23,10 @@ export default async function VendorOnboardingStatusPage() {
         }
         primaryLabel={legalComplete ? "Back to home" : "Complete agreements below"}
         primaryHref={legalComplete ? "/portal" : "#legal-agreements"}
+        actionVariant={legalComplete ? "back" : "primary"}
       />
-      <div className="app-content">
-        <section className="dashboard-grid dashboard-grid-single" id="legal-agreements">
+      <div className="app-content workspace-page">
+        <section className="workspace-layout" id="legal-agreements">
           <VendorNdaManager vendor={clientVendor} />
         </section>
       </div>

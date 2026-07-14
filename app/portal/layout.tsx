@@ -40,6 +40,7 @@ export default async function PartnerLayout({
 
   return (
     <WorkspaceLayout
+      homeHref="/portal"
       workspace="VENDOR PORTAL"
       navItems={legalComplete ? partnerNavigation : legalOnboardingNavigation}
       accountItems={legalComplete ? partnerAccountItems : undefined}

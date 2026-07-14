@@ -213,14 +213,14 @@ export function DealRegistrationForm() {
   }
 
   return (
-    <article className="workspace-card wide-card deal-registration-card">
+    <article className="workspace-card workspace-panel deal-registration-card">
       <div className="card-header-row">
         <div>
           <h2>Deal registration form</h2>
           <p>Share the community and contact details GoAccess needs to review and route this opportunity cleanly.</p>
         </div>
       </div>
-      <form className="cta-form deal-registration-form" noValidate onSubmit={handleSubmit}>
+      <form className="cta-form workspace-form deal-registration-form" noValidate onSubmit={handleSubmit}>
         {status === "error" ? (
           <div
             className="deal-form-error-summary"
@@ -242,9 +242,10 @@ export function DealRegistrationForm() {
           <legend>Community details</legend>
           <div className="field-grid">
             <div className="inline-form-grid">
-              <label className={`field-group ${errors.companyName ? "has-error" : ""}`.trim()}>
+              <label className={`field-group workspace-field ${errors.companyName ? "has-error" : ""}`.trim()}>
                 <FieldLabel>Community name</FieldLabel>
                 <input
+                  className="workspace-control"
                   {...getErrorProps("companyName", errors)}
                   maxLength={160}
                   name="companyName"
@@ -256,9 +257,10 @@ export function DealRegistrationForm() {
                 />
                 <FieldError errors={errors} field="companyName" />
               </label>
-              <label className={`field-group ${errors.communityAddress ? "has-error" : ""}`.trim()}>
+              <label className={`field-group workspace-field ${errors.communityAddress ? "has-error" : ""}`.trim()}>
                 <FieldLabel>Community address</FieldLabel>
                 <input
+                  className="workspace-control"
                   {...getErrorProps("communityAddress", errors)}
                   maxLength={300}
                   name="communityAddress"
@@ -271,9 +273,10 @@ export function DealRegistrationForm() {
                 <FieldError errors={errors} field="communityAddress" />
               </label>
             </div>
-            <label className={`field-group ${errors.domain ? "has-error" : ""}`.trim()}>
+            <label className={`field-group workspace-field ${errors.domain ? "has-error" : ""}`.trim()}>
               <FieldLabel optional>Community website or domain</FieldLabel>
               <input
+                className="workspace-control"
                 {...getErrorProps("domain", errors)}
                 maxLength={300}
                 name="domain"
@@ -285,9 +288,10 @@ export function DealRegistrationForm() {
               <FieldError errors={errors} field="domain" />
             </label>
             <div className="inline-form-grid">
-              <label className={`field-group ${errors.city ? "has-error" : ""}`.trim()}>
+              <label className={`field-group workspace-field ${errors.city ? "has-error" : ""}`.trim()}>
                 <FieldLabel>City</FieldLabel>
                 <input
+                  className="workspace-control"
                   {...getErrorProps("city", errors)}
                   maxLength={100}
                   name="city"
@@ -299,9 +303,10 @@ export function DealRegistrationForm() {
                 />
                 <FieldError errors={errors} field="city" />
               </label>
-              <label className={`field-group ${errors.state ? "has-error" : ""}`.trim()}>
+              <label className={`field-group workspace-field ${errors.state ? "has-error" : ""}`.trim()}>
                 <FieldLabel>State</FieldLabel>
                 <input
+                  className="workspace-control"
                   {...getErrorProps("state", errors)}
                   maxLength={100}
                   name="state"
@@ -321,9 +326,10 @@ export function DealRegistrationForm() {
           <legend>Primary contact</legend>
           <div className="field-grid">
             <div className="inline-form-grid">
-              <label className={`field-group ${errors.contactName ? "has-error" : ""}`.trim()}>
+              <label className={`field-group workspace-field ${errors.contactName ? "has-error" : ""}`.trim()}>
                 <FieldLabel>Contact name</FieldLabel>
                 <input
+                  className="workspace-control"
                   {...getErrorProps("contactName", errors)}
                   maxLength={120}
                   name="contactName"
@@ -335,9 +341,10 @@ export function DealRegistrationForm() {
                 />
                 <FieldError errors={errors} field="contactName" />
               </label>
-              <label className={`field-group ${errors.contactEmail ? "has-error" : ""}`.trim()}>
+              <label className={`field-group workspace-field ${errors.contactEmail ? "has-error" : ""}`.trim()}>
                 <FieldLabel>Contact email</FieldLabel>
                 <input
+                  className="workspace-control"
                   {...getErrorProps("contactEmail", errors)}
                   maxLength={254}
                   name="contactEmail"
@@ -350,9 +357,10 @@ export function DealRegistrationForm() {
                 <FieldError errors={errors} field="contactEmail" />
               </label>
             </div>
-            <label className={`field-group ${errors.contactPhone ? "has-error" : ""}`.trim()}>
+            <label className={`field-group workspace-field ${errors.contactPhone ? "has-error" : ""}`.trim()}>
               <FieldLabel>Contact phone</FieldLabel>
               <input
+                className="workspace-control"
                 {...getErrorProps("contactPhone", errors)}
                 autoComplete="tel"
                 maxLength={40}
@@ -371,9 +379,10 @@ export function DealRegistrationForm() {
         <fieldset className="deal-form-section">
           <legend>Opportunity details</legend>
           <div className="field-grid">
-            <label className={`field-group ${errors.productInterest ? "has-error" : ""}`.trim()}>
+            <label className={`field-group workspace-field ${errors.productInterest ? "has-error" : ""}`.trim()}>
               <FieldLabel>Product interest</FieldLabel>
               <input
+                className="workspace-control"
                 {...getErrorProps("productInterest", errors)}
                 maxLength={160}
                 name="productInterest"
@@ -385,10 +394,10 @@ export function DealRegistrationForm() {
               />
               <FieldError errors={errors} field="productInterest" />
             </label>
-            <label className="field-group">
+            <label className="field-group workspace-field">
               <FieldLabel>Opportunity notes</FieldLabel>
               <textarea
-                className="cta-textarea"
+                className="cta-textarea workspace-control"
                 maxLength={2000}
                 name="notes"
                 onChange={(event) => update("notes", event.target.value)}

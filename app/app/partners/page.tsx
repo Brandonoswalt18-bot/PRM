@@ -38,11 +38,6 @@ export default async function PartnersPage() {
       delta: "Legal onboarding still in progress",
     },
     {
-      label: "Credentials issued",
-      value: String(vendorRows.filter((vendor) => vendor.credentialsIssued).length),
-      delta: "Vendors that can enter the portal",
-    },
-    {
       label: "Recognized monthly RMR",
       value: formatCurrency(vendorRows.reduce((sum, vendor) => sum + vendor.currentRmr, 0)),
       delta: "Closed won recurring revenue across the vendor base",
@@ -53,15 +48,15 @@ export default async function PartnersPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR ADMIN"
-        title="Vendor roster"
+        title="Partners"
         subtitle="Review active vendor profiles, onboarding state, portal access, and current monthly recurring revenue contribution."
         primaryLabel="Review applications"
         primaryHref="/app/programs"
       />
-      <div className="app-content">
+      <div className="app-content workspace-page">
         <MetricGrid metrics={metrics} />
-        <section className="dashboard-grid">
-          <article className="workspace-card wide-card">
+        <section className="workspace-layout workspace-layout-sidebar dashboard-grid">
+          <article className="workspace-card workspace-panel">
             <div className="card-header-row">
               <div>
                 <h3>Vendor roster</h3>
@@ -77,7 +72,7 @@ export default async function PartnersPage() {
                 <span>Monthly RMR</span>
               </div>
               {vendorRows.map((vendor) => (
-                <div className="table-row table-cols-5" id={`vendor-${vendor.id}`} key={vendor.id}>
+                <div className="workspace-row table-row table-cols-5" id={`vendor-${vendor.id}`} key={vendor.id}>
                   <span>
                     <Link
                       href={`/app/programs?application=${encodeURIComponent(vendor.applicationId)}#application-${encodeURIComponent(vendor.applicationId)}`}
@@ -87,21 +82,41 @@ export default async function PartnersPage() {
                   </span>
                   <span>{[vendor.city, vendor.state].filter(Boolean).join(", ") || vendor.region}</span>
                   <span>
-                    {formatVendorStatusLabel(vendor.status)} · NDA {formatNdaStatusLabel(vendor.ndaStatus)} · Terms {vendor.termsAcceptedAt ? "accepted" : "pending"}
+                    <span
+                      className={`status-pill ${
+                        vendor.ndaStatus === "signed" && vendor.termsAcceptedAt
+                          ? "status-pill-success"
+                          : "status-pill-warning"
+                      }`}
+                    >
+                      {formatVendorStatusLabel(vendor.status)} · NDA {formatNdaStatusLabel(vendor.ndaStatus)} · Terms {vendor.termsAcceptedAt ? "accepted" : "pending"}
+                    </span>
                   </span>
-                  <span>{formatPortalAccessLabel(vendor.portalAccess)}</span>
+                  <span>
+                    <span
+                      className={`status-pill ${
+                        vendor.portalAccess === "active"
+                          ? "status-pill-success"
+                          : vendor.portalAccess === "invited"
+                            ? "status-pill-warning"
+                            : "status-pill-neutral"
+                      }`}
+                    >
+                      {formatPortalAccessLabel(vendor.portalAccess)}
+                    </span>
+                  </span>
                   <span>{formatCurrency(vendor.currentRmr)}</span>
                 </div>
               ))}
               {vendorRows.length === 0 ? (
-                <div className="empty-state-card">
+                <div className="workspace-row empty-state-card">
                   <strong>No approved vendors yet.</strong>
                   <p>Approved applications will appear here after the onboarding record is created.</p>
                 </div>
               ) : null}
             </div>
           </article>
-          <article className="workspace-card">
+          <article className="workspace-card workspace-panel">
             <h3>Roster checks</h3>
             <ul>
               <li>Only approved vendors should move into NDA and portal invite steps.</li>

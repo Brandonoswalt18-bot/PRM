@@ -159,6 +159,21 @@ function getApplicationStepSummary(application: VendorApplication, vendor?: Clie
   return "The vendor is fully onboarded and already active in the portal.";
 }
 
+function getApplicationStatusTone(
+  application: VendorApplication,
+  vendor?: ClientApprovedVendor,
+) {
+  if (application.status === "rejected") {
+    return "status-pill-danger";
+  }
+
+  if (application.status === "credentials_issued" && vendor?.portalAccess === "active") {
+    return "status-pill-success";
+  }
+
+  return "status-pill-warning";
+}
+
 function buildProgramsHref(activeQueue: "all" | "pending" | "onboarding", applicationId?: string) {
   const params = new URLSearchParams();
 
@@ -292,7 +307,7 @@ export function AdminApplicationManager({
   }
 
   return (
-    <article className="workspace-card wide-card">
+    <article className="workspace-card workspace-panel wide-card">
       <div className="card-header-row">
         <div>
           <span className="stack-section-label">Applications</span>
@@ -300,7 +315,7 @@ export function AdminApplicationManager({
           <p>Scan the queue fast, then open one partner when you need the full NDA, credential, and email trail.</p>
         </div>
       </div>
-      <div className="queue-filter-row" aria-label="Application queue filters">
+      <div className="queue-filter-row workspace-filter-tabs" aria-label="Application queue filters">
         <Link
           aria-current={activeQueue === "all" ? "page" : undefined}
           className={`queue-filter-pill${activeQueue === "all" ? " queue-filter-pill-active" : ""}`}
@@ -328,7 +343,7 @@ export function AdminApplicationManager({
       </div>
       {message ? <p className="table-note" aria-live="polite" role="status">{message}</p> : null}
       {applications.length === 0 ? (
-        <div className="empty-state-card">
+        <div className="workspace-row empty-state-card">
           <span className="section-kicker">Queue clear</span>
           <h3>No applications in this queue.</h3>
           <p>When new partner applications arrive, they will appear here with the next step called out automatically.</p>
@@ -362,7 +377,7 @@ export function AdminApplicationManager({
 
             return (
               <div
-                className={`stack-card application-queue-card${isSelected ? " application-queue-card-selected" : ""}`}
+                className={`workspace-row stack-card application-queue-card${isSelected ? " application-queue-card-selected" : ""}`}
                 id={`application-${application.id}`}
                 key={application.id}
               >
@@ -380,7 +395,7 @@ export function AdminApplicationManager({
                     </p>
                   </div>
                   <div className="stage-actions-topline">
-                    <span className={`status-pill ${isRejected ? "status-pill-danger" : "status-pill-neutral"}`}>
+                    <span className={`status-pill ${getApplicationStatusTone(resolvedApplication, vendor)}`}>
                       {isRejected ? "Declined" : currentStepLabel}
                     </span>
                     <Link className="button button-secondary" href={buildProgramsHref(activeQueue, isSelected ? undefined : application.id)}>
@@ -405,7 +420,7 @@ export function AdminApplicationManager({
                 <p className="stack-note">{actionNote}</p>
                 {isSelected ? (
                   <>
-                    <div className="detail-banner">
+                    <div className="workspace-layout workspace-layout-balanced detail-banner">
                       <div>
                         <span className="detail-banner-label">Current stage</span>
                         <strong>{currentStepLabel}</strong>
@@ -446,31 +461,31 @@ export function AdminApplicationManager({
                       </button>
                     </div>
                     <div className="detail-fact-grid">
-                      <div className="detail-fact">
+                      <div className="detail-fact workspace-kv">
                         <span>Submitted</span>
                         <strong>{createdLabel}</strong>
                       </div>
-                      <div className="detail-fact">
+                      <div className="detail-fact workspace-kv">
                         <span>Contact</span>
                         <strong>{resolvedApplication.primaryContactName}</strong>
                       </div>
-                      <div className="detail-fact">
+                      <div className="detail-fact workspace-kv">
                         <span>Vendor stage</span>
                         <strong>{vendor ? formatVendorStatusLabel(vendor.status) : "Not created"}</strong>
                       </div>
-                      <div className="detail-fact">
+                      <div className="detail-fact workspace-kv">
                         <span>NDA</span>
                         <strong>{vendor ? formatNdaStatusLabel(vendor.ndaStatus) : "Not started"}</strong>
                       </div>
-                      <div className="detail-fact">
+                      <div className="detail-fact workspace-kv">
                         <span>Partner Agreement</span>
                         <strong>{vendor?.termsAcceptedAt ? "Accepted" : "Pending"}</strong>
                       </div>
-                      <div className="detail-fact">
+                      <div className="detail-fact workspace-kv">
                         <span>Portal invite</span>
                         <strong>{vendor?.credentialsIssued ? "Sent" : "Pending"}</strong>
                       </div>
-                      <div className="detail-fact">
+                      <div className="detail-fact workspace-kv">
                         <span>Portal access</span>
                         <strong>{vendor ? formatPortalAccessLabel(vendor.portalAccess) : "Not ready"}</strong>
                       </div>
@@ -532,7 +547,7 @@ export function AdminApplicationManager({
                     ) : null}
                     <div className="timeline-stack compact-timeline">
                       {timeline.map((entry) => (
-                        <div className="timeline-card" key={`${application.id}-${entry.timestamp}-${entry.title}`}>
+                        <div className="workspace-row timeline-card" key={`${application.id}-${entry.timestamp}-${entry.title}`}>
                           <div className="timeline-card-topline">
                             <strong>{entry.title}</strong>
                             <span className={`timeline-badge timeline-${entry.tone ?? "neutral"}`}>

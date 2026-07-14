@@ -5,7 +5,7 @@ import { DemoRequestForm } from "@/components/marketing/demo-request-form";
 export function MarketingPage() {
   return (
     <div className="site-shell public-shell public-application-shell">
-      <header className="topbar topbar-minimal">
+      <header className="topbar topbar-minimal public-container">
         <Link aria-label="GoAccess home" className="approved-brand-link" href="/">
           <GoAccessLogo className="approved-brand-logo" priority />
         </Link>
@@ -15,7 +15,7 @@ export function MarketingPage() {
         </nav>
       </header>
 
-      <main className="public-application-main">
+      <main className="public-application-main public-container">
         <section className="public-application-intro">
           <span className="access-label">Vendor application</span>
           <h1>Apply to become a GoAccess vendor</h1>

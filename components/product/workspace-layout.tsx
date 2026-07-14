@@ -20,6 +20,7 @@ type WorkspaceLayoutProps = {
   accountItems?: WorkspaceAccountItem[];
   session: WorkspaceSession;
   globalSearchRecords?: GlobalSearchRecord[];
+  homeHref?: string;
   children: ReactNode;
 };
 
@@ -69,6 +70,7 @@ export function WorkspaceLayout({
   accountItems = [],
   session,
   globalSearchRecords,
+  homeHref = "/",
   children,
 }: WorkspaceLayoutProps) {
   const pathname = usePathname();
@@ -77,9 +79,6 @@ export function WorkspaceLayout({
   const mobileCloseRef = useRef<HTMLButtonElement | null>(null);
   const sidebarRef = useRef<HTMLElement | null>(null);
   const sessionCardRef = useRef<HTMLDetailsElement | null>(null);
-  const activeItem = navItems.find((item) => isActivePath(pathname, item.href));
-  const activeAccountItem = accountItems.find((item) => isActivePath(pathname, item.href));
-  const activePageLabel = activeItem?.label ?? activeAccountItem?.label ?? navItems[0]?.label ?? workspace;
   const navGroups = navItems.reduce<Array<{ label: string; items: WorkspaceNavItem[] }>>(
     (groups, item) => {
       const currentGroup = groups.find((group) => group.label === item.group);
@@ -199,7 +198,7 @@ export function WorkspaceLayout({
       >
         <div className="app-sidebar-top">
           <div>
-            <Link aria-label="GoAccess home" className="approved-brand-link" href="/">
+            <Link aria-label={`${workspace} home`} className="approved-brand-link" href={homeHref}>
               <GoAccessLogo className="approved-brand-logo approved-brand-logo-workspace" priority />
             </Link>
             <div className="sidebar-label">{workspace}</div>
@@ -309,11 +308,11 @@ export function WorkspaceLayout({
             </svg>
           </button>
           <div className="mobile-workspace-copy">
-            <span className="mobile-workspace-label">{workspace}</span>
-            <strong className="mobile-workspace-title">{activePageLabel}</strong>
+            <span className="mobile-workspace-label">GoAccess</span>
+            <strong className="mobile-workspace-title">{workspace}</strong>
           </div>
         </div>
-        {globalSearchRecords && globalSearchRecords.length > 0 ? (
+        {globalSearchRecords ? (
           <GlobalWorkspaceSearch
             placeholder="Search deals, vendors, or applications"
             records={globalSearchRecords}

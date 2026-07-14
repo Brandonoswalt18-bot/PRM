@@ -4,8 +4,9 @@ type WorkspacePageHeaderProps = {
   workspace: string;
   title: string;
   subtitle: string;
-  primaryLabel: string;
+  primaryLabel?: string;
   primaryHref?: string;
+  actionVariant?: "primary" | "secondary" | "back";
 };
 
 export function WorkspacePageHeader({
@@ -14,9 +15,13 @@ export function WorkspacePageHeader({
   subtitle,
   primaryLabel,
   primaryHref,
+  actionVariant = "primary",
 }: WorkspacePageHeaderProps) {
+  const actionClassName =
+    actionVariant === "primary" ? "button button-primary" : "button button-secondary";
+
   return (
-    <header className="app-topbar">
+    <header className={`app-topbar${primaryLabel ? "" : " is-actionless"}`}>
       <div className="app-topbar-main">
         <div className="app-title-copy">
           <span className="app-workspace-label">{workspace}</span>
@@ -24,12 +29,19 @@ export function WorkspacePageHeader({
           <p className="app-subtitle">{subtitle}</p>
         </div>
       </div>
-      <div className="app-topbar-actions">
-        <Link className="button button-primary" href={primaryHref ?? "#"} prefetch={false}>
-          <span>{primaryLabel}</span>
-          <span aria-hidden="true" className="button-arrow">→</span>
-        </Link>
-      </div>
+      {primaryLabel ? (
+        <div className="app-topbar-actions">
+          <Link className={actionClassName} href={primaryHref ?? "#"} prefetch={false}>
+            {actionVariant === "back" ? (
+              <span aria-hidden="true" className="button-arrow button-arrow-back">←</span>
+            ) : null}
+            <span>{primaryLabel}</span>
+            {actionVariant !== "back" ? (
+              <span aria-hidden="true" className="button-arrow">→</span>
+            ) : null}
+          </Link>
+        </div>
+      ) : null}
     </header>
   );
 }

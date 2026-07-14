@@ -71,21 +71,23 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
     : LEGAL_AGREEMENTS.terms.url;
 
   return (
-    <article className="workspace-card wide-card">
+    <article className="workspace-card workspace-panel">
       <div className="card-header-row">
         <div>
           <span className="section-kicker">Required legal onboarding</span>
-          <h3>Review and accept both agreements</h3>
+          <h3>Review and accept both documents</h3>
           <p>Both PDFs are hosted by GoAccess. Accepted copies are automatically completed with your company, signature, and recorded acceptance date.</p>
         </div>
       </div>
 
       <div className="legal-acceptance-grid">
-        <section className={`stack-card legal-acceptance-card${ndaComplete ? " is-complete" : ""}`}>
+        <section className={`workspace-row stack-card legal-acceptance-card${ndaComplete ? " is-complete" : ""}`}>
           <div className="onboarding-step-heading">
             <span className="onboarding-step-number">1</span>
             <div>
-              <span className="onboarding-step-status">{ndaComplete ? "Accepted" : "Required"}</span>
+              <span className={`onboarding-step-status status-pill ${ndaComplete ? "status-pill-success" : "status-pill-warning"}`}>
+                {ndaComplete ? "Accepted" : "Required"}
+              </span>
               <h3>Non-Disclosure Agreement</h3>
             </div>
           </div>
@@ -110,7 +112,7 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
             </p>
           ) : (
             <form
-              className="onboarding-form"
+              className="onboarding-form workspace-form"
               onSubmit={(event) => {
                 event.preventDefault();
                 void submitAcceptance(
@@ -122,13 +124,13 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
               }}
             >
               <div className="inline-form-grid">
-                <label className="login-field">
+                <label className="login-field workspace-field">
                   <span>Full name</span>
-                  <input className="login-input" maxLength={120} required type="text" value={ndaAcceptedBy} onChange={(event) => setNdaAcceptedBy(event.target.value)} />
+                  <input className="login-input workspace-control" maxLength={120} required type="text" value={ndaAcceptedBy} onChange={(event) => setNdaAcceptedBy(event.target.value)} />
                 </label>
-                <label className="login-field">
+                <label className="login-field workspace-field">
                   <span>Title</span>
-                  <input className="login-input" maxLength={120} placeholder="Owner, President, Director..." required type="text" value={ndaAcceptedTitle} onChange={(event) => setNdaAcceptedTitle(event.target.value)} />
+                  <input className="login-input workspace-control" maxLength={120} placeholder="Owner, President, Director..." required type="text" value={ndaAcceptedTitle} onChange={(event) => setNdaAcceptedTitle(event.target.value)} />
                 </label>
               </div>
               <label className="onboarding-checkbox">
@@ -145,11 +147,13 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
           )}
         </section>
 
-        <section className={`stack-card legal-acceptance-card${termsComplete ? " is-complete" : ""}`}>
+        <section className={`workspace-row stack-card legal-acceptance-card${termsComplete ? " is-complete" : ""}`}>
           <div className="onboarding-step-heading">
             <span className="onboarding-step-number">2</span>
             <div>
-              <span className="onboarding-step-status">{termsComplete ? "Accepted" : "Required"}</span>
+              <span className={`onboarding-step-status status-pill ${termsComplete ? "status-pill-success" : "status-pill-warning"}`}>
+                {termsComplete ? "Accepted" : "Required"}
+              </span>
               <h3>Partner Service Agreement</h3>
             </div>
           </div>
@@ -174,7 +178,7 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
             </p>
           ) : (
             <form
-              className="onboarding-form"
+              className="onboarding-form workspace-form"
               onSubmit={(event) => {
                 event.preventDefault();
                 void submitAcceptance(
@@ -186,13 +190,13 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
               }}
             >
               <div className="inline-form-grid">
-                <label className="login-field">
+                <label className="login-field workspace-field">
                   <span>Full name</span>
-                  <input className="login-input" maxLength={120} required type="text" value={termsAcceptedBy} onChange={(event) => setTermsAcceptedBy(event.target.value)} />
+                  <input className="login-input workspace-control" maxLength={120} required type="text" value={termsAcceptedBy} onChange={(event) => setTermsAcceptedBy(event.target.value)} />
                 </label>
-                <label className="login-field">
+                <label className="login-field workspace-field">
                   <span>Title</span>
-                  <input className="login-input" maxLength={120} placeholder="Owner, President, Director..." required type="text" value={termsAcceptedTitle} onChange={(event) => setTermsAcceptedTitle(event.target.value)} />
+                  <input className="login-input workspace-control" maxLength={120} placeholder="Owner, President, Director..." required type="text" value={termsAcceptedTitle} onChange={(event) => setTermsAcceptedTitle(event.target.value)} />
                 </label>
               </div>
               <label className="onboarding-checkbox">

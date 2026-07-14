@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { MetricGrid } from "@/components/product/product-page-sections";
+import { VendorDealStatusPill } from "@/components/product/vendor-deal-status-pill";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
-import { formatVendorDealStatusLabel } from "@/lib/goaccess-copy";
 import { listDeals } from "@/lib/goaccess-store";
 import { formatDealLocation } from "@/lib/deal-registration";
-import type { DealStatus } from "@/types/goaccess";
 
 function formatShortDate(value: string) {
   return new Date(value).toLocaleDateString("en-US", {
@@ -13,22 +11,6 @@ function formatShortDate(value: string) {
     day: "numeric",
     year: "numeric",
   });
-}
-
-function getStatusTone(status: DealStatus) {
-  if (status === "approved" || status === "closed_won" || status === "synced_to_hubspot") {
-    return "status-pill-success";
-  }
-
-  if (status === "rejected" || status === "closed_lost") {
-    return "status-pill-danger";
-  }
-
-  if (status === "submitted" || status === "under_review") {
-    return "status-pill-warning";
-  }
-
-  return "status-pill-neutral";
 }
 
 export default async function PartnerDealsPage() {
@@ -67,9 +49,17 @@ export default async function PartnerDealsPage() {
         primaryLabel="Register a deal"
         primaryHref="/portal/deals/new"
       />
-      <div className="app-content">
-        <MetricGrid metrics={metrics} />
-        <article className="simple-panel">
+      <div className="app-content workspace-page">
+        <section className="portal-summary-strip workspace-panel" aria-label="Deal summary">
+          {metrics.map((metric) => (
+            <article className="portal-summary-item" key={metric.label}>
+              <span>{metric.label}</span>
+              <strong>{metric.value}</strong>
+              <small>{metric.delta}</small>
+            </article>
+          ))}
+        </section>
+        <article className="workspace-card workspace-panel simple-panel">
           <div className="simple-panel-header">
             <div>
               <span className="simple-eyebrow">History</span>
@@ -81,7 +71,7 @@ export default async function PartnerDealsPage() {
             <div className="simple-deal-list">
               {deals.map((deal) => (
                 <Link
-                  className="simple-deal-row partner-deal-row"
+                  className="workspace-row simple-deal-row partner-deal-row"
                   href={`/portal/deals/${deal.id}`}
                   key={deal.id}
                   prefetch={false}
@@ -92,9 +82,7 @@ export default async function PartnerDealsPage() {
                       {formatDealLocation(deal)} · Submitted {formatShortDate(deal.createdAt)}
                     </span>
                   </div>
-                  <span className={`status-pill ${getStatusTone(deal.status)}`}>
-                    {formatVendorDealStatusLabel(deal.status)}
-                  </span>
+                  <VendorDealStatusPill status={deal.status} />
                   <span aria-hidden="true" className="simple-row-arrow">→</span>
                 </Link>
               ))}

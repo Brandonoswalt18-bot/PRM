@@ -1,4 +1,4 @@
-import { MetricGrid, TimelineSection } from "@/components/product/product-page-sections";
+import { MetricGrid } from "@/components/product/product-page-sections";
 import { SupportRequestForm } from "@/components/product/support-request-form";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
@@ -42,13 +42,14 @@ export default async function PartnerSupportPage() {
         primaryLabel="Open support request"
         primaryHref="#support-request-form"
       />
-      <div className="app-content">
+      <div className="app-content workspace-page">
         <MetricGrid metrics={metrics} />
-        <section className="dashboard-grid">
-          <div id="support-request-form">
+        <section className="workspace-layout workspace-layout-sidebar">
+          <div className="workspace-side-stack" id="support-request-form">
             <SupportRequestForm />
           </div>
-          <article className="workspace-card">
+          <article className="workspace-card workspace-panel">
+            <span className="section-kicker">Help topics</span>
             <h3>Support categories</h3>
             <ul>
               <li>Deal registration questions</li>
@@ -58,17 +59,36 @@ export default async function PartnerSupportPage() {
             </ul>
           </article>
         </section>
-        <section className="dashboard-grid">
-          {supportRequests.slice(0, 4).map((request) => {
-            return (
-              <TimelineSection
-                key={request.id}
-                title={request.subject}
-                description={formatVendorSupportCategoryLabel(request.category)}
-                entries={buildSupportTimeline(request)}
-              />
-            );
-          })}
+        <section className="workspace-layout">
+          {supportRequests.length > 0 ? supportRequests.slice(0, 4).map((request) => (
+            <article className="workspace-card workspace-panel" key={request.id}>
+              <div className="card-header-row">
+                <div>
+                  <span className="section-kicker">Support history</span>
+                  <h3>{request.subject}</h3>
+                  <p>{formatVendorSupportCategoryLabel(request.category)}</p>
+                </div>
+              </div>
+              <div className="timeline-stack">
+                {buildSupportTimeline(request).map((entry) => (
+                  <div className="workspace-row timeline-card" key={`${entry.timestamp}-${entry.title}`}>
+                    <div className="timeline-card-topline">
+                      <strong>{entry.title}</strong>
+                      <span className={`timeline-badge timeline-${entry.tone ?? "neutral"}`}>
+                        {new Date(entry.timestamp).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p>{entry.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </article>
+          )) : (
+            <article className="workspace-card workspace-panel simple-empty-state">
+              <h3>No support requests yet</h3>
+              <p>Your submitted requests and GoAccess responses will appear here.</p>
+            </article>
+          )}
         </section>
       </div>
     </>

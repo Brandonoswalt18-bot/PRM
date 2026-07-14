@@ -212,13 +212,15 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
   await expect(agreementsLink).toBeVisible();
   await agreementsLink.click();
   await expect(page).toHaveURL(/\/portal\/onboarding$/);
-  await expect(page.getByRole("heading", { name: "Agreements" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Agreements", exact: true })).toBeVisible();
   await expect(vendorNavigation.getByRole("link", { name: "Agreements" })).toHaveAttribute(
     "aria-current",
     "page",
   );
   await page.goto("/portal");
-  await expect(page.getByRole("link", { name: "Training" })).toBeVisible();
+  await expect(
+    vendorNavigation.getByRole("link", { name: "Training", exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole("heading", { name: "Learn at your own pace" })).toBeVisible();
   await expect(page.locator("body")).not.toContainText(/RMR|earnings|payout/i);
   await page.getByLabel("Account menu for Jordan Lee").click();
@@ -376,7 +378,7 @@ test("unsigned vendor is limited to required legal onboarding", async ({ page })
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/portal\/onboarding$/);
 
-  await expect(page.getByRole("heading", { name: "Agreements" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Agreements", exact: true })).toBeVisible();
   const legalStatus = page.locator("#legal-agreements");
   await expect(legalStatus.getByRole("link", { name: "View NDA PDF" })).toHaveAttribute(
     "href", "/legal/goaccess-non-disclosure-agreement.pdf",
@@ -650,7 +652,11 @@ test("vendor mobile navigation keeps grouped destinations accessible", async ({ 
   await page.waitForLoadState("networkidle");
 
   await page.getByRole("button", { name: "Open navigation" }).click();
-  await expect(page.getByRole("button", { name: "Close navigation" })).toBeFocused();
+  await expect(
+    page
+      .getByRole("dialog", { name: "VENDOR PORTAL navigation" })
+      .getByRole("button", { name: "Close navigation" }),
+  ).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Open navigation" })).toBeFocused();
   await expect(page.locator("#workspace-navigation")).not.toHaveClass(/is-mobile-open/);

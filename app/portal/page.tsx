@@ -1,16 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { VendorDealStatusPill } from "@/components/product/vendor-deal-status-pill";
 import { VendorUpdatesPreview } from "@/components/product/vendor-updates-preview";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
-import { formatVendorDealStatusLabel } from "@/lib/goaccess-copy";
 import {
   getVendorById,
   listDeals,
   listPublishedPartnerUpdates,
   listTrainingAssets,
 } from "@/lib/goaccess-store";
-import type { DealStatus } from "@/types/goaccess";
 
 function formatShortDate(value: string) {
   return new Date(value).toLocaleDateString("en-US", {
@@ -18,22 +17,6 @@ function formatShortDate(value: string) {
     day: "numeric",
     year: "numeric",
   });
-}
-
-function getStatusTone(status: DealStatus) {
-  if (status === "approved" || status === "closed_won" || status === "synced_to_hubspot") {
-    return "status-pill-success";
-  }
-
-  if (status === "rejected" || status === "closed_lost") {
-    return "status-pill-danger";
-  }
-
-  if (status === "submitted" || status === "under_review") {
-    return "status-pill-warning";
-  }
-
-  return "status-pill-neutral";
 }
 
 export default async function PartnerPortalPage() {
@@ -73,8 +56,8 @@ export default async function PartnerPortalPage() {
         primaryLabel="Register a deal"
         primaryHref="/portal/deals/new"
       />
-      <div className="app-content simple-dashboard">
-        <section className="portal-summary-strip" aria-label="Deal summary">
+      <div className="app-content workspace-page simple-dashboard">
+        <section className="portal-summary-strip workspace-panel" aria-label="Deal summary">
           <Link className="portal-summary-item" href="/portal/deals" prefetch={false}>
             <span>Registered deals</span>
             <strong>{deals.length}</strong>
@@ -92,8 +75,8 @@ export default async function PartnerPortalPage() {
           </Link>
         </section>
 
-        <section className="simple-dashboard-grid">
-          <article className="simple-panel simple-panel-primary">
+        <section className="simple-dashboard-grid workspace-layout workspace-layout-sidebar">
+          <article className="workspace-card workspace-panel simple-panel simple-panel-primary">
             <div className="simple-panel-header">
               <div>
                 <span className="simple-eyebrow">Deals</span>
@@ -110,7 +93,7 @@ export default async function PartnerPortalPage() {
               <div className="simple-deal-list">
                 {recentDeals.map((deal) => (
                   <Link
-                    className="simple-deal-row partner-deal-row"
+                    className="workspace-row simple-deal-row partner-deal-row"
                     href={`/portal/deals/${deal.id}`}
                     key={deal.id}
                     prefetch={false}
@@ -122,9 +105,7 @@ export default async function PartnerPortalPage() {
                         {` · Updated ${formatShortDate(deal.updatedAt)}`}
                       </span>
                     </div>
-                    <span className={`status-pill ${getStatusTone(deal.status)}`}>
-                      {formatVendorDealStatusLabel(deal.status)}
-                    </span>
+                    <VendorDealStatusPill status={deal.status} />
                     <span className="simple-row-arrow" aria-hidden="true">→</span>
                   </Link>
                 ))}
@@ -140,7 +121,7 @@ export default async function PartnerPortalPage() {
             )}
           </article>
 
-          <aside className="simple-panel simple-side-panel" aria-labelledby="partner-flow-title">
+          <aside className="workspace-card workspace-panel simple-panel simple-side-panel" aria-labelledby="partner-flow-title">
             <span className="simple-eyebrow">Simple workflow</span>
             <h2 id="partner-flow-title">What happens next</h2>
             <ol className="simple-step-list">
@@ -171,7 +152,7 @@ export default async function PartnerPortalPage() {
 
         <VendorUpdatesPreview updates={partnerUpdates} />
 
-        <section className="simple-panel simple-training-panel" aria-labelledby="training-preview-title">
+        <section className="workspace-card workspace-panel simple-panel simple-training-panel" aria-labelledby="training-preview-title">
           <div className="simple-panel-header">
             <div>
               <span className="simple-eyebrow">Training</span>
@@ -194,7 +175,7 @@ export default async function PartnerPortalPage() {
 
                 return (
                   <a
-                    className="training-preview-card"
+                    className="workspace-row training-preview-card"
                     href={href}
                     key={asset.id}
                     rel="noreferrer"

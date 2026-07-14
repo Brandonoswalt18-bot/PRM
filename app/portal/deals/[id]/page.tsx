@@ -1,10 +1,5 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  MetricGrid,
-  ProfileRow,
-  TableSection,
-  TimelineSection,
-} from "@/components/product/product-page-sections";
 import { VendorDealAgreementManager } from "@/components/product/vendor-deal-agreement-manager";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
@@ -82,6 +77,8 @@ export default async function PartnerDealDetailPage({
     profileRows.push({ label: "GoAccess decision reason", value: deal.declineReason });
   }
 
+  const timelineEntries = buildVendorDealTimeline(deal);
+
   return (
     <>
       <WorkspacePageHeader
@@ -90,10 +87,11 @@ export default async function PartnerDealDetailPage({
         subtitle={`Review the registration for ${formatDealLocation(deal)}, its current status, and any next steps.`}
         primaryLabel="Back to deal history"
         primaryHref="/portal/deals"
+        actionVariant="back"
       />
-      <div className="app-content">
+      <div className="app-content workspace-page">
         {deal.status === "rejected" ? (
-          <article className="workspace-card wide-card decision-notice decision-notice-danger">
+          <article className="workspace-card workspace-panel wide-card decision-notice decision-notice-danger">
             <span className="section-kicker">GoAccess decision</span>
             <h3>This registration was declined.</h3>
             <p>{deal.declineReason ?? "Contact GoAccess support if you need more information about this decision."}</p>
@@ -102,21 +100,40 @@ export default async function PartnerDealDetailPage({
             ) : null}
           </article>
         ) : null}
-        <MetricGrid metrics={metrics} />
-        <section className="dashboard-grid">
-          <TableSection
-            title="Deal record"
-            description="The account details GoAccess is using to review and route this opportunity."
-            actionLabel="Open support"
-            actionHref="/portal/support"
-            headers={["Field", "Value"]}
-            rows={profileRows}
-            renderRow={ProfileRow}
-          />
+        <section className="portal-summary-strip workspace-panel" aria-label="Deal summary">
+          {metrics.map((metric) => (
+            <article className="portal-summary-item" key={metric.label}>
+              <span>{metric.label}</span>
+              <strong>{metric.value}</strong>
+              <small>{metric.delta}</small>
+            </article>
+          ))}
         </section>
-        <section className="dashboard-grid">
+        <section className="workspace-layout">
+          <article className="workspace-card workspace-panel">
+            <div className="card-header-row">
+              <div>
+                <span className="section-kicker">Reference</span>
+                <h3>Deal record</h3>
+                <p>The account details GoAccess is using to review and route this opportunity.</p>
+              </div>
+              <Link href="/portal/support" className="button button-secondary" prefetch={false}>
+                Open support
+              </Link>
+            </div>
+            <dl className="workspace-kv">
+              {profileRows.map((row) => (
+                <div className="workspace-row" key={row.label}>
+                  <dt>{row.label}</dt>
+                  <dd>{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </article>
+        </section>
+        <section className="workspace-layout">
           {deal.agreementStatus === "not_started" ? (
-            <article className="workspace-card wide-card">
+            <article className="workspace-card workspace-panel wide-card">
               <span className="section-kicker">Dealer agreement</span>
               <h3>No action needed yet</h3>
               <p>GoAccess will add the dealer agreement when it is ready for your review and signature.</p>
@@ -125,12 +142,29 @@ export default async function PartnerDealDetailPage({
             <VendorDealAgreementManager deal={toClientVendorDealRegistration(deal)} />
           )}
         </section>
-        <section className="dashboard-grid">
-          <TimelineSection
-            title="Status timeline"
-            description="Recorded status and agreement updates for this deal."
-            entries={buildVendorDealTimeline(deal)}
-          />
+        <section className="workspace-layout">
+          <article className="workspace-card workspace-panel">
+            <div className="card-header-row">
+              <div>
+                <span className="section-kicker">Timeline</span>
+                <h3>Status timeline</h3>
+                <p>Recorded status and agreement updates for this deal.</p>
+              </div>
+            </div>
+            <div className="timeline-stack">
+              {timelineEntries.map((entry) => (
+                <div className="workspace-row timeline-card" key={`${entry.timestamp}-${entry.title}`}>
+                  <div className="timeline-card-topline">
+                    <strong>{entry.title}</strong>
+                    <span className={`timeline-badge timeline-${entry.tone ?? "neutral"}`}>
+                      {new Date(entry.timestamp).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p>{entry.detail}</p>
+                </div>
+              ))}
+            </div>
+          </article>
         </section>
       </div>
     </>
