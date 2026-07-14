@@ -35,7 +35,6 @@ const initialState: DealFormState = {
 const requiredFieldOrder: DealFormField[] = [
   "companyName",
   "communityAddress",
-  "domain",
   "city",
   "state",
   "contactName",
@@ -57,12 +56,23 @@ const fieldLabels: Record<DealFormField, string> = {
   notes: "Opportunity notes",
 };
 
+const missingFieldMessages: Partial<Record<DealFormField, string>> = {
+  companyName: "Enter the community name.",
+  communityAddress: "Enter the community address.",
+  city: "Enter the city.",
+  state: "Enter the state.",
+  contactName: "Enter the contact name.",
+  contactEmail: "Enter the contact email.",
+  contactPhone: "Enter the contact phone.",
+  productInterest: "Enter the product interest.",
+};
+
 function validateDealForm(form: DealFormState) {
   const nextErrors: DealFormErrors = {};
 
   for (const field of requiredFieldOrder) {
     if (!form[field].trim()) {
-      nextErrors[field] = `${fieldLabels[field]} is required.`;
+      nextErrors[field] = missingFieldMessages[field];
     }
   }
 
@@ -80,9 +90,7 @@ function FieldLabel({ children, optional = false }: { children: ReactNode; optio
   return (
     <span className="field-label-row">
       <span className="field-label">{children}</span>
-      <span className={`field-requirement ${optional ? "is-optional" : "is-required"}`}>
-        {optional ? "Optional" : "Required"}
-      </span>
+      {optional ? <span className="field-requirement is-optional">Optional</span> : null}
     </span>
   );
 }
@@ -213,14 +221,6 @@ export function DealRegistrationForm() {
         </div>
       </div>
       <form className="cta-form deal-registration-form" noValidate onSubmit={handleSubmit}>
-        <div className="deal-form-requirements" aria-label="Form requirements">
-          <span aria-hidden="true" className="deal-form-requirements-mark">*</span>
-          <div>
-            <strong>Complete all {requiredFieldOrder.length} required fields.</strong>
-            <p>Every required field is marked below. Opportunity notes are optional.</p>
-          </div>
-        </div>
-
         {status === "error" ? (
           <div
             className="deal-form-error-summary"
@@ -272,14 +272,13 @@ export function DealRegistrationForm() {
               </label>
             </div>
             <label className={`field-group ${errors.domain ? "has-error" : ""}`.trim()}>
-              <FieldLabel>Community website or domain</FieldLabel>
+              <FieldLabel optional>Community website or domain</FieldLabel>
               <input
                 {...getErrorProps("domain", errors)}
                 maxLength={300}
                 name="domain"
                 onChange={(event) => update("domain", event.target.value)}
                 placeholder="maplecresthoa.com"
-                required
                 type="text"
                 value={form.domain}
               />
@@ -387,7 +386,7 @@ export function DealRegistrationForm() {
               <FieldError errors={errors} field="productInterest" />
             </label>
             <label className="field-group">
-              <FieldLabel optional>Opportunity notes</FieldLabel>
+              <FieldLabel>Opportunity notes</FieldLabel>
               <textarea
                 className="cta-textarea"
                 maxLength={2000}

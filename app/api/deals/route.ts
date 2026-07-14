@@ -62,15 +62,14 @@ export async function POST(request: Request) {
   const notes = body.notes?.toString().trim() ?? "";
   const fieldErrors: DealFieldErrors = {};
 
-  if (!companyName) fieldErrors.companyName = "Community name is required.";
-  if (!communityAddress) fieldErrors.communityAddress = "Community address is required.";
-  if (!domain) fieldErrors.domain = "Community website or domain is required.";
-  if (!city) fieldErrors.city = "City is required.";
-  if (!state) fieldErrors.state = "State is required.";
-  if (!contactName) fieldErrors.contactName = "Contact name is required.";
-  if (!contactEmail) fieldErrors.contactEmail = "Contact email is required.";
-  if (!contactPhone) fieldErrors.contactPhone = "Contact phone is required.";
-  if (!productInterest) fieldErrors.productInterest = "Product interest is required.";
+  if (!companyName) fieldErrors.companyName = "Enter the community name.";
+  if (!communityAddress) fieldErrors.communityAddress = "Enter the community address.";
+  if (!city) fieldErrors.city = "Enter the city.";
+  if (!state) fieldErrors.state = "Enter the state.";
+  if (!contactName) fieldErrors.contactName = "Enter the contact name.";
+  if (!contactEmail) fieldErrors.contactEmail = "Enter the contact email.";
+  if (!contactPhone) fieldErrors.contactPhone = "Enter the contact phone.";
+  if (!productInterest) fieldErrors.productInterest = "Enter the product interest.";
 
   if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
     fieldErrors.contactEmail = "Enter a valid contact email.";

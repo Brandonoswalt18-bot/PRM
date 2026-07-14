@@ -250,17 +250,24 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
 
   await page.goto("/portal/deals/new");
   const dealForm = page.locator("form.deal-registration-form");
-  await expect(dealForm.getByText("Required", { exact: true })).toHaveCount(9);
+  await expect(dealForm.getByText("Required", { exact: true })).toHaveCount(0);
   await expect(dealForm.getByText("Optional", { exact: true })).toHaveCount(1);
+  await expect(dealForm.locator(".deal-form-requirements")).toHaveCount(0);
+  await expect(dealForm.locator('[name="companyName"]')).toHaveAttribute("required", "");
+  await expect(dealForm.locator('[name="domain"]')).not.toHaveAttribute("required", "");
   await page.getByRole("button", { name: "Submit deal for review" }).click();
   await expect(dealForm.getByRole("alert")).toContainText("Check the highlighted fields");
-  await expect(dealForm.locator(".field-error-text")).toHaveCount(9);
+  await expect(dealForm.locator(".field-error-text")).toHaveCount(8);
+  await expect(dealForm).not.toContainText(/required/i);
+  await expect(dealForm.locator(".field-error-text").first()).toHaveText(
+    "Enter the community name.",
+  );
+  await expect(dealForm.locator('[name="domain"]')).toHaveAttribute("aria-invalid", "false");
   await expect(dealForm.locator('[name="companyName"]')).toBeFocused();
   await expect(dealForm.locator('[name="companyName"]')).toHaveAttribute("aria-invalid", "true");
 
   await page.getByLabel("Community name").fill(`Playwright Community ${unique}`);
   await page.getByLabel("Community address").fill("4127 Redwood Terrace");
-  await page.getByLabel("Community website or domain").fill("playwright-community.example");
   await page.getByLabel("City").fill("San Diego");
   await page.getByLabel("State").fill("CA");
   await page.getByLabel("Contact name").fill("Jamie Sloan");
@@ -284,6 +291,7 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
     (deal) => deal.companyName === `Playwright Community ${unique}`,
   );
   expect(submittedDeal).toBeDefined();
+  expect(submittedDeal?.domain).toBe("");
   expect(submittedDeal).not.toHaveProperty("monthlyRmr");
   expect(submittedDeal).not.toHaveProperty("expectedMonthlyRmr");
   expect(submittedDeal).not.toHaveProperty("vendorPayoutType");

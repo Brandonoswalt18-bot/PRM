@@ -2596,44 +2596,9 @@ li + li {
   font-size: 0.8rem;
 }
 
-/* Deal registration: explicit requirements and persistent validation feedback. */
+/* Deal registration: compact sections and persistent validation feedback. */
 .deal-registration-form {
   gap: 14px;
-}
-
-.deal-form-requirements {
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border: 1px solid #dbe5f1;
-  border-radius: 14px;
-  background: #f4f7fb;
-}
-
-.deal-form-requirements-mark {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background: #e8f1fb;
-  color: var(--signal);
-  font-size: 1rem;
-  font-weight: 900;
-}
-
-.deal-form-requirements strong {
-  color: var(--ink);
-  font-size: 0.82rem;
-}
-
-.deal-form-requirements p {
-  margin: 2px 0 0;
-  color: var(--muted);
-  font-size: 0.76rem;
-  line-height: 1.4;
 }
 
 .deal-form-section {
@@ -2672,11 +2637,6 @@ li + li {
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-}
-
-.field-requirement.is-required {
-  background: #e8f1fb;
-  color: var(--signal-deep);
 }
 
 .field-requirement.is-optional {
