@@ -207,6 +207,9 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
   await page.getByLabel("Password").fill("goaccess-vendor-demo");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/portal$/);
+  await expect(
+    page.getByRole("heading", { name: "Welcome back, Blue Haven Integrators", exact: true }),
+  ).toBeVisible();
   const vendorNavigation = page.getByRole("navigation", { name: "Workspace pages" });
   const agreementsLink = vendorNavigation.getByRole("link", { name: "Agreements" });
   await expect(agreementsLink).toBeVisible();
@@ -650,6 +653,9 @@ test("vendor mobile navigation keeps grouped destinations accessible", async ({ 
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/portal$/);
   await page.waitForLoadState("networkidle");
+  await expect(
+    page.getByRole("heading", { name: "Welcome back, Blue Haven Integrators", exact: true }),
+  ).toBeVisible();
 
   await page.getByRole("button", { name: "Open navigation" }).click();
   await expect(

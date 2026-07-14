@@ -35,7 +35,7 @@ export default async function PartnerPortalPage() {
     redirect("/portal/onboarding");
   }
 
-  const firstName = session?.fullName.split(" ")[0] || "Partner";
+  const companyName = vendor?.companyName?.trim();
   const dealsInReview = deals.filter(
     (deal) => deal.status === "submitted" || deal.status === "under_review",
   ).length;
@@ -51,7 +51,7 @@ export default async function PartnerPortalPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
-        title={`Welcome back, ${firstName}`}
+        title={companyName ? `Welcome back, ${companyName}` : "Welcome back"}
         subtitle="Register opportunities, follow each review, and access GoAccess training."
         primaryLabel="Register a deal"
         primaryHref="/portal/deals/new"
