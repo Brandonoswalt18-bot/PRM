@@ -12,12 +12,15 @@ export default function NewDealPage() {
         primaryLabel="View your deals"
         primaryHref="/portal/deals"
       />
-      <div className="app-content">
+      <div className="app-content deal-registration-page">
         <section className="deal-registration-layout">
           <div id="deal-registration-form">
             <DealRegistrationForm />
           </div>
-          <aside className="simple-panel simple-side-panel" aria-labelledby="deal-review-steps-title">
+          <aside
+            className="simple-panel simple-side-panel deal-review-panel"
+            aria-labelledby="deal-review-steps-title"
+          >
             <span className="simple-eyebrow">After submission</span>
             <h2 id="deal-review-steps-title">What happens next</h2>
             <ol className="simple-step-list">

@@ -12,6 +12,11 @@
   --brand-text: #1a2744;
   --brand-green: #1db954;
   --brand-red: #e53e3e;
+  --off-white: var(--brand-off-white);
+  --gray-line: var(--brand-gray-line);
+  --gray-dark: var(--brand-gray-dark);
+  --blue-dark: var(--brand-blue-dark);
+  --green: var(--brand-green);
   --bg: var(--brand-off-white);
   --surface: rgba(255, 255, 255, 0.92);
   --surface-strong: rgba(255, 255, 255, 0.98);
@@ -5844,6 +5849,81 @@ li + li {
 .deal-registration-form select,
 .deal-registration-form textarea {
   font-size: 16px;
+}
+
+/* Deal registration: mirror the portal's layered panel system without changing the form flow. */
+.deal-registration-page {
+  padding: 14px;
+  border: 1px solid rgba(0, 74, 173, 0.08);
+  border-radius: 20px;
+  background: #f1f5fa;
+}
+
+.deal-registration-page .deal-registration-layout {
+  gap: 16px;
+}
+
+.deal-registration-page .deal-registration-card,
+.deal-registration-page .deal-review-panel {
+  overflow: hidden;
+  border-color: #d9e3f0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(0, 32, 96, 0.07);
+}
+
+.deal-registration-page .deal-registration-card {
+  border-top: 3px solid var(--signal);
+}
+
+.deal-registration-page .deal-registration-card > .card-header-row {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e3eaf3;
+}
+
+.deal-registration-page .deal-form-section {
+  padding: 16px;
+  border-color: #dce5f0;
+  border-left: 3px solid rgba(0, 74, 173, 0.58);
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.deal-registration-page .deal-form-section legend {
+  color: var(--signal);
+}
+
+.deal-registration-page .deal-review-panel {
+  border-top: 3px solid #94a3b8;
+  background: #f8fafc;
+}
+
+.deal-registration-page .deal-review-panel h2 {
+  margin: 4px 0 0;
+}
+
+.deal-registration-page .deal-review-panel .simple-step-list {
+  padding-top: 18px;
+  border-top: 1px solid #e3eaf3;
+}
+
+@media (max-width: 760px) {
+  .deal-registration-page {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .deal-registration-page .deal-registration-card > .card-header-row {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+  }
+
+  .deal-registration-page .deal-form-section {
+    padding: 12px;
+  }
 }
 
 @media (max-width: 760px) {
