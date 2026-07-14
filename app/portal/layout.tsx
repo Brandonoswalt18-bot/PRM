@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 const partnerNavigation: WorkspaceNavItem[] = [
   { label: "Home", href: "/portal", group: "Portal", icon: "home" },
+  { label: "Agreements", href: "/portal/onboarding", group: "Portal", icon: "documents" },
   { label: "Deals", href: "/portal/deals", group: "Portal", icon: "deals" },
   { label: "Training", href: "/portal/learning", group: "Portal", icon: "learning" },
 ];
@@ -18,7 +19,6 @@ const legalOnboardingNavigation: WorkspaceNavItem[] = [
 ];
 
 const partnerAccountItems: WorkspaceAccountItem[] = [
-  { label: "Agreements", href: "/portal/onboarding" },
   { label: "Profile", href: "/portal/profile" },
   { label: "Support", href: "/portal/support" },
 ];

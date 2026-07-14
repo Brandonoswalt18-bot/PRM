@@ -207,12 +207,23 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
   await page.getByLabel("Password").fill("goaccess-vendor-demo");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/portal$/);
+  const vendorNavigation = page.getByRole("navigation", { name: "Workspace pages" });
+  const agreementsLink = vendorNavigation.getByRole("link", { name: "Agreements" });
+  await expect(agreementsLink).toBeVisible();
+  await agreementsLink.click();
+  await expect(page).toHaveURL(/\/portal\/onboarding$/);
+  await expect(page.getByRole("heading", { name: "Agreements" })).toBeVisible();
+  await expect(vendorNavigation.getByRole("link", { name: "Agreements" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await page.goto("/portal");
   await expect(page.getByRole("link", { name: "Training" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Learn at your own pace" })).toBeVisible();
   await expect(page.locator("body")).not.toContainText(/RMR|earnings|payout/i);
   await page.getByLabel("Account menu for Jordan Lee").click();
   const accountMenu = page.locator(".session-menu");
-  await expect(accountMenu.getByRole("link", { name: "Agreements" })).toBeVisible();
+  await expect(accountMenu.getByRole("link", { name: "Agreements" })).toHaveCount(0);
   await expect(accountMenu.getByRole("link", { name: "Profile" })).toBeVisible();
   await expect(accountMenu.getByRole("link", { name: "Support" })).toBeVisible();
   await expect(accountMenu.getByRole("link", { name: "Sign out" })).toBeVisible();
@@ -640,6 +651,7 @@ test("vendor mobile navigation keeps grouped destinations accessible", async ({ 
   const navigation = page.getByRole("navigation", { name: "Workspace pages" });
   await expect(navigation.getByText("Portal")).toBeVisible();
   await expect(navigation.getByRole("link", { name: "Home" })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Agreements" })).toBeVisible();
   await expect(navigation.getByRole("link", { name: "Deals" })).toBeVisible();
   await expect(navigation.getByRole("link", { name: "Training" })).toBeVisible();
   await expect(navigation.getByText("Earnings")).toHaveCount(0);
