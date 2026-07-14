@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.env
+.env*.local
+.tmp
+playwright-report
+test-results
+
+# Local analysis and working files are not part of the portal build.
+*.xlsx
+billing-contact-audit.md
+invoice-deal-tracker.md
+app/app/assets/page 2.tsx

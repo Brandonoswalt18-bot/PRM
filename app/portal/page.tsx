@@ -57,6 +57,64 @@ export default async function PartnerPortalPage() {
         primaryHref="/portal/deals/new"
       />
       <div className="app-content workspace-page simple-dashboard">
+        <VendorUpdatesPreview updates={partnerUpdates} />
+
+        <section
+          className="workspace-card workspace-panel simple-panel simple-training-panel"
+          aria-labelledby="training-preview-title"
+          data-dashboard-section="Training"
+        >
+          <div className="simple-panel-header">
+            <div>
+              <span className="simple-eyebrow">Training</span>
+              <h2 id="training-preview-title">Learn at your own pace</h2>
+              <p>Open GoAccess training videos and downloadable guides for your team.</p>
+            </div>
+            <Link href="/portal/learning" className="simple-text-link" prefetch={false}>
+              View training
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+
+          {trainingPreview.length > 0 ? (
+            <div className="training-preview-grid">
+              {trainingPreview.map((asset) => {
+                const href =
+                  asset.source === "external" && asset.externalUrl
+                    ? asset.externalUrl
+                    : `/api/training-assets/file?id=${asset.id}`;
+
+                return (
+                  <a
+                    className="workspace-row training-preview-card"
+                    href={href}
+                    key={asset.id}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    <span className={`training-preview-icon is-${asset.type}`} aria-hidden="true">
+                      {asset.type === "video" ? "▶" : "PDF"}
+                    </span>
+                    <span className="training-preview-copy">
+                      <strong>{asset.title}</strong>
+                      <span>{asset.description || (asset.type === "video" ? "Training video" : "Training document")}</span>
+                    </span>
+                    <span className="training-preview-meta">
+                      {asset.type === "video" ? "Watch video" : "Open document"}
+                      <span aria-hidden="true">↗</span>
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="training-preview-empty">
+              <strong>Training is being prepared</strong>
+              <span>Videos and PDFs published by GoAccess will appear here.</span>
+            </div>
+          )}
+        </section>
+
         <section className="portal-summary-strip workspace-panel" aria-label="Deal summary">
           <Link className="portal-summary-item" href="/portal/deals" prefetch={false}>
             <span>Registered deals</span>
@@ -75,7 +133,10 @@ export default async function PartnerPortalPage() {
           </Link>
         </section>
 
-        <section className="simple-dashboard-grid workspace-layout workspace-layout-sidebar">
+        <section
+          className="simple-dashboard-grid workspace-layout workspace-layout-sidebar"
+          data-dashboard-section="Deals"
+        >
           <article className="workspace-card workspace-panel simple-panel simple-panel-primary">
             <div className="simple-panel-header">
               <div>
@@ -150,58 +211,31 @@ export default async function PartnerPortalPage() {
           </aside>
         </section>
 
-        <VendorUpdatesPreview updates={partnerUpdates} />
-
-        <section className="workspace-card workspace-panel simple-panel simple-training-panel" aria-labelledby="training-preview-title">
-          <div className="simple-panel-header">
-            <div>
-              <span className="simple-eyebrow">Training</span>
-              <h2 id="training-preview-title">Learn at your own pace</h2>
-              <p>Open GoAccess training videos and downloadable guides for your team.</p>
+        <section
+          className="legal-status-banner is-complete"
+          aria-labelledby="agreements-preview-title"
+          data-dashboard-section="Agreements"
+        >
+          <div className="legal-status-copy">
+            <span className="simple-eyebrow">Agreements</span>
+            <h2 id="agreements-preview-title">Your agreements are complete</h2>
+            <p>Review or download the NDA and Partner Agreement accepted by your company.</p>
+          </div>
+          <div className="legal-status-actions">
+            <div className="legal-checklist" aria-label="Agreement completion status">
+              <span className="is-complete">
+                <span aria-hidden="true">✓</span>
+                NDA
+              </span>
+              <span className="is-complete">
+                <span aria-hidden="true">✓</span>
+                Partner Agreement
+              </span>
             </div>
-            <Link href="/portal/learning" className="simple-text-link" prefetch={false}>
-              View training
-              <span aria-hidden="true">→</span>
+            <Link className="button button-secondary" href="/portal/onboarding" prefetch={false}>
+              Review agreements
             </Link>
           </div>
-
-          {trainingPreview.length > 0 ? (
-            <div className="training-preview-grid">
-              {trainingPreview.map((asset) => {
-                const href =
-                  asset.source === "external" && asset.externalUrl
-                    ? asset.externalUrl
-                    : `/api/training-assets/file?id=${asset.id}`;
-
-                return (
-                  <a
-                    className="workspace-row training-preview-card"
-                    href={href}
-                    key={asset.id}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    <span className={`training-preview-icon is-${asset.type}`} aria-hidden="true">
-                      {asset.type === "video" ? "▶" : "PDF"}
-                    </span>
-                    <span className="training-preview-copy">
-                      <strong>{asset.title}</strong>
-                      <span>{asset.description || (asset.type === "video" ? "Training video" : "Training document")}</span>
-                    </span>
-                    <span className="training-preview-meta">
-                      {asset.type === "video" ? "Watch video" : "Open document"}
-                      <span aria-hidden="true">↗</span>
-                    </span>
-                  </a>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="training-preview-empty">
-              <strong>Training is being prepared</strong>
-              <span>Videos and PDFs published by GoAccess will appear here.</span>
-            </div>
-          )}
         </section>
       </div>
     </>

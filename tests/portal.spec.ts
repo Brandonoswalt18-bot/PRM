@@ -241,6 +241,18 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
     "GoAccess Channel Partner Service Agreement - Accepted",
   );
   const vendorNavigation = page.getByRole("navigation", { name: "Workspace pages" });
+  await expect(vendorNavigation.locator(".app-nav-item")).toHaveText([
+    "Home",
+    "Updates",
+    "Training",
+    "Deals",
+    "Agreements",
+  ]);
+  expect(
+    await page.locator("[data-dashboard-section]").evaluateAll((sections) =>
+      sections.map((section) => section.getAttribute("data-dashboard-section")),
+    ),
+  ).toEqual(["Updates", "Training", "Deals", "Agreements"]);
   const agreementsLink = vendorNavigation.getByRole("link", { name: "Agreements" });
   await expect(agreementsLink).toBeVisible();
   await agreementsLink.click();
@@ -700,11 +712,23 @@ test("vendor mobile navigation keeps grouped destinations accessible", async ({ 
   await page.getByRole("button", { name: "Open navigation" }).click();
   const navigation = page.getByRole("navigation", { name: "Workspace pages" });
   await expect(navigation.getByText("Portal")).toBeVisible();
+  await expect(navigation.locator(".app-nav-item")).toHaveText([
+    "Home",
+    "Updates",
+    "Training",
+    "Deals",
+    "Agreements",
+  ]);
   await expect(navigation.getByRole("link", { name: "Home" })).toBeVisible();
   await expect(navigation.getByRole("link", { name: "Agreements" })).toBeVisible();
   await expect(navigation.getByRole("link", { name: "Deals" })).toBeVisible();
   await expect(navigation.getByRole("link", { name: "Training" })).toBeVisible();
   await expect(navigation.getByText("Earnings")).toHaveCount(0);
+  expect(
+    await page.locator("[data-dashboard-section]").evaluateAll((sections) =>
+      sections.map((section) => section.getAttribute("data-dashboard-section")),
+    ),
+  ).toEqual(["Updates", "Training", "Deals", "Agreements"]);
   await navigation.getByRole("link", { name: "Deals" }).click();
   await expect(page).toHaveURL(/\/portal\/deals$/);
 });

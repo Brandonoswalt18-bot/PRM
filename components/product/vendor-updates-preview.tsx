@@ -36,7 +36,11 @@ export function VendorUpdatesPreview({ updates }: { updates: ClientPartnerUpdate
   const featuredId = sorted.find((update) => update.isPinned)?.id ?? sorted[0]?.id;
 
   return (
-    <section className="workspace-card workspace-panel simple-panel portal-updates-preview" aria-labelledby="portal-updates-preview-title">
+    <section
+      className="workspace-card workspace-panel simple-panel portal-updates-preview"
+      aria-labelledby="portal-updates-preview-title"
+      data-dashboard-section="Updates"
+    >
       <div className="simple-panel-header">
         <div>
           <span className="simple-eyebrow">Updates</span>

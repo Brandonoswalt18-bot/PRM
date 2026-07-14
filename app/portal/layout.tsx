@@ -9,10 +9,10 @@ export const dynamic = "force-dynamic";
 
 const partnerNavigation: WorkspaceNavItem[] = [
   { label: "Home", href: "/portal", group: "Portal", icon: "home" },
-  { label: "Agreements", href: "/portal/onboarding", group: "Portal", icon: "documents" },
-  { label: "Deals", href: "/portal/deals", group: "Portal", icon: "deals" },
-  { label: "Training", href: "/portal/learning", group: "Portal", icon: "learning" },
   { label: "Updates", href: "/portal/updates", group: "Portal", icon: "updates" },
+  { label: "Training", href: "/portal/learning", group: "Portal", icon: "learning" },
+  { label: "Deals", href: "/portal/deals", group: "Portal", icon: "deals" },
+  { label: "Agreements", href: "/portal/onboarding", group: "Portal", icon: "documents" },
 ];
 
 const legalOnboardingNavigation: WorkspaceNavItem[] = [
