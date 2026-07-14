@@ -1,7 +1,10 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from "pdf-lib";
-import { LEGAL_AGREEMENTS } from "@/lib/legal-agreements";
+import {
+  HISTORICAL_PARTNER_AGREEMENTS,
+  LEGAL_AGREEMENTS,
+} from "@/lib/legal-agreements";
 import type { ApprovedVendor } from "@/types/goaccess";
 
 export type LegalAgreementKind = "nda" | "terms";
@@ -11,6 +14,24 @@ const ink = rgb(0.075, 0.137, 0.247);
 const blue = rgb(0.02, 0.31, 0.69);
 const muted = rgb(0.34, 0.4, 0.5);
 const white = rgb(1, 1, 1);
+
+type LineField = {
+  value: string;
+  x: number;
+  y: number;
+  width: number;
+  size?: number;
+  clearHeight?: number;
+};
+
+type PartnerAgreementTemplate = {
+  name: string;
+  version: string;
+  url: string;
+  sha256: string;
+  acceptanceText: string;
+  layout: "channel-service-2026-07" | "partner-reseller-2026-07.1";
+};
 
 function cleanPdfText(value: string | undefined, fallback = "") {
   return (value ?? fallback).replace(/[\r\n\t]+/g, " ").replace(/\s+/g, " ").trim();
@@ -26,39 +47,53 @@ function fitFontSize(font: PDFFont, value: string, maxWidth: number, preferredSi
   return size;
 }
 
+function drawLineFields(page: PDFPage, font: PDFFont, fields: LineField[]) {
+  const prepared = fields
+    .map((field) => {
+      const text = cleanPdfText(field.value);
+      return text
+        ? { ...field, text, fittedSize: fitFontSize(font, text, field.width, field.size ?? 9) }
+        : null;
+    })
+    .filter((field): field is LineField & { text: string; fittedSize: number } => Boolean(field));
+
+  // Clear every target before drawing any value. The first-page reseller fields
+  // are intentionally close together, so clearing them in a separate pass keeps
+  // one field from erasing another field's completed text.
+  for (const field of prepared) {
+    page.drawRectangle({
+      x: field.x - 1,
+      y: field.y - 1,
+      width: field.width + 2,
+      height: field.clearHeight ?? field.fittedSize + 5,
+      color: white,
+    });
+  }
+
+  for (const field of prepared) {
+    page.drawLine({
+      start: { x: field.x, y: field.y },
+      end: { x: field.x + field.width, y: field.y },
+      thickness: 0.6,
+      color: ink,
+    });
+    page.drawText(field.text, {
+      x: field.x + 2,
+      y: field.y + 2.2,
+      size: field.fittedSize,
+      font,
+      color: ink,
+    });
+  }
+}
+
 function drawLineField(
   page: PDFPage,
   font: PDFFont,
   value: string,
-  options: { x: number; y: number; width: number; size?: number }
+  options: Omit<LineField, "value">
 ) {
-  const text = cleanPdfText(value);
-
-  if (!text) {
-    return;
-  }
-
-  const size = fitFontSize(font, text, options.width, options.size ?? 9);
-  page.drawRectangle({
-    x: options.x - 1,
-    y: options.y - 1,
-    width: options.width + 2,
-    height: size + 5,
-    color: white,
-  });
-  page.drawLine({
-    start: { x: options.x, y: options.y },
-    end: { x: options.x + options.width, y: options.y },
-    thickness: 0.6,
-    color: ink,
-  });
-  page.drawText(text, {
-    x: options.x + 2,
-    y: options.y + 2.2,
-    size,
-    font,
-    color: ink,
-  });
+  drawLineFields(page, font, [{ value, ...options }]);
 }
 
 function getDateParts(isoTimestamp: string) {
@@ -194,14 +229,52 @@ function addAcceptanceReceipt(
   );
 }
 
-async function loadTemplate(kind: LegalAgreementKind) {
+function resolvePartnerAgreementTemplate(vendor: ApprovedVendor): PartnerAgreementTemplate {
+  const current = {
+    ...LEGAL_AGREEMENTS.terms,
+    layout: "partner-reseller-2026-07.1" as const,
+  };
+  const historical = {
+    ...HISTORICAL_PARTNER_AGREEMENTS.channelPartnerService202607,
+    layout: "channel-service-2026-07" as const,
+  };
+
+  if (vendor.termsDocumentSha256) {
+    if (vendor.termsDocumentSha256 === current.sha256) {
+      return current;
+    }
+
+    if (vendor.termsDocumentSha256 === historical.sha256) {
+      return historical;
+    }
+
+    throw new Error("The accepted Partner Agreement template is not available for this audit record.");
+  }
+
+  if (vendor.termsVersion === current.version) {
+    return current;
+  }
+
+  if (!vendor.termsVersion || [historical.version, "legacy-prelaunch"].includes(vendor.termsVersion)) {
+    return historical;
+  }
+
+  throw new Error("The accepted Partner Agreement version is not available for this audit record.");
+}
+
+async function loadTemplate(kind: LegalAgreementKind, vendor: ApprovedVendor) {
+  const partnerAgreement = kind === "terms" ? resolvePartnerAgreementTemplate(vendor) : null;
+  const documentUrl =
+    kind === "nda" ? LEGAL_AGREEMENTS.nda.url : partnerAgreement!.url;
   const templatePath = path.join(
     process.cwd(),
     "public",
-    "legal",
-    kind === "nda" ? "goaccess-non-disclosure-agreement.pdf" : "goaccess-partner-terms.pdf"
+    ...documentUrl.split("/").filter(Boolean)
   );
-  return readFile(templatePath);
+  return {
+    bytes: await readFile(templatePath),
+    partnerAgreement,
+  };
 }
 
 export async function buildExecutedLegalAgreementPdf(
@@ -222,8 +295,9 @@ export async function buildExecutedLegalAgreementPdf(
     throw new Error("This agreement has not been accepted yet.");
   }
 
-  const agreement = kind === "nda" ? LEGAL_AGREEMENTS.nda : LEGAL_AGREEMENTS.terms;
-  const pdf = await PDFDocument.load(await loadTemplate(kind));
+  const template = await loadTemplate(kind, vendor);
+  const agreement = kind === "nda" ? LEGAL_AGREEMENTS.nda : template.partnerAgreement!;
+  const pdf = await PDFDocument.load(template.bytes);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const pages = pdf.getPages();
@@ -242,6 +316,16 @@ export async function buildExecutedLegalAgreementPdf(
     drawLineField(pages[1], font, acceptedBy, { x: 88, y: 556, width: 234, size: 9 });
     drawLineField(pages[1], font, acceptedTitle, { x: 92, y: 542, width: 135, size: 9 });
     drawLineField(pages[1], font, acceptedDate, { x: 88, y: 528, width: 134, size: 9 });
+  } else if (template.partnerAgreement!.layout === "partner-reseller-2026-07.1") {
+    const location = [vendor.city, vendor.state].filter(Boolean).join(", ");
+    drawLineFields(pages[0], font, [
+      { value: vendor.companyName, x: 72, y: 588, width: 359, size: 9 },
+      { value: location, x: 152, y: 576, width: 360, size: 9 },
+    ]);
+    drawLineField(pages[6], font, vendor.companyName, { x: 127, y: 627, width: 261.5, size: 9 });
+    drawLineField(pages[6], font, `${acceptedBy}, ${acceptedTitle}`, { x: 72, y: 596, width: 200, size: 8.5 });
+    drawLineField(pages[6], font, acceptedDate, { x: 286, y: 596, width: 92, size: 8.5 });
+    drawLineField(pages[6], font, signature, { x: 72, y: 553, width: 153, size: 8.5 });
   } else {
     drawLineField(pages[0], font, vendor.companyName, { x: 72, y: 570, width: 294, size: 9 });
 

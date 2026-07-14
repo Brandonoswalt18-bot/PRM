@@ -154,10 +154,10 @@ export function VendorNdaManager({ vendor }: { vendor: ClientApprovedVendor | nu
               <span className={`onboarding-step-status status-pill ${termsComplete ? "status-pill-success" : "status-pill-warning"}`}>
                 {termsComplete ? "Accepted" : "Required"}
               </span>
-              <h3>Partner Service Agreement</h3>
+              <h3>Partner Reseller Agreement</h3>
             </div>
           </div>
-          <p className="stack-note">Review the complete Channel Partner Service Agreement before accepting it for your company.</p>
+          <p className="stack-note">Review the complete GoAccess Partner Reseller Agreement before accepting it for your company.</p>
           <div className="legal-document-actions">
             <a className="button button-secondary" href={termsDocumentUrl} target="_blank" rel="noreferrer">
               {termsComplete ? "View accepted Partner Agreement" : "View Partner Agreement PDF"}

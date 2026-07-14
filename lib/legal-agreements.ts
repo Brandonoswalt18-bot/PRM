@@ -8,9 +8,20 @@ export const LEGAL_AGREEMENTS = {
       "I have read and agree to the GoAccess Non-Disclosure Agreement and confirm that I am authorized to accept it on behalf of my company.",
   },
   terms: {
+    name: "GoAccess Partner Reseller Agreement",
+    version: "2026-07.1",
+    url: "/legal/goaccess-partner-terms.pdf",
+    sha256: "6623fb6c81c0e4ad26ccdb8c96b2b26cb7df56a846d6a66657078fb5870d6e94",
+    acceptanceText:
+      "I have read and agree to the GoAccess Partner Reseller Agreement and confirm that I am authorized to accept it on behalf of my company.",
+  },
+} as const;
+
+export const HISTORICAL_PARTNER_AGREEMENTS = {
+  channelPartnerService202607: {
     name: "GoAccess Channel Partner Service Agreement",
     version: "2026-07",
-    url: "/legal/goaccess-partner-terms.pdf",
+    url: "/legal/archive/goaccess-partner-terms-2026-07.pdf",
     sha256: "c6386ee3e3325ea2aa366055a750f64826eb00fca587fc2b03bd2431176922d1",
     acceptanceText:
       "I have read and agree to the GoAccess Channel Partner Service Agreement and confirm that I am authorized to accept it on behalf of my company.",

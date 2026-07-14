@@ -682,7 +682,10 @@ function cloneSeedStore(): PortalStore {
 function normalizeApprovedVendor(vendor: ApprovedVendor): ApprovedVendor {
   const ndaVersion =
     vendor.ndaVersion ?? (vendor.ndaStatus === "signed" ? "legacy-prelaunch" : DEFAULT_NDA_VERSION);
-  const termsVersion = vendor.termsVersion ?? DEFAULT_TERMS_VERSION;
+  const termsAccepted = Boolean(vendor.termsAcceptedAt);
+  const termsVersion = termsAccepted
+    ? vendor.termsVersion ?? "legacy-prelaunch"
+    : DEFAULT_TERMS_VERSION;
   const normalized: ApprovedVendor = {
     ...vendor,
     hubspotCompanySyncStatus:
@@ -696,11 +699,11 @@ function normalizeApprovedVendor(vendor: ApprovedVendor): ApprovedVendor {
     ndaAcceptedBy:
       vendor.ndaAcceptedBy ??
       (vendor.ndaStatus === "signed" ? vendor.primaryContactName : undefined),
-    termsDocumentUrl: DEFAULT_TERMS_DOCUMENT_URL,
+    termsDocumentUrl: termsAccepted ? vendor.termsDocumentUrl : DEFAULT_TERMS_DOCUMENT_URL,
     termsVersion,
-    termsDocumentSha256:
-      vendor.termsDocumentSha256 ??
-      (termsVersion === DEFAULT_TERMS_VERSION ? LEGAL_AGREEMENTS.terms.sha256 : undefined),
+    termsDocumentSha256: termsAccepted
+      ? vendor.termsDocumentSha256
+      : LEGAL_AGREEMENTS.terms.sha256,
   };
 
   if (vendor.id === "vendor-unsigned-demo" && vendor.ndaVersion !== DEFAULT_NDA_VERSION) {
@@ -739,6 +742,7 @@ function normalizeApprovedVendor(vendor: ApprovedVendor): ApprovedVendor {
 
   return {
     ...normalized,
+    termsDocumentUrl: vendor.termsDocumentUrl,
     termsVersion: "legacy-prelaunch",
     termsDocumentSha256: undefined,
     termsAcceptedAt:
@@ -1929,8 +1933,13 @@ function recordVendorNdaAcceptance(
   vendor: ApprovedVendor,
   evidence: LegalAcceptanceEvidence
 ) {
+  if (vendor.ndaSignedAt) {
+    finalizeVendorLegalStatus(store, vendor);
+    return vendor;
+  }
+
   const normalized = normalizeLegalAcceptanceEvidence(evidence);
-  const acceptedAt = vendor.ndaSignedAt ?? nowIso();
+  const acceptedAt = nowIso();
 
   vendor.ndaStatus = "signed";
   vendor.ndaSignedAt = acceptedAt;
@@ -1954,18 +1963,22 @@ function recordVendorTermsAcceptance(
   vendor: ApprovedVendor,
   evidence: LegalAcceptanceEvidence
 ) {
+  if (vendor.termsAcceptedAt) {
+    finalizeVendorLegalStatus(store, vendor);
+    return vendor;
+  }
+
   const normalized = normalizeLegalAcceptanceEvidence(evidence);
 
   vendor.termsDocumentUrl = LEGAL_AGREEMENTS.terms.url;
   vendor.termsVersion = LEGAL_AGREEMENTS.terms.version;
   vendor.termsDocumentSha256 = LEGAL_AGREEMENTS.terms.sha256;
-  vendor.termsAcceptedAt = vendor.termsAcceptedAt ?? nowIso();
-  vendor.termsAcceptedBy = vendor.termsAcceptedBy ?? normalized.acceptedBy;
-  vendor.termsAcceptedTitle = vendor.termsAcceptedTitle ?? normalized.acceptedTitle;
-  vendor.termsAcceptanceIp = vendor.termsAcceptanceIp ?? normalized.ipAddress;
-  vendor.termsAcceptanceUserAgent = vendor.termsAcceptanceUserAgent ?? normalized.userAgent;
-  vendor.termsAcceptanceText =
-    vendor.termsAcceptanceText ?? LEGAL_AGREEMENTS.terms.acceptanceText;
+  vendor.termsAcceptedAt = nowIso();
+  vendor.termsAcceptedBy = normalized.acceptedBy;
+  vendor.termsAcceptedTitle = normalized.acceptedTitle;
+  vendor.termsAcceptanceIp = normalized.ipAddress;
+  vendor.termsAcceptanceUserAgent = normalized.userAgent;
+  vendor.termsAcceptanceText = LEGAL_AGREEMENTS.terms.acceptanceText;
   vendor.updatedAt = nowIso();
   finalizeVendorLegalStatus(store, vendor);
   return vendor;
@@ -2391,12 +2404,6 @@ export async function updateVendorApplicationStatus(
 
   let vendor = store.approvedVendors.find((item) => item.applicationId === application.id);
 
-  if (nextStatus === "nda_sent" && !getVendorTermsConfig().documentUrl) {
-    throw new Error(
-      "Configure GOACCESS_TERMS_DOCUMENT_URL before starting vendor legal onboarding."
-    );
-  }
-
   if (nextStatus === "nda_signed") {
     if (vendor?.ndaStatus !== "signed" && !vendor?.signedNdaUploadedAt) {
       throw new Error("The vendor must accept the NDA before legal onboarding can continue.");
@@ -2468,18 +2475,22 @@ export async function updateVendorApplicationStatus(
       const onboardingToken = vendor.inviteToken ?? buildInviteToken(application.companyName);
       const onboardingUrl = buildOnboardingUrl(onboardingToken);
       vendor.status = "pending_nda";
-      vendor.ndaStatus = "sent";
-      vendor.ndaSentAt = nowIso();
-      vendor.ndaDocumentName = DEFAULT_NDA_DOCUMENT_NAME;
-      vendor.ndaDocumentUrl = getNdaDocumentUrl();
-      vendor.ndaVersion = DEFAULT_NDA_VERSION;
-      vendor.ndaDocumentSha256 = LEGAL_AGREEMENTS.nda.sha256;
-      vendor.termsDocumentUrl = termsConfig.documentUrl;
-      vendor.termsVersion = termsConfig.version;
-      vendor.termsDocumentSha256 = LEGAL_AGREEMENTS.terms.sha256;
+      if (!vendor.ndaSignedAt) {
+        vendor.ndaStatus = "sent";
+        vendor.ndaSentAt = nowIso();
+        vendor.ndaDocumentName = DEFAULT_NDA_DOCUMENT_NAME;
+        vendor.ndaDocumentUrl = getNdaDocumentUrl();
+        vendor.ndaVersion = DEFAULT_NDA_VERSION;
+        vendor.ndaDocumentSha256 = LEGAL_AGREEMENTS.nda.sha256;
+      }
+      if (!vendor.termsAcceptedAt) {
+        vendor.termsDocumentUrl = termsConfig.documentUrl;
+        vendor.termsVersion = termsConfig.version;
+        vendor.termsDocumentSha256 = LEGAL_AGREEMENTS.terms.sha256;
+      }
       vendor.inviteToken = onboardingToken;
-      vendor.inviteSentAt = vendor.ndaSentAt;
-      application.ndaSentAt = vendor.ndaSentAt;
+      vendor.inviteSentAt = nowIso();
+      application.ndaSentAt = vendor.ndaSentAt ?? vendor.inviteSentAt;
       store.notifications.unshift(
         await recordWorkflowEmail({
           applicationId: application.id,
@@ -2577,13 +2588,17 @@ export async function reissueVendorInvite(applicationId: string) {
 
     vendor.inviteToken = inviteToken;
     vendor.inviteSentAt = sentAt;
-    vendor.ndaDocumentName = LEGAL_AGREEMENTS.nda.name;
-    vendor.ndaDocumentUrl = LEGAL_AGREEMENTS.nda.url;
-    vendor.ndaVersion = LEGAL_AGREEMENTS.nda.version;
-    vendor.ndaDocumentSha256 = LEGAL_AGREEMENTS.nda.sha256;
-    vendor.termsDocumentUrl = termsConfig.documentUrl;
-    vendor.termsVersion = termsConfig.version;
-    vendor.termsDocumentSha256 = LEGAL_AGREEMENTS.terms.sha256;
+    if (!vendor.ndaSignedAt) {
+      vendor.ndaDocumentName = LEGAL_AGREEMENTS.nda.name;
+      vendor.ndaDocumentUrl = LEGAL_AGREEMENTS.nda.url;
+      vendor.ndaVersion = LEGAL_AGREEMENTS.nda.version;
+      vendor.ndaDocumentSha256 = LEGAL_AGREEMENTS.nda.sha256;
+    }
+    if (!vendor.termsAcceptedAt) {
+      vendor.termsDocumentUrl = termsConfig.documentUrl;
+      vendor.termsVersion = termsConfig.version;
+      vendor.termsDocumentSha256 = LEGAL_AGREEMENTS.terms.sha256;
+    }
     vendor.updatedAt = sentAt;
 
     store.notifications.unshift(

@@ -59,7 +59,7 @@ Current behavior:
 - creates or updates HubSpot companies, contacts, and deals when an admin syncs an approved vendor deal
 - inspects HubSpot for existing company, contact, and open associated deal conflicts before writing a new approved vendor deal
 - records outbound applicant, admin, approval, legal onboarding, and credential notifications in the durable portal store
-- sends approved vendors to a secure click-through checklist where they review and accept the NDA and versioned Partner Terms & Conditions
+- sends approved vendors to a secure click-through checklist where they review and accept the NDA and versioned Partner Reseller Agreement
 - prevents NDA confirmation, portal activation, and deal registration until the required legal steps are complete
 - sends vendor lifecycle emails through Resend when email env vars are configured
 - supports admin-managed training videos and documents for vendor learning
@@ -97,9 +97,6 @@ Operational notes:
 
 Portal workflow env vars:
 
-- `GOACCESS_NDA_DOCUMENT_URL`
-- `GOACCESS_TERMS_DOCUMENT_URL`
-- `GOACCESS_TERMS_VERSION`
 - `GOACCESS_PORTAL_BASE_URL`
 - `GOACCESS_APPLICATION_NOTIFICATION_EMAIL`
 - `GOACCESS_DEAL_NOTIFICATION_EMAIL` (optional; falls back to the application notification or admin email)
@@ -234,11 +231,11 @@ Current auth flow:
 - visit `/login`
 - sign in with email + password
 - middleware redirects unauthorized role access back to login
-- after approval, `/onboarding/[token]` is the vendor's first secure step for the signed NDA and Partner Terms acceptance
-- GoAccess cannot confirm legal onboarding until the NDA upload and versioned Terms acceptance are both present
+- after approval, `/onboarding/[token]` is the vendor's first secure step for the NDA and Partner Reseller Agreement acceptance
+- GoAccess cannot confirm legal onboarding until both versioned agreement acceptances are present
 - after legal confirmation, `/invite/[token]` creates the vendor password and activates full portal access
 - secure onboarding and activation links expire after seven days, work only for the intended stage, and are replaced when an admin reissues them
-- deal registration requires confirmed NDA, recorded Partner Terms acceptance, issued credentials, and active portal access
+- deal registration requires confirmed NDA, recorded Partner Reseller Agreement acceptance, issued credentials, and active portal access
 - public form and login endpoints use basic per-instance throttling; production should also use platform-level rate limiting
 
 Required auth env vars for production:

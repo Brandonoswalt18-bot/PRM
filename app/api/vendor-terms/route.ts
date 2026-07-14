@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       vendor: toClientApprovedVendor(vendor),
-      message: "Partner Service Agreement accepted and recorded.",
+      message: "Partner Reseller Agreement accepted and recorded.",
     });
   } catch (error) {
     return NextResponse.json(

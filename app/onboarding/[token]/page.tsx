@@ -157,7 +157,7 @@ export default async function VendorOnboardingPage({ params, searchParams }: Onb
                 <h2>Accept the Partner Agreement</h2>
               </div>
             </div>
-            <p>Review the current GoAccess Channel Partner Service Agreement, then accept it electronically for your company.</p>
+            <p>Review the current GoAccess Partner Reseller Agreement, then accept it electronically for your company.</p>
             {termsDocumentUrl ? (
               <div className="legal-document-actions">
                 <a className="button button-secondary" href={termsDocumentUrl} rel="noreferrer" target="_blank">

@@ -47,6 +47,7 @@ test("public vendor application is accepted and protected APIs reject anonymous 
 });
 
 test("approved vendor accepts the NDA and Partner Agreement before portal activation", async ({ page }) => {
+  test.setTimeout(120_000);
   const unique = Date.now();
   const email = `onboarding+${unique}@example.com`;
   const submission = await page.request.post("/api/vendor-applications", {
@@ -136,9 +137,30 @@ test("approved vendor accepts the NDA and Partner Agreement before portal activa
   const acceptedTermsResponse = await page.request.get(acceptedTermsHref!);
   expect(acceptedTermsResponse.ok()).toBeTruthy();
   expect(acceptedTermsResponse.headers()["content-type"]).toBe("application/pdf");
+  expect(acceptedTermsResponse.headers()["cache-control"]).toBe("private, no-store");
+  expect(acceptedTermsResponse.headers()["x-content-type-options"]).toBe("nosniff");
+  expect(acceptedTermsResponse.headers()["content-disposition"]).toContain(
+    "goaccess-partner-agreement-onboarding-partner-",
+  );
   const acceptedTermsPdf = await PDFDocument.load(await acceptedTermsResponse.body());
   expect(acceptedTermsPdf.getPageCount()).toBe(8);
-  expect(acceptedTermsPdf.getTitle()).toContain("Accepted");
+  expect(acceptedTermsPdf.getTitle()).toContain("GoAccess Partner Reseller Agreement - Accepted");
+  expect(acceptedTermsPdf.getSubject()).toContain("Electronically accepted on");
+
+  const onboardingToken = decodeURIComponent(
+    new URL(legalPayload.onboardingUrl).pathname.split("/").filter(Boolean).at(-1)!,
+  );
+  const repeatedAcceptance = await page.request.post(
+    `/api/onboarding/${encodeURIComponent(onboardingToken)}/terms`,
+    {
+      form: {
+        accepted: "yes",
+        acceptedBy: "Replacement Signer",
+        acceptedTitle: "Unauthorized Revision",
+      },
+    },
+  );
+  expect(repeatedAcceptance.ok()).toBeTruthy();
 
   const issueAccess = await page.request.patch(
     `/api/vendor-applications/${submissionPayload.application.id}`,
@@ -165,8 +187,8 @@ test("approved vendor accepts the NDA and Partner Agreement before portal activa
     ndaVersion: "2026-07.1",
     termsAcceptedBy: "Alex Onboarding",
     termsAcceptedTitle: "President",
-    termsDocumentSha256: "c6386ee3e3325ea2aa366055a750f64826eb00fca587fc2b03bd2431176922d1",
-    termsVersion: "2026-07",
+    termsDocumentSha256: "6623fb6c81c0e4ad26ccdb8c96b2b26cb7df56a846d6a66657078fb5870d6e94",
+    termsVersion: "2026-07.1",
   });
 
   await page.goto(accessPayload.inviteUrl);
@@ -200,6 +222,7 @@ test("admin can sign in, use global search, and remains isolated from vendor pag
 });
 
 test("vendor can sign in and submit a complete deal registration", async ({ page }) => {
+  test.setTimeout(120_000);
   const unique = Date.now();
 
   await page.goto("/login");
@@ -210,6 +233,13 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
   await expect(
     page.getByRole("heading", { name: "Welcome back, Blue Haven Integrators", exact: true }),
   ).toBeVisible();
+  const historicalTermsResponse = await page.request.get("/api/legal-agreements/terms/file");
+  expect(historicalTermsResponse.ok()).toBeTruthy();
+  const historicalTermsPdf = await PDFDocument.load(await historicalTermsResponse.body());
+  expect(historicalTermsPdf.getPageCount()).toBe(8);
+  expect(historicalTermsPdf.getTitle()).toContain(
+    "GoAccess Channel Partner Service Agreement - Accepted",
+  );
   const vendorNavigation = page.getByRole("navigation", { name: "Workspace pages" });
   const agreementsLink = vendorNavigation.getByRole("link", { name: "Agreements" });
   await expect(agreementsLink).toBeVisible();
@@ -416,7 +446,7 @@ test("unsigned vendor is limited to required legal onboarding", async ({ page })
   await expect(page).toHaveURL(/\/portal\/onboarding\?required=legal$/);
   await expect(page.getByRole("heading", { name: "Agreements" })).toBeVisible();
   const ndaCard = page.locator("section.legal-acceptance-card").filter({ hasText: "Non-Disclosure Agreement" });
-  const termsCard = page.locator("section.legal-acceptance-card").filter({ hasText: "Partner Service Agreement" });
+  const termsCard = page.locator("section.legal-acceptance-card").filter({ hasText: "Partner Reseller Agreement" });
   await ndaCard.getByLabel("Title").fill("Test Vendor");
   await ndaCard.getByRole("checkbox").check();
   await ndaCard.getByRole("button", { name: "Accept NDA" }).click();
