@@ -12,6 +12,7 @@ const partnerNavigation: WorkspaceNavItem[] = [
   { label: "Agreements", href: "/portal/onboarding", group: "Portal", icon: "documents" },
   { label: "Deals", href: "/portal/deals", group: "Portal", icon: "deals" },
   { label: "Training", href: "/portal/learning", group: "Portal", icon: "learning" },
+  { label: "Updates", href: "/portal/updates", group: "Portal", icon: "updates" },
 ];
 
 const legalOnboardingNavigation: WorkspaceNavItem[] = [

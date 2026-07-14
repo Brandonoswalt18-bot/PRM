@@ -168,6 +168,7 @@ How it works:
   - notifications
   - support requests
   - training asset metadata
+  - partner updates and publication status
   - immutable monthly RMR statements
 - when Supabase env is missing or invalid, the app safely falls back to the existing legacy store behavior
 - the login/session flow stays custom; Supabase Auth is not used in this phase
@@ -201,6 +202,14 @@ Notes:
 - private uploaded files require `BLOB_READ_WRITE_TOKEN`
 - external links do not require blob storage
 - file opens are gated by the active admin or vendor session
+
+## Partner updates
+
+Admins can draft, preview, publish, archive, and republish vendor announcements from `/app/updates`.
+
+Approved vendors can read published announcements from `/portal/updates`, with the latest items also
+shown on the portal Home page. Draft and archived records stay admin-only, external resource links are
+limited to HTTP(S), and only one published update can be pinned at a time.
 
 ## Analytics
 

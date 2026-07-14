@@ -47,6 +47,7 @@ function WorkspaceNavIcon({ icon }: { icon: WorkspaceNavItem["icon"] }) {
     deals: <path d="M4 7h16v13H4Zm4 0V4h8v3m-4 4v5m-2-2h4" />,
     sync: <path d="M20 7h-5V2m5 5a8 8 0 0 0-13.7-2.7L4 7m0 10h5v5m-5-5a8 8 0 0 0 13.7 2.7L20 17" />,
     learning: <path d="m2 8 10-5 10 5-10 5Zm4 2.5V16c3.5 2.6 8.5 2.6 12 0v-5.5M22 8v7" />,
+    updates: <path d="M4 13V9l12-5v14L4 13Zm12-4h2.5a2.5 2.5 0 0 1 0 5H16M7 14.25 8.5 21h4L11 15.75" />,
     revenue: <path d="M12 2v20m5-16.5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />,
     documents: <path d="M6 2h9l5 5v15H6Zm9 0v6h5M9 13h8M9 17h8" />,
     profile: <path d="M20 21a8 8 0 0 0-16 0m8-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />,

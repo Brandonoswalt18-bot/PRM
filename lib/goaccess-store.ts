@@ -26,6 +26,10 @@ import type {
   DealStatusUpdateOptions,
   DealSyncEvent,
   PortalStore,
+  PartnerUpdate,
+  ClientPartnerUpdate,
+  CreatePartnerUpdateInput,
+  UpdatePartnerUpdateInput,
   RecordDealDecisionInput,
   VendorPayoutType,
   SupportRequest,
@@ -230,6 +234,24 @@ type TrainingAssetRow = {
   uploaded_by: string;
   created_at: string;
   updated_at: string;
+};
+
+type PartnerUpdateRow = {
+  id: string;
+  title: string;
+  summary: string;
+  body: string;
+  category: PartnerUpdate["category"];
+  status: PartnerUpdate["status"];
+  resource_label: string | null;
+  resource_url: string | null;
+  is_pinned: boolean;
+  created_by_name: string;
+  created_by_email: string;
+  created_at: string;
+  updated_at: string;
+  published_at: string | null;
+  archived_at: string | null;
 };
 
 type VendorRmrStatementRow = {
@@ -635,6 +657,7 @@ const seedStore: PortalStore = {
       updatedAt: "2026-03-05T18:03:00.000Z",
     },
   ],
+  partnerUpdates: [],
   rmrStatements: [],
 };
 
@@ -760,6 +783,7 @@ function normalizeStore(store: PortalStore | Partial<PortalStore>): PortalStore 
     notifications: store.notifications ?? seed.notifications,
     supportRequests: store.supportRequests ?? seed.supportRequests,
     trainingAssets: store.trainingAssets ?? seed.trainingAssets,
+    partnerUpdates: store.partnerUpdates ?? seed.partnerUpdates,
     rmrStatements: store.rmrStatements ?? seed.rmrStatements,
   };
 }
@@ -1156,6 +1180,62 @@ function rowToTrainingAsset(row: TrainingAssetRow): TrainingAsset {
   };
 }
 
+function partnerUpdateToRow(update: PartnerUpdate): PartnerUpdateRow {
+  return {
+    id: update.id,
+    title: update.title,
+    summary: update.summary,
+    body: update.body,
+    category: update.category,
+    status: update.status,
+    resource_label: update.resourceLabel ?? null,
+    resource_url: update.resourceUrl ?? null,
+    is_pinned: update.isPinned,
+    created_by_name: update.createdByName,
+    created_by_email: update.createdByEmail,
+    created_at: update.createdAt,
+    updated_at: update.updatedAt,
+    published_at: update.publishedAt ?? null,
+    archived_at: update.archivedAt ?? null,
+  };
+}
+
+function rowToPartnerUpdate(row: PartnerUpdateRow): PartnerUpdate {
+  return {
+    id: row.id,
+    title: row.title,
+    summary: row.summary,
+    body: row.body,
+    category: row.category,
+    status: row.status,
+    resourceLabel: row.resource_label ?? undefined,
+    resourceUrl: row.resource_url ?? undefined,
+    isPinned: row.is_pinned,
+    createdByName: row.created_by_name,
+    createdByEmail: row.created_by_email,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    publishedAt: row.published_at ?? undefined,
+    archivedAt: row.archived_at ?? undefined,
+  };
+}
+
+function toClientPartnerUpdate(update: PartnerUpdate): ClientPartnerUpdate {
+  return {
+    id: update.id,
+    title: update.title,
+    summary: update.summary,
+    body: update.body,
+    category: update.category,
+    resourceLabel: update.resourceLabel,
+    resourceUrl: update.resourceUrl,
+    isPinned: update.isPinned,
+    createdAt: update.createdAt,
+    updatedAt: update.updatedAt,
+    publishedAt: update.publishedAt,
+  };
+}
+
 function vendorRmrStatementToRow(statement: VendorRmrStatement): VendorRmrStatementRow {
   return {
     id: statement.id,
@@ -1279,6 +1359,7 @@ async function readSupabaseStore(): Promise<DatabasePortalStore | null> {
     { data: notificationRows, error: notificationsError },
     { data: supportRequestRows, error: supportRequestsError },
     { data: trainingAssetRows, error: trainingAssetsError },
+    { data: partnerUpdateRows, error: partnerUpdatesError },
     { data: rmrStatementRows, error: rmrStatementsError },
   ] = await Promise.all([
     client.from("vendor_applications").select("*"),
@@ -1289,6 +1370,7 @@ async function readSupabaseStore(): Promise<DatabasePortalStore | null> {
     client.from("vendor_notifications").select("*"),
     client.from("support_requests").select("*"),
     client.from("training_assets").select("*"),
+    client.from("partner_updates").select("*"),
     client.from("rmr_statements").select("*"),
   ]);
 
@@ -1301,6 +1383,7 @@ async function readSupabaseStore(): Promise<DatabasePortalStore | null> {
     notificationsError ??
     supportRequestsError ??
     trainingAssetsError ??
+    partnerUpdatesError ??
     rmrStatementsError;
 
   if (readError) {
@@ -1322,6 +1405,7 @@ async function readSupabaseStore(): Promise<DatabasePortalStore | null> {
     ),
     supportRequests: ((supportRequestRows ?? []) as SupportRequestRow[]).map(rowToSupportRequest),
     trainingAssets: ((trainingAssetRows ?? []) as TrainingAssetRow[]).map(rowToTrainingAsset),
+    partnerUpdates: ((partnerUpdateRows ?? []) as PartnerUpdateRow[]).map(rowToPartnerUpdate),
     rmrStatements: ((rmrStatementRows ?? []) as VendorRmrStatementRow[]).map(
       rowToVendorRmrStatement
     ),
@@ -1433,6 +1517,7 @@ async function writeSupabaseStore(
     await upsertRows(client, "vendor_notifications", store.notifications.map(vendorNotificationToRow));
     await upsertRows(client, "support_requests", store.supportRequests.map(supportRequestToRow));
     await upsertRows(client, "training_assets", store.trainingAssets.map(trainingAssetToRow));
+    await upsertRows(client, "partner_updates", store.partnerUpdates.map(partnerUpdateToRow));
     await upsertRows(client, "rmr_statements", store.rmrStatements.map(vendorRmrStatementToRow));
     return true;
   } catch (error) {
@@ -1747,6 +1832,30 @@ export async function listTrainingAssets() {
 export async function getTrainingAssetById(assetId: string) {
   const store = await readStore();
   return store.trainingAssets.find((item) => item.id === assetId) ?? null;
+}
+
+export async function listPartnerUpdates() {
+  const store = await readStore();
+  return [...store.partnerUpdates].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+export async function listPublishedPartnerUpdates(): Promise<ClientPartnerUpdate[]> {
+  const store = await readStore();
+  return store.partnerUpdates
+    .filter((update) => update.status === "published")
+    .sort((a, b) => {
+      if (a.isPinned !== b.isPinned) {
+        return a.isPinned ? -1 : 1;
+      }
+
+      return (b.publishedAt ?? b.updatedAt).localeCompare(a.publishedAt ?? a.updatedAt);
+    })
+    .map(toClientPartnerUpdate);
+}
+
+export async function getPartnerUpdateById(updateId: string) {
+  const store = await readStore();
+  return store.partnerUpdates.find((item) => item.id === updateId) ?? null;
 }
 
 export async function getDealById(dealId: string) {
@@ -3462,6 +3571,119 @@ export async function createExternalTrainingAsset(input: CreateExternalTrainingA
   store.trainingAssets.unshift(asset);
   await writeStore(store);
   return asset;
+}
+
+function unpinOtherPublishedPartnerUpdates(
+  store: PortalStore,
+  updateId: string,
+  timestamp: string
+) {
+  for (const update of store.partnerUpdates) {
+    if (update.id !== updateId && update.status === "published" && update.isPinned) {
+      update.isPinned = false;
+      update.updatedAt = timestamp;
+    }
+  }
+}
+
+export async function createPartnerUpdate(input: CreatePartnerUpdateInput) {
+  const timestamp = nowIso();
+  const update: PartnerUpdate = {
+    id: makeId("update"),
+    title: input.title.trim(),
+    summary: input.summary.trim(),
+    body: input.body.trim(),
+    category: input.category,
+    status: input.status,
+    resourceLabel: input.resourceLabel?.trim() || undefined,
+    resourceUrl: input.resourceUrl?.trim() || undefined,
+    isPinned: input.isPinned,
+    createdByName: input.createdByName.trim(),
+    createdByEmail: input.createdByEmail.trim().toLowerCase(),
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    publishedAt: input.status === "published" ? timestamp : undefined,
+  };
+
+  if (!update.resourceUrl) {
+    update.resourceLabel = undefined;
+  }
+
+  const store = await readStore();
+
+  if (update.status === "published" && update.isPinned) {
+    unpinOtherPublishedPartnerUpdates(store, update.id, timestamp);
+  }
+
+  store.partnerUpdates.unshift(update);
+  await writeStore(store);
+  return update;
+}
+
+export async function updatePartnerUpdate(updateId: string, input: UpdatePartnerUpdateInput) {
+  const store = await readStore();
+  const update = store.partnerUpdates.find((item) => item.id === updateId);
+
+  if (!update) {
+    throw new Error("Partner update not found.");
+  }
+
+  const timestamp = nowIso();
+  const wasPublished = update.status === "published";
+
+  if (input.title !== undefined) {
+    update.title = input.title.trim();
+  }
+
+  if (input.summary !== undefined) {
+    update.summary = input.summary.trim();
+  }
+
+  if (input.body !== undefined) {
+    update.body = input.body.trim();
+  }
+
+  if (input.category !== undefined) {
+    update.category = input.category;
+  }
+
+  if ("resourceLabel" in input) {
+    update.resourceLabel = input.resourceLabel?.trim() || undefined;
+  }
+
+  if ("resourceUrl" in input) {
+    update.resourceUrl = input.resourceUrl?.trim() || undefined;
+  }
+
+  if (input.isPinned !== undefined) {
+    update.isPinned = input.isPinned;
+  }
+
+  if (input.status === "published") {
+    update.status = "published";
+    update.publishedAt = wasPublished ? update.publishedAt ?? timestamp : timestamp;
+    update.archivedAt = undefined;
+  } else if (input.status === "archived") {
+    update.status = "archived";
+    update.archivedAt = timestamp;
+    update.isPinned = false;
+  } else if (input.status === "draft") {
+    update.status = "draft";
+    update.publishedAt = undefined;
+    update.archivedAt = undefined;
+  }
+
+  if (!update.resourceUrl) {
+    update.resourceLabel = undefined;
+  }
+
+  if (update.status === "published" && update.isPinned) {
+    unpinOtherPublishedPartnerUpdates(store, update.id, timestamp);
+  }
+
+  update.updatedAt = timestamp;
+  await writeStore(store);
+  return update;
 }
 
 export async function finalizeTrainingUpload(input: TrainingUploadFinalizeInput) {

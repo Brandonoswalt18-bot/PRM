@@ -37,6 +37,11 @@ export type SupportRequestCategory =
 
 export type TrainingAssetType = "video" | "document";
 export type TrainingAssetSource = "upload" | "external";
+export type PartnerUpdateCategory =
+  | "product_update"
+  | "sales_resource"
+  | "operational_notice";
+export type PartnerUpdateStatus = "draft" | "published" | "archived";
 export type RmrStatementType = "forecast" | "recognized";
 export type RmrStatementStatus = "open" | "closed";
 
@@ -262,6 +267,49 @@ export type TrainingAsset = {
   updatedAt: string;
 };
 
+export type PartnerUpdate = {
+  id: string;
+  title: string;
+  summary: string;
+  body: string;
+  category: PartnerUpdateCategory;
+  status: PartnerUpdateStatus;
+  resourceLabel?: string;
+  resourceUrl?: string;
+  isPinned: boolean;
+  createdByName: string;
+  createdByEmail: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt?: string;
+  archivedAt?: string;
+};
+
+export type ClientPartnerUpdate = Omit<
+  PartnerUpdate,
+  "status" | "createdByName" | "createdByEmail" | "archivedAt"
+>;
+
+export type PartnerUpdateContentInput = {
+  title: string;
+  summary: string;
+  body: string;
+  category: PartnerUpdateCategory;
+  resourceLabel?: string;
+  resourceUrl?: string;
+  isPinned: boolean;
+};
+
+export type CreatePartnerUpdateInput = PartnerUpdateContentInput & {
+  status: Extract<PartnerUpdateStatus, "draft" | "published">;
+  createdByName: string;
+  createdByEmail: string;
+};
+
+export type UpdatePartnerUpdateInput = Partial<PartnerUpdateContentInput> & {
+  status?: PartnerUpdateStatus;
+};
+
 export type PortalStore = {
   vendorApplications: VendorApplication[];
   approvedVendors: ApprovedVendor[];
@@ -271,6 +319,7 @@ export type PortalStore = {
   notifications: VendorNotification[];
   supportRequests: SupportRequest[];
   trainingAssets: TrainingAsset[];
+  partnerUpdates: PartnerUpdate[];
   rmrStatements: VendorRmrStatement[];
 };
 

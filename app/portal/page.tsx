@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { VendorUpdatesPreview } from "@/components/product/vendor-updates-preview";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
 import { formatVendorDealStatusLabel } from "@/lib/goaccess-copy";
-import { getVendorById, listDeals, listTrainingAssets } from "@/lib/goaccess-store";
+import {
+  getVendorById,
+  listDeals,
+  listPublishedPartnerUpdates,
+  listTrainingAssets,
+} from "@/lib/goaccess-store";
 import type { DealStatus } from "@/types/goaccess";
 
 function formatShortDate(value: string) {
@@ -33,10 +39,11 @@ function getStatusTone(status: DealStatus) {
 export default async function PartnerPortalPage() {
   const session = await getWorkspaceSession();
   const vendorId = session?.vendorId;
-  const [vendor, deals, trainingAssets] = await Promise.all([
+  const [vendor, deals, trainingAssets, partnerUpdates] = await Promise.all([
     vendorId ? getVendorById(vendorId) : Promise.resolve(null),
     listDeals(vendorId),
     listTrainingAssets(),
+    listPublishedPartnerUpdates(),
   ]);
 
   const legalComplete = vendor?.ndaStatus === "signed" && Boolean(vendor.termsAcceptedAt);
@@ -161,6 +168,8 @@ export default async function PartnerPortalPage() {
             </ol>
           </aside>
         </section>
+
+        <VendorUpdatesPreview updates={partnerUpdates} />
 
         <section className="simple-panel simple-training-panel" aria-labelledby="training-preview-title">
           <div className="simple-panel-header">

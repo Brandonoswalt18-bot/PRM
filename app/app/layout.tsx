@@ -16,6 +16,7 @@ const vendorNavigation: WorkspaceNavItem[] = [
   { label: "Applications", href: "/app/programs", group: "Partner setup", icon: "applications" },
   { label: "Partners", href: "/app/partners", group: "Partner setup", icon: "vendors" },
   { label: "Training", href: "/app/learning", group: "Partner setup", icon: "learning" },
+  { label: "Updates", href: "/app/updates", group: "Partner setup", icon: "updates" },
   { label: "Deal approvals", href: "/app/deal-registrations", group: "Revenue", icon: "deals" },
   { label: "Monthly RMR", href: "/app/payouts", group: "Revenue", icon: "revenue" },
   { label: "HubSpot sync", href: "/app/commissions", group: "Revenue", icon: "sync" },

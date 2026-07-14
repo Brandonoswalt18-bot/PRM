@@ -9,6 +9,7 @@ export type WorkspaceNavItem = {
     | "deals"
     | "sync"
     | "learning"
+    | "updates"
     | "revenue"
     | "documents"
     | "profile"
