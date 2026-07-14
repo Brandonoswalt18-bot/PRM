@@ -38,7 +38,7 @@ export default async function PartnerSupportPage() {
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="Support"
-        subtitle="Open a request for deal review, profile corrections, portal access, or monthly recurring revenue questions."
+        subtitle="Open a request for deal review, profile corrections, portal access, or general help."
         primaryLabel="Open support request"
         primaryHref="#support-request-form"
       />
@@ -54,7 +54,7 @@ export default async function PartnerSupportPage() {
               <li>Deal registration questions</li>
               <li>Deal status or duplicate registration questions</li>
               <li>Profile updates and credential issues</li>
-              <li>Monthly RMR or statement questions</li>
+              <li>General account and partnership questions</li>
             </ul>
           </article>
         </section>

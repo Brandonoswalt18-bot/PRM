@@ -208,7 +208,7 @@ export function DealRegistrationForm() {
     <article className="workspace-card wide-card deal-registration-card">
       <div className="card-header-row">
         <div>
-          <h3>Deal registration form</h3>
+          <h2>Deal registration form</h2>
           <p>Share the community and contact details GoAccess needs to review and route this opportunity cleanly.</p>
         </div>
       </div>

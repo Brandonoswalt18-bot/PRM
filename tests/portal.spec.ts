@@ -207,8 +207,15 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
   await page.getByLabel("Password").fill("goaccess-vendor-demo");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/portal$/);
-  await expect(page.getByRole("link", { name: "Training library" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Training" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Learn at your own pace" })).toBeVisible();
+  await expect(page.locator("body")).not.toContainText(/RMR|earnings|payout/i);
+  await page.getByLabel("Account menu for Jordan Lee").click();
+  const accountMenu = page.locator(".session-menu");
+  await expect(accountMenu.getByRole("link", { name: "Agreements" })).toBeVisible();
+  await expect(accountMenu.getByRole("link", { name: "Profile" })).toBeVisible();
+  await expect(accountMenu.getByRole("link", { name: "Support" })).toBeVisible();
+  await expect(accountMenu.getByRole("link", { name: "Sign out" })).toBeVisible();
   await expect(page.locator(".training-preview-card")).toHaveCount(4);
   for (const title of [
     "Portico — Security Check-in SOP",
@@ -230,7 +237,7 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
   expect(vendorProfileResponse.ok()).toBeTruthy();
   expect(JSON.stringify(await vendorProfileResponse.json()).toLowerCase()).not.toContain("hubspot");
 
-  await page.goto("/portal/links");
+  await page.goto("/portal/deals/new");
   const dealForm = page.locator("form.deal-registration-form");
   await expect(dealForm.getByText("Required", { exact: true })).toHaveCount(9);
   await expect(dealForm.getByText("Optional", { exact: true })).toHaveCount(1);
@@ -260,28 +267,44 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
   const dealsResponse = await page.request.get("/api/deals");
   expect(dealsResponse.ok()).toBeTruthy();
   const dealsPayload = (await dealsResponse.json()) as {
-    items: Array<Record<string, unknown> & { companyName: string; monthlyRmr: number; status: string }>;
+    items: Array<Record<string, unknown> & { id: string; companyName: string; status: string }>;
   };
   const submittedDeal = dealsPayload.items.find(
     (deal) => deal.companyName === `Playwright Community ${unique}`,
   );
-  expect(submittedDeal?.monthlyRmr).toBe(0);
+  expect(submittedDeal).toBeDefined();
+  expect(submittedDeal).not.toHaveProperty("monthlyRmr");
+  expect(submittedDeal).not.toHaveProperty("expectedMonthlyRmr");
+  expect(submittedDeal).not.toHaveProperty("vendorPayoutType");
+  expect(submittedDeal).not.toHaveProperty("vendorPayoutRate");
+  expect(submittedDeal).not.toHaveProperty("expectedVendorMonthlyRevenue");
   expect(submittedDeal).not.toHaveProperty("estimatedValue");
   expect(JSON.stringify(submittedDeal).toLowerCase()).not.toContain("hubspot");
 
+  await page.goto(`/portal/deals/${submittedDeal!.id}`);
+  await expect(page.getByRole("heading", { name: `Playwright Community ${unique}` })).toBeVisible();
+  await expect(page.locator("body")).not.toContainText(/RMR|earnings|payout|estimated value|hubspot|crm/i);
+
   for (const path of [
     "/portal",
-    "/portal/links",
+    "/portal/deals/new",
     "/portal/deals",
-    "/portal/earnings",
     "/portal/learning",
-    "/portal/payouts",
     "/portal/support",
     "/portal/profile",
   ]) {
     await page.goto(path);
     await expect(page.locator("body")).not.toContainText(/hubspot|crm/i);
   }
+
+  await page.goto("/portal/links");
+  await expect(page).toHaveURL(/\/portal\/deals\/new$/);
+  await page.goto("/portal/earnings");
+  await expect(page).toHaveURL(/\/portal\/deals$/);
+  await page.goto("/portal/payouts");
+  await expect(page).toHaveURL(/\/portal\/deals$/);
+  await page.goto("/portal/assets");
+  await expect(page).toHaveURL(/\/portal\/learning$/);
 
   const tamperedFinancials = await page.request.post("/api/deals", {
     data: {
@@ -300,12 +323,14 @@ test("vendor can sign in and submit a complete deal registration", async ({ page
     },
   });
   expect(tamperedFinancials.ok()).toBeTruthy();
-  const tamperedPayload = (await tamperedFinancials.json()) as { deal: { monthlyRmr: number } };
-  expect(tamperedPayload.deal.monthlyRmr).toBe(0);
+  const tamperedPayload = (await tamperedFinancials.json()) as { deal: Record<string, unknown> };
+  expect(tamperedPayload.deal).not.toHaveProperty("monthlyRmr");
+  expect(tamperedPayload.deal).not.toHaveProperty("expectedMonthlyRmr");
+  expect(tamperedPayload.deal).not.toHaveProperty("expectedVendorMonthlyRevenue");
   expect(tamperedPayload.deal).not.toHaveProperty("estimatedValue");
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/portal/links");
+  await page.goto("/portal/deals/new");
   const mobileDealForm = page.locator("form.deal-registration-form");
   await page.getByRole("button", { name: "Submit deal for review" }).click();
   await expect(mobileDealForm.getByRole("alert")).toBeVisible();
@@ -330,18 +355,21 @@ test("unsigned vendor is limited to required legal onboarding", async ({ page })
   await page.getByLabel("Email address or username").fill("Alex");
   await page.getByLabel("Password").fill("12345678");
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/portal$/);
+  await expect(page).toHaveURL(/\/portal\/onboarding$/);
 
-  await expect(page.getByRole("heading", { name: "Complete your vendor agreements" })).toBeVisible();
-  const legalStatus = page.getByRole("region", { name: "Accept your NDA and Partner Agreement" });
+  await expect(page.getByRole("heading", { name: "Agreements" })).toBeVisible();
+  const legalStatus = page.locator("#legal-agreements");
   await expect(legalStatus.getByRole("link", { name: "View NDA PDF" })).toHaveAttribute(
     "href", "/legal/goaccess-non-disclosure-agreement.pdf",
   );
   await expect(legalStatus.getByRole("link", { name: "View Partner Agreement PDF" })).toHaveAttribute(
     "href", "/legal/goaccess-partner-terms.pdf",
   );
-  await expect(page.getByRole("link", { name: "Register deal" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Monthly RMR" })).toHaveCount(0);
+  const legalNavigation = page.getByRole("navigation", { name: "Workspace pages" });
+  await expect(legalNavigation.getByRole("link", { name: "Agreements" })).toBeVisible();
+  await expect(legalNavigation.getByRole("link", { name: "Home" })).toHaveCount(0);
+  await expect(legalNavigation.getByRole("link", { name: "Deals" })).toHaveCount(0);
+  await expect(legalNavigation.getByRole("link", { name: "Training" })).toHaveCount(0);
 
   const blockedSubmission = await page.request.post("/api/deals", {
     data: {
@@ -360,23 +388,17 @@ test("unsigned vendor is limited to required legal onboarding", async ({ page })
   });
   expect(blockedSubmission.status()).toBe(403);
 
-  await page.goto("/portal/links");
+  await page.goto("/portal/deals/new");
   await expect(page).toHaveURL(/\/portal\/onboarding\?required=legal$/);
-  await expect(page.getByRole("heading", { name: "Onboarding" })).toBeVisible();
-  const progress = page.getByRole("list", { name: "Vendor onboarding progress" });
-  await expect(progress.getByRole("listitem").filter({ hasText: "NDA" })).toContainText("Next");
-  await expect(progress.getByRole("listitem").filter({ hasText: "Partner Agreement" })).toContainText("Upcoming");
-  await expect(progress.getByRole("listitem").filter({ hasText: "Portal access" })).toContainText("Upcoming");
-  await expect(progress.getByRole("listitem").filter({ hasText: "First deal" })).toContainText("Upcoming");
+  await expect(page.getByRole("heading", { name: "Agreements" })).toBeVisible();
   const ndaCard = page.locator("section.legal-acceptance-card").filter({ hasText: "Non-Disclosure Agreement" });
+  const termsCard = page.locator("section.legal-acceptance-card").filter({ hasText: "Partner Service Agreement" });
   await ndaCard.getByLabel("Title").fill("Test Vendor");
   await ndaCard.getByRole("checkbox").check();
   await ndaCard.getByRole("button", { name: "Accept NDA" }).click();
-  await expect(progress.getByRole("listitem").filter({ hasText: "NDA" })).toContainText("Complete");
-  await expect(progress.getByRole("listitem").filter({ hasText: "Partner Agreement" })).toContainText("Next");
-  await expect(progress.getByRole("listitem").filter({ hasText: "Portal access" })).toContainText("Upcoming");
-  await expect(progress.getByRole("listitem").filter({ hasText: "First deal" })).toContainText("Upcoming");
-  await expect(page.getByRole("button", { name: "Accept Partner Agreement" })).toBeVisible();
+  await expect(ndaCard.getByText("Accepted", { exact: true })).toBeVisible();
+  await expect(termsCard.getByText("Required", { exact: true })).toBeVisible();
+  await expect(termsCard.getByRole("button", { name: "Accept Partner Agreement" })).toBeVisible();
 
   const stillBlocked = await page.request.post("/api/deals", {
     data: {
@@ -395,7 +417,7 @@ test("unsigned vendor is limited to required legal onboarding", async ({ page })
   expect(stillBlocked.status()).toBe(403);
 });
 
-test("GoAccess admin owns monthly RMR before deal approval", async ({ page }) => {
+test("GoAccess admin can approve without RMR and add internal RMR later", async ({ page }) => {
   const unique = Date.now();
 
   await page.goto("/login");
@@ -422,9 +444,9 @@ test("GoAccess admin owns monthly RMR before deal approval", async ({ page }) =>
   });
   expect(submission.ok()).toBeTruthy();
   const submissionPayload = (await submission.json()) as {
-    deal: { id: string; monthlyRmr: number };
+    deal: { id: string } & Record<string, unknown>;
   };
-  expect(submissionPayload.deal.monthlyRmr).toBe(0);
+  expect(submissionPayload.deal).not.toHaveProperty("monthlyRmr");
 
   await page.goto("/auth/logout");
   await page.getByLabel("Email address").fill("maya@goaccess.com");
@@ -440,10 +462,18 @@ test("GoAccess admin owns monthly RMR before deal approval", async ({ page }) =>
     deal: { estimatedValue: 0, monthlyRmr: 0 },
   });
 
-  const blockedApproval = await page.request.patch(`/api/deals/${submissionPayload.deal.id}`, {
+  const approval = await page.request.patch(`/api/deals/${submissionPayload.deal.id}`, {
     data: { status: "approved" },
   });
-  expect(blockedApproval.status()).toBe(400);
+  expect(approval.ok()).toBeTruthy();
+  const approvalPayload = (await approval.json()) as {
+    deal: { status: string; monthlyRmr: number };
+    hubspot?: { syncDecision?: string };
+    message: string;
+  };
+  expect(approvalPayload.deal).toMatchObject({ status: "approved", monthlyRmr: 0 });
+  expect(approvalPayload.hubspot?.syncDecision).toBe("blocked_configuration");
+  expect(approvalPayload.message).toContain("Deal approved");
 
   const adminRmr = await page.request.patch(`/api/deals/${submissionPayload.deal.id}`, {
     data: { monthlyRmr: 850 },
@@ -451,19 +481,6 @@ test("GoAccess admin owns monthly RMR before deal approval", async ({ page }) =>
   expect(adminRmr.ok()).toBeTruthy();
   const adminRmrPayload = (await adminRmr.json()) as { deal: { monthlyRmr: number } };
   expect(adminRmrPayload.deal.monthlyRmr).toBe(850);
-
-  const approval = await page.request.patch(`/api/deals/${submissionPayload.deal.id}`, {
-    data: { status: "approved" },
-  });
-  expect(approval.ok()).toBeTruthy();
-  const approvalPayload = (await approval.json()) as {
-    deal: { status: string };
-    hubspot?: { syncDecision?: string };
-    message: string;
-  };
-  expect(approvalPayload.deal.status).toBe("approved");
-  expect(approvalPayload.hubspot?.syncDecision).toBe("blocked_configuration");
-  expect(approvalPayload.message).toContain("Deal approved");
 });
 
 test("deal decisions notify the vendor, retain an admin audit trail, and share decline reasons safely", async ({
@@ -614,10 +631,18 @@ test("vendor mobile navigation keeps grouped destinations accessible", async ({ 
   await page.waitForLoadState("networkidle");
 
   await page.getByRole("button", { name: "Open navigation" }).click();
+  await expect(page.getByRole("button", { name: "Close navigation" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Open navigation" })).toBeFocused();
+  await expect(page.locator("#workspace-navigation")).not.toHaveClass(/is-mobile-open/);
+
+  await page.getByRole("button", { name: "Open navigation" }).click();
   const navigation = page.getByRole("navigation", { name: "Workspace pages" });
-  await expect(navigation.getByText("Deal pipeline")).toBeVisible();
-  await expect(navigation.getByRole("link", { name: "Register deal" })).toBeVisible();
-  await expect(navigation.getByText("Earnings")).toBeVisible();
-  await navigation.getByRole("link", { name: "My deals" }).click();
+  await expect(navigation.getByText("Portal")).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Home" })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Deals" })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: "Training" })).toBeVisible();
+  await expect(navigation.getByText("Earnings")).toHaveCount(0);
+  await navigation.getByRole("link", { name: "Deals" }).click();
   await expect(page).toHaveURL(/\/portal\/deals$/);
 });

@@ -131,6 +131,8 @@ export type ClientApprovedVendor = Omit<
   | "ndaAcceptanceUserAgent"
   | "termsAcceptanceIp"
   | "termsAcceptanceUserAgent"
+  | "signedNdaFileUrl"
+  | "signedNdaBlobPath"
   | "hubspotPartnerId"
   | "hubspotCompanyId"
   | "hubspotCompanySyncStatus"
@@ -182,7 +184,20 @@ export type DealRegistration = {
 
 export type ClientVendorDealRegistration = Omit<
   DealRegistration,
-  "estimatedValue" | "hubspotCompanyId" | "hubspotContactId" | "hubspotDealId" | "status"
+  | "estimatedValue"
+  | "monthlyRmr"
+  | "expectedMonthlyRmr"
+  | "vendorPayoutType"
+  | "vendorPayoutRate"
+  | "expectedVendorMonthlyRevenue"
+  | "agreementFileUrl"
+  | "agreementBlobPath"
+  | "signedAgreementFileUrl"
+  | "signedAgreementBlobPath"
+  | "hubspotCompanyId"
+  | "hubspotContactId"
+  | "hubspotDealId"
+  | "status"
 > & {
   status: Exclude<DealStatus, "synced_to_hubspot">;
 };

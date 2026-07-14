@@ -158,7 +158,7 @@ export function formatVendorSupportCategoryLabel(category: SupportRequestCategor
     case "profile_update":
       return "Profile update";
     case "rmr_question":
-      return "RMR question";
+      return "Account question";
     case "portal_access":
       return "Portal access";
     case "general":
@@ -187,5 +187,5 @@ export function getVendorNextStep(vendor: ApprovedVendor | null | undefined) {
     return "Use the invite email to create your password and activate portal access.";
   }
 
-  return "Your account is ready. You can register deals and track recurring revenue here.";
+  return "Your account is ready. You can register deals and use GoAccess training resources here.";
 }

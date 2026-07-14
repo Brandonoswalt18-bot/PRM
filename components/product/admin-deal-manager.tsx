@@ -135,7 +135,7 @@ function getDealNextAction(deal: DealRegistration) {
   }
 
   if (deal.status === "closed_won" && (deal.agreementStatus === "not_started" || deal.agreementStatus === "uploaded")) {
-    return "Upload the dealer agreement and set economics.";
+    return "Upload and share the dealer agreement.";
   }
 
   if (deal.status === "closed_won" && deal.agreementStatus === "sent") {
@@ -143,7 +143,7 @@ function getDealNextAction(deal: DealRegistration) {
   }
 
   if (deal.status === "closed_won" && deal.agreementStatus === "signed") {
-    return "Agreement is complete. Monitor payout readiness.";
+    return "Agreement is complete. No further portal action is required.";
   }
 
   if (deal.status === "closed_lost") {
@@ -314,7 +314,7 @@ export function AdminDealManager({
       {
         id: "closed_won" as const,
         label: "Closed won",
-        description: "Won accounts that now need agreement or payout follow-through.",
+        description: "Won accounts that now need agreement follow-through.",
         count: deals.filter((deal) => deal.status === "closed_won").length,
       },
       {
@@ -378,12 +378,13 @@ export function AdminDealManager({
 
     try {
       const rmrValue = rmrValues[dealId]?.trim();
+      const deal = deals.find((candidate) => candidate.id === dealId);
       const response = await fetch(`/api/deals/${dealId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status,
-          ...(rmrValue ? { monthlyRmr: Number(rmrValue) } : {}),
+          ...(rmrValue && !deal?.hubspotDealId ? { monthlyRmr: Number(rmrValue) } : {}),
           ...(status === "rejected"
             ? { declineReason: declineReasons[dealId]?.trim() || undefined }
             : {}),
@@ -415,8 +416,8 @@ export function AdminDealManager({
   async function saveMonthlyRmr(dealId: string) {
     const monthlyRmr = Number(rmrValues[dealId]);
 
-    if (!Number.isFinite(monthlyRmr) || monthlyRmr <= 0) {
-      setMessage("Enter a monthly RMR amount greater than zero.");
+    if (!Number.isFinite(monthlyRmr) || monthlyRmr < 0) {
+      setMessage("Enter a monthly RMR amount of zero or greater.");
       return;
     }
 
@@ -545,8 +546,6 @@ export function AdminDealManager({
             const allowedNextSteps = allowedTransitions[deal.status];
             const isRejected = deal.status === "rejected";
             const isSelected = selectedDealId === deal.id;
-            const isRmrReady = Number(rmrValues[deal.id]) > 0;
-
             return (
               <div
                 className={`stack-card application-queue-card${isSelected ? " application-queue-card-selected" : ""}`}
@@ -645,11 +644,12 @@ export function AdminDealManager({
                     ) : null}
                     <div className="admin-rmr-control">
                       <label className="field-group">
-                        <span className="field-label">Monthly RMR (GoAccess admin)</span>
+                        <span className="field-label">Monthly RMR (optional, internal)</span>
                         <input
                           aria-label={`Monthly RMR for ${deal.companyName}`}
-                          min="1"
-                          placeholder="Enter approved monthly RMR"
+                          disabled={Boolean(deal.hubspotDealId)}
+                          min="0"
+                          placeholder="Add monthly RMR when known"
                           step="1"
                           type="number"
                           value={rmrValues[deal.id] ?? ""}
@@ -661,14 +661,16 @@ export function AdminDealManager({
                       <div>
                         <button
                           className="button button-secondary"
-                          disabled={busyId === deal.id}
+                          disabled={busyId === deal.id || Boolean(deal.hubspotDealId)}
                           onClick={() => saveMonthlyRmr(deal.id)}
                           type="button"
                         >
                           Save RMR
                         </button>
                         <p className="stack-note">
-                          Enter an amount greater than zero before approval. Vendors cannot enter or change it.
+                          {deal.hubspotDealId
+                            ? "This deal is linked. Update RMR in HubSpot; the portal imports it during reconciliation."
+                            : "Optional internal tracking. Enter zero to clear it. Vendors cannot view or change this amount."}
                         </p>
                       </div>
                     </div>
@@ -686,8 +688,7 @@ export function AdminDealManager({
                               disabled={
                                 busyId === deal.id ||
                                 !actionStatus ||
-                                !allowedNextSteps.includes(actionStatus) ||
-                                (actionStatus === "approved" && deal.status === "under_review" && !isRmrReady)
+                                !allowedNextSteps.includes(actionStatus)
                               }
                               key={`${deal.id}-${stage.label}`}
                               type="button"

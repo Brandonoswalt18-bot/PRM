@@ -5,24 +5,6 @@ import { startTransition, useState } from "react";
 import { formatDealAgreementStatusLabel } from "@/lib/goaccess-copy";
 import type { ClientVendorDealRegistration } from "@/types/goaccess";
 
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatPayoutSummary(deal: ClientVendorDealRegistration) {
-  if (!deal.vendorPayoutType || deal.vendorPayoutRate <= 0) {
-    return "GoAccess will confirm payout terms with this agreement.";
-  }
-
-  return deal.vendorPayoutType === "percentage_rmr"
-    ? `${Math.round(deal.vendorPayoutRate * 100)}% of expected monthly RMR`
-    : `${formatCurrency(deal.vendorPayoutRate)} flat monthly payout`;
-}
-
 export function VendorDealAgreementManager({ deal }: { deal: ClientVendorDealRegistration }) {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
@@ -71,53 +53,37 @@ export function VendorDealAgreementManager({ deal }: { deal: ClientVendorDealReg
       <div className="card-header-row">
         <div>
           <span className="section-kicker">Dealer agreement</span>
-          <h3>Agreement and expected earnings</h3>
+          <h3>Dealer agreement</h3>
           <p>Review the uploaded agreement, then upload the signed copy back into the portal.</p>
         </div>
         <span className="status-pill">{formatDealAgreementStatusLabel(deal.agreementStatus)}</span>
       </div>
 
-      <div className="agreement-grid">
-        <div className="stack-card">
-          <div className="stack-card-header">
-            <div>
-              <h3>Agreement status</h3>
-              <p>Download the current document and track whether the signed copy has been returned.</p>
-            </div>
-          </div>
-          <div className="stack-meta-grid">
-            <span>Sent by GoAccess: {deal.agreementSentAt ? new Date(deal.agreementSentAt).toLocaleDateString() : "Not yet"}</span>
-            <span>Signed upload: {deal.signedAgreementUploadedAt ? new Date(deal.signedAgreementUploadedAt).toLocaleDateString() : "Not yet"}</span>
-            <span>Current state: {formatDealAgreementStatusLabel(deal.agreementStatus)}</span>
-          </div>
-          <div className="agreement-link-stack">
-            {deal.agreementFileName ? (
-              <a className="button button-secondary" href={`/api/deals/${deal.id}/agreement/file?kind=dealer`} target="_blank" rel="noreferrer">
-                View dealer agreement
-              </a>
-            ) : (
-              <p className="stack-note">GoAccess has not uploaded the dealer agreement for this closed deal yet.</p>
-            )}
-            {deal.signedAgreementFileName ? (
-              <a className="button button-secondary" href={`/api/deals/${deal.id}/agreement/file?kind=signed`} target="_blank" rel="noreferrer">
-                View signed copy
-              </a>
-            ) : null}
+      <div className="stack-card">
+        <div className="stack-card-header">
+          <div>
+            <h3>Agreement status</h3>
+            <p>Download the current document and track whether the signed copy has been returned.</p>
           </div>
         </div>
-
-        <div className="stack-card">
-          <div className="stack-card-header">
-            <div>
-              <h3>Expected economics</h3>
-              <p>The expected recurring revenue and payout terms stored for this deal.</p>
-            </div>
-          </div>
-          <div className="stack-meta-grid">
-            <span>Expected monthly RMR: {formatCurrency(deal.expectedMonthlyRmr)}</span>
-            <span>Payout structure: {formatPayoutSummary(deal)}</span>
-            <span>Expected vendor earnings: {formatCurrency(deal.expectedVendorMonthlyRevenue)}</span>
-          </div>
+        <div className="stack-meta-grid">
+          <span>Sent by GoAccess: {deal.agreementSentAt ? new Date(deal.agreementSentAt).toLocaleDateString() : "Not yet"}</span>
+          <span>Signed upload: {deal.signedAgreementUploadedAt ? new Date(deal.signedAgreementUploadedAt).toLocaleDateString() : "Not yet"}</span>
+          <span>Current state: {formatDealAgreementStatusLabel(deal.agreementStatus)}</span>
+        </div>
+        <div className="agreement-link-stack">
+          {deal.agreementFileName ? (
+            <a className="button button-secondary" href={`/api/deals/${deal.id}/agreement/file?kind=dealer`} target="_blank" rel="noreferrer">
+              View dealer agreement
+            </a>
+          ) : (
+            <p className="stack-note">GoAccess has not uploaded the dealer agreement for this closed deal yet.</p>
+          )}
+          {deal.signedAgreementFileName ? (
+            <a className="button button-secondary" href={`/api/deals/${deal.id}/agreement/file?kind=signed`} target="_blank" rel="noreferrer">
+              View signed copy
+            </a>
+          ) : null}
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireVendorLegalRouteAccess } from "@/lib/auth-guards";
+import { toClientVendorDealRegistration } from "@/lib/goaccess-client-data";
 import {
   getDealById,
   recordDealSyncEvent,
@@ -50,8 +51,12 @@ export async function POST(
 
     return NextResponse.json({
       ok: true,
-      deal: updatedDeal,
-      result,
+      deal: updatedDeal ? toClientVendorDealRegistration(updatedDeal) : null,
+      result: {
+        dealId: result.dealId,
+        fileName: result.fileName,
+        uploadedAt: result.uploadedAt,
+      },
       message: "Signed dealer agreement uploaded. GoAccess can now review the final copy.",
     });
   } catch (error) {

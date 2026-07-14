@@ -285,7 +285,7 @@ export function buildVendorDealTimeline(deal: DealRegistration): TimelineEntry[]
       title: deal.status === "closed_won" ? "Deal closed won" : "Deal closed lost",
       detail:
         deal.status === "closed_won"
-          ? `Recurring revenue of $${deal.monthlyRmr.toLocaleString()} is now active.`
+          ? "This opportunity is complete."
           : "This opportunity is closed and no longer active in the pipeline.",
       timestamp: deal.updatedAt,
       tone: deal.status === "closed_won" ? "success" : "danger",

@@ -490,8 +490,13 @@ export function AdminApplicationManager({
                           {vendor.ndaStatus === "signed" ? "View accepted NDA" : "Open NDA doc"}
                         </a>
                       ) : null}
-                      {vendor?.signedNdaFileUrl ? (
-                        <a className="detail-link-chip" href={vendor.signedNdaFileUrl} target="_blank" rel="noreferrer">
+                      {vendor?.signedNdaFileName ? (
+                        <a
+                          className="detail-link-chip"
+                          href={`/api/vendor-nda/file?vendorId=${encodeURIComponent(vendor.id)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
                           View legacy signed NDA
                         </a>
                       ) : null}

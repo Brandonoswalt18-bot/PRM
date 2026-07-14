@@ -15,6 +15,11 @@ export type WorkspaceNavItem = {
     | "support";
 };
 
+export type WorkspaceAccountItem = {
+  label: string;
+  href: string;
+};
+
 export type WorkspaceSession = {
   fullName: string;
   email: string;

@@ -12,11 +12,7 @@ import { formatDealLocation } from "@/lib/deal-registration";
 import { toClientVendorDealRegistration } from "@/lib/goaccess-client-data";
 import { formatDealAgreementStatusLabel, formatVendorDealStatusLabel } from "@/lib/goaccess-copy";
 import { buildVendorDealTimeline } from "@/lib/goaccess-timeline";
-import { formatCurrency, getDealById } from "@/lib/goaccess-store";
-
-function formatOptionalCurrency(value: number) {
-  return value > 0 ? formatCurrency(value) : "Not provided";
-}
+import { getDealById } from "@/lib/goaccess-store";
 
 export default async function PartnerDealDetailPage({
   params,
@@ -42,11 +38,6 @@ export default async function PartnerDealDetailPage({
             : "Current GoAccess decision",
     },
     {
-      label: "Monthly RMR",
-      value: formatOptionalCurrency(deal.monthlyRmr),
-      delta: deal.status === "closed_won" ? "Active recurring revenue" : "Projected if won",
-    },
-    {
       label: "Dealer agreement",
       value: formatDealAgreementStatusLabel(deal.agreementStatus),
       delta: deal.signedAgreementFileName
@@ -54,14 +45,6 @@ export default async function PartnerDealDetailPage({
         : deal.agreementFileName
           ? "Agreement is available for review"
           : "Waiting on GoAccess to upload it",
-    },
-    {
-      label: "Expected earnings",
-      value: formatOptionalCurrency(deal.expectedVendorMonthlyRevenue),
-      delta:
-        deal.expectedMonthlyRmr > 0
-          ? `${formatCurrency(deal.expectedMonthlyRmr)} expected monthly RMR`
-          : "Will appear once GoAccess sets agreement terms",
     },
     {
       label: "Submitted",
@@ -104,7 +87,7 @@ export default async function PartnerDealDetailPage({
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title={deal.companyName}
-        subtitle={`Review the registration for ${formatDealLocation(deal)} and its current status, agreement, and outcome updates.`}
+        subtitle={`Review the registration for ${formatDealLocation(deal)}, its current status, and any next steps.`}
         primaryLabel="Back to deal history"
         primaryHref="/portal/deals"
       />

@@ -236,6 +236,31 @@ test("every HubSpot deal payload uses Channel Partner and the free-text vendor b
   }
 });
 
+test("HubSpot receives internal RMR only after GoAccess has set a positive amount", () => {
+  withEnvironment(
+    {
+      HUBSPOT_DEAL_STAGE_ID: "appointmentscheduled",
+      HUBSPOT_DEAL_SUBMISSION_ID_PROPERTY: "partner_portal_submission_id",
+      HUBSPOT_DEAL_REGISTRATION_STATUS_PROPERTY: "partner_registration_status",
+      HUBSPOT_DEAL_REGISTERED_AT_PROPERTY: "partner_registered_at",
+      HUBSPOT_DEAL_MONTHLY_RMR_PROPERTY: "partner_monthly_rmr",
+    },
+    () => {
+      const zeroRmrProperties = buildHubSpotDealProperties({
+        vendor: buildVendor(),
+        deal: buildDeal({ monthlyRmr: 0 }),
+      });
+      expect(zeroRmrProperties).not.toHaveProperty("partner_monthly_rmr");
+
+      const positiveRmrProperties = buildHubSpotDealProperties({
+        vendor: buildVendor(),
+        deal: buildDeal({ monthlyRmr: 850 }),
+      });
+      expect(positiveRmrProperties.partner_monthly_rmr).toBe("850");
+    },
+  );
+});
+
 test("the legacy Business Name dropdown is written only for an existing exact option", () => {
   const originalEnvironment = {
     stage: process.env.HUBSPOT_DEAL_STAGE_ID,
@@ -447,13 +472,15 @@ test("linked-deal retry properties preserve HubSpot-owned sales edits", () => {
   );
 });
 
-test("vendor-facing payloads redact internal company mapping and estimated value", () => {
+test("vendor-facing payloads redact internal company mapping and financial data", () => {
   const clientVendor = toClientApprovedVendor(
     buildVendor({
       hubspotCompanyId: "company-1",
       hubspotCompanySyncStatus: "synced",
       hubspotCompanySyncReference: "Internal sync detail",
       hubspotCompanySyncedAt: timestamp,
+      signedNdaFileUrl: "https://private.example/signed-nda.pdf",
+      signedNdaBlobPath: "private/signed-nda.pdf",
     })
   );
 
@@ -462,8 +489,26 @@ test("vendor-facing payloads redact internal company mapping and estimated value
   expect(clientVendor).not.toHaveProperty("hubspotCompanySyncReference");
   expect(clientVendor).not.toHaveProperty("hubspotCompanySyncedAt");
   expect(clientVendor).not.toHaveProperty("hubspotPartnerId");
+  expect(clientVendor).not.toHaveProperty("signedNdaFileUrl");
+  expect(clientVendor).not.toHaveProperty("signedNdaBlobPath");
   expect(clientVendor.vendorCode).toBe("GA-VENDOR-019");
 
-  const clientDeal = toClientVendorDealRegistration(buildDeal());
+  const clientDeal = toClientVendorDealRegistration(
+    buildDeal({
+      agreementFileUrl: "https://private.example/dealer-agreement.pdf",
+      agreementBlobPath: "private/dealer-agreement.pdf",
+      signedAgreementFileUrl: "https://private.example/signed-dealer-agreement.pdf",
+      signedAgreementBlobPath: "private/signed-dealer-agreement.pdf",
+    }),
+  );
   expect(clientDeal).not.toHaveProperty("estimatedValue");
+  expect(clientDeal).not.toHaveProperty("monthlyRmr");
+  expect(clientDeal).not.toHaveProperty("expectedMonthlyRmr");
+  expect(clientDeal).not.toHaveProperty("vendorPayoutType");
+  expect(clientDeal).not.toHaveProperty("vendorPayoutRate");
+  expect(clientDeal).not.toHaveProperty("expectedVendorMonthlyRevenue");
+  expect(clientDeal).not.toHaveProperty("agreementFileUrl");
+  expect(clientDeal).not.toHaveProperty("agreementBlobPath");
+  expect(clientDeal).not.toHaveProperty("signedAgreementFileUrl");
+  expect(clientDeal).not.toHaveProperty("signedAgreementBlobPath");
 });

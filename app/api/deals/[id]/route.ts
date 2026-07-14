@@ -209,20 +209,20 @@ export async function PATCH(
       return NextResponse.json({ message: "Deal not found." }, { status: 404 });
     }
 
+    if (monthlyRmr !== null && existingDeal.hubspotDealId) {
+      return NextResponse.json(
+        {
+          message:
+            "This deal is linked to HubSpot. Update monthly RMR in HubSpot; the portal imports it during reconciliation.",
+        },
+        { status: 409 },
+      );
+    }
+
     if (body.status && !canTransitionDealStatus(existingDeal.status, body.status)) {
       return NextResponse.json(
         { message: `Cannot move a deal from ${existingDeal.status.replaceAll("_", " ")} to ${body.status.replaceAll("_", " ")}.` },
         { status: 409 }
-      );
-    }
-
-    if (
-      (body.status === "approved" || body.status === "synced_to_hubspot") &&
-      (monthlyRmr ?? existingDeal.monthlyRmr) <= 0
-    ) {
-      return NextResponse.json(
-        { message: "Enter the GoAccess monthly RMR amount before approving this deal." },
-        { status: 400 }
       );
     }
 
@@ -234,7 +234,10 @@ export async function PATCH(
       return NextResponse.json({
         ok: true,
         deal: existingDeal,
-        message: "Monthly RMR saved by GoAccess.",
+        message:
+          monthlyRmr === 0
+            ? "Monthly RMR cleared by GoAccess."
+            : "Monthly RMR saved by GoAccess.",
       });
     }
 

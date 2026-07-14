@@ -1,5 +1,4 @@
 import {
-  MetricGrid,
   ProfileRow,
   SideSections,
   TableSection,
@@ -13,63 +12,26 @@ import {
   formatVendorStatusLabel,
   getVendorNextStep,
 } from "@/lib/goaccess-copy";
-import { getCurrentMonthlyRmrForVendor, getForecastMonthlyRmrForVendor, getVendorById, listDeals, listSupportRequests } from "@/lib/goaccess-store";
-import type { InfoListSection, MetricCard, ProfileField } from "@/types/prm";
+import { getVendorById } from "@/lib/goaccess-store";
+import type { InfoListSection, ProfileField } from "@/types/prm";
 
-function buildMetrics(dealCount: number, openSupport: number, hasCredentials: boolean, rmr: number, forecast: number): MetricCard[] {
+function buildSections(
+  vendor: Awaited<ReturnType<typeof getVendorById>>,
+): InfoListSection[] {
   return [
     {
-      label: "Registered deals",
-      value: String(dealCount),
-      delta: `${openSupport} support items in queue`,
-    },
-    {
-      label: "Open support",
-      value: String(openSupport),
-      delta: openSupport === 0 ? "No vendor issues waiting" : "Vendor follow-up needed",
-    },
-    {
-      label: "Current monthly RMR",
-      value: `$${rmr.toLocaleString()}`,
-      delta: `${hasCredentials ? "Credentials active" : "Credentials pending"}`,
-    },
-    {
-      label: "Forecast monthly RMR",
-      value: `$${forecast.toLocaleString()}`,
-      delta: "Forecast includes closed won and approved pipeline",
-    },
-  ];
-}
-
-function buildProfile(vendorName: string) {
-  return vendorName ? [
-    { label: "Vendor", value: vendorName },
-  ] : [];
-}
-
-function buildSections(vendor: Awaited<ReturnType<typeof getVendorById>>, openDeals: number, closedWon: number): InfoListSection[] {
-  return [
-    {
-      title: "Profile status",
+      title: "Account status",
       items: [
         `Account stage: ${vendor ? formatVendorStatusLabel(vendor.status) : "Pending"}`,
         `NDA: ${vendor ? formatNdaStatusLabel(vendor.ndaStatus) : "Not started"}`,
-        `Portal invite: ${vendor?.credentialsIssued ? "Sent" : "Not sent"}`,
+        `Portal access: ${vendor?.portalAccess === "active" ? "Active" : "Pending"}`,
       ],
     },
     {
-      title: "Deal posture",
+      title: "Keep your profile current",
       items: [
-        `Open deals: ${openDeals}`,
-        `Closed won: ${closedWon}`,
-        "GoAccess reviews each new registration before approval",
-      ],
-    },
-    {
-      title: "Actions",
-      items: [
-        "Update contact details as needed",
-        "Request support for review delays",
+        "Update company and contact details when they change",
+        "Use Support if a correction needs GoAccess assistance",
         getVendorNextStep(vendor),
       ],
     },
@@ -79,23 +41,6 @@ function buildSections(vendor: Awaited<ReturnType<typeof getVendorById>>, openDe
 export default async function PartnerProfilePage() {
   const session = await getWorkspaceSession();
   const vendor = session?.vendorId ? await getVendorById(session.vendorId) : null;
-  const vendorId = vendor?.id ?? session?.vendorId;
-  const [deals, supportRequests, currentRmr, forecastRmr] = await Promise.all(
-    vendorId
-      ? [
-          listDeals(vendorId),
-          listSupportRequests(vendorId),
-          getCurrentMonthlyRmrForVendor(vendorId),
-          getForecastMonthlyRmrForVendor(vendorId),
-        ]
-      : [Promise.resolve([]), Promise.resolve([]), Promise.resolve(0), Promise.resolve(0)]
-  );
-  const openDeals = deals.filter((deal) => deal.status === "submitted" || deal.status === "under_review").length;
-  const closedWon = deals.filter((deal) => deal.status === "closed_won").length;
-  const openSupport = supportRequests.filter((request) => request.status !== "resolved").length;
-  const metrics = vendor
-    ? buildMetrics(deals.length, openSupport, Boolean(vendor.credentialsIssued), currentRmr, forecastRmr)
-    : [];
   const profileRows: ProfileField[] = vendor
     ? [
         { label: "Company", value: vendor.companyName },
@@ -108,36 +53,34 @@ export default async function PartnerProfilePage() {
         ...(vendor.state ? [{ label: "State", value: vendor.state }] : []),
         { label: "Account stage", value: formatVendorStatusLabel(vendor.status) },
         { label: "NDA status", value: formatNdaStatusLabel(vendor.ndaStatus) },
-        { label: "Portal invite", value: vendor.credentialsIssued ? "Sent" : "Pending" },
+        { label: "Portal access", value: vendor.portalAccess === "active" ? "Active" : "Pending" },
       ]
-    : buildProfile("");
-  const sections = vendor ? buildSections(vendor, openDeals, closedWon) : [];
+    : [];
 
   return (
     <>
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
         title="Profile"
-        subtitle="Keep your business details current so onboarding, support, and deal review stay aligned across every team touchpoint."
-        primaryLabel="Register a deal"
-        primaryHref="/portal/links"
+        subtitle="Keep your company and primary contact details current."
+        primaryLabel="Back to home"
+        primaryHref="/portal"
       />
       <div className="app-content">
-        <MetricGrid metrics={metrics} />
         <section className="dashboard-grid">
-        {vendor ? <VendorProfileForm vendor={toClientApprovedVendor(vendor)} /> : null}
+          {vendor ? <VendorProfileForm vendor={toClientApprovedVendor(vendor)} /> : null}
           <TableSection
             title="Account snapshot"
-            description="This live summary reflects the approved vendor record GoAccess uses for onboarding, legal tracking, and account operations."
-            actionLabel="Open deal registrations"
-            actionHref="/portal/deals"
+            description="The approved vendor information GoAccess uses for agreements and deal review."
+            actionLabel="Open agreements"
+            actionHref="/portal/onboarding"
             headers={["Field", "Value"]}
             rows={profileRows}
             renderRow={ProfileRow}
           />
         </section>
         <section className="dashboard-grid">
-          <SideSections sections={sections} />
+          <SideSections sections={buildSections(vendor)} />
         </section>
       </div>
     </>

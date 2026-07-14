@@ -8,11 +8,16 @@ import {
   GlobalWorkspaceSearch,
   type GlobalSearchRecord,
 } from "@/components/product/global-workspace-search";
-import type { WorkspaceNavItem, WorkspaceSession } from "@/types/prm";
+import type {
+  WorkspaceAccountItem,
+  WorkspaceNavItem,
+  WorkspaceSession,
+} from "@/types/prm";
 
 type WorkspaceLayoutProps = {
   workspace: string;
   navItems: WorkspaceNavItem[];
+  accountItems?: WorkspaceAccountItem[];
   session: WorkspaceSession;
   globalSearchRecords?: GlobalSearchRecord[];
   children: ReactNode;
@@ -60,6 +65,7 @@ function WorkspaceNavIcon({ icon }: { icon: WorkspaceNavItem["icon"] }) {
 export function WorkspaceLayout({
   workspace,
   navItems,
+  accountItems = [],
   session,
   globalSearchRecords,
   children,
@@ -68,7 +74,11 @@ export function WorkspaceLayout({
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const mobileToggleRef = useRef<HTMLButtonElement | null>(null);
   const mobileCloseRef = useRef<HTMLButtonElement | null>(null);
-  const activeItem = navItems.find((item) => isActivePath(pathname, item.href)) ?? navItems[0];
+  const sidebarRef = useRef<HTMLElement | null>(null);
+  const sessionCardRef = useRef<HTMLDetailsElement | null>(null);
+  const activeItem = navItems.find((item) => isActivePath(pathname, item.href));
+  const activeAccountItem = accountItems.find((item) => isActivePath(pathname, item.href));
+  const activePageLabel = activeItem?.label ?? activeAccountItem?.label ?? navItems[0]?.label ?? workspace;
   const navGroups = navItems.reduce<Array<{ label: string; items: WorkspaceNavItem[] }>>(
     (groups, item) => {
       const currentGroup = groups.find((group) => group.label === item.group);
@@ -92,6 +102,7 @@ export function WorkspaceLayout({
 
   useEffect(() => {
     setMobileNavOpen(false);
+    sessionCardRef.current?.removeAttribute("open");
   }, [pathname]);
 
   useEffect(() => {
@@ -119,6 +130,35 @@ export function WorkspaceLayout({
       if (event.key === "Escape") {
         setMobileNavOpen(false);
         requestAnimationFrame(() => mobileToggleRef.current?.focus());
+        return;
+      }
+
+      if (event.key !== "Tab" || !sidebarRef.current) {
+        return;
+      }
+
+      const focusableElements = Array.from(
+        sidebarRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), summary, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter(
+        (element) =>
+          element.getAttribute("aria-hidden") !== "true" && element.getClientRects().length > 0,
+      );
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (!firstElement || !lastElement) {
+        return;
+      }
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
       }
     }
 
@@ -141,17 +181,20 @@ export function WorkspaceLayout({
       </a>
       <button
         aria-label="Close navigation"
-        aria-hidden={!mobileNavOpen}
+        aria-hidden="true"
         className={`mobile-nav-backdrop${mobileNavOpen ? " is-open" : ""}`}
-        tabIndex={mobileNavOpen ? 0 : -1}
+        tabIndex={-1}
         type="button"
         onClick={() => closeMobileNavigation(true)}
       />
 
       <aside
         aria-label={`${workspace} navigation`}
+        aria-modal={mobileNavOpen ? true : undefined}
         className={`app-sidebar${mobileNavOpen ? " is-mobile-open" : ""}`}
         id="workspace-navigation"
+        ref={sidebarRef}
+        role={mobileNavOpen ? "dialog" : undefined}
       >
         <div className="app-sidebar-top">
           <div>
@@ -202,7 +245,7 @@ export function WorkspaceLayout({
             Public page
           </Link>
         </div>
-        <details className="session-card">
+        <details className="session-card" ref={sessionCardRef}>
           <summary
             aria-label={`Account menu for ${session.fullName}`}
             className="session-card-main"
@@ -215,6 +258,18 @@ export function WorkspaceLayout({
             <span aria-hidden="true" className="session-chevron" />
           </summary>
           <div className="session-menu">
+            {accountItems.map((item) => (
+              <Link
+                aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
+                className={`session-menu-link${isActivePath(pathname, item.href) ? " is-active" : ""}`}
+                href={item.href}
+                key={item.href}
+                prefetch={false}
+                onClick={() => closeMobileNavigation()}
+              >
+                {item.label}
+              </Link>
+            ))}
             <Link
               className="session-signout"
               href="/auth/logout"
@@ -254,7 +309,7 @@ export function WorkspaceLayout({
           </button>
           <div className="mobile-workspace-copy">
             <span className="mobile-workspace-label">{workspace}</span>
-            <strong className="mobile-workspace-title">{activeItem?.label ?? workspace}</strong>
+            <strong className="mobile-workspace-title">{activePageLabel}</strong>
           </div>
         </div>
         {globalSearchRecords && globalSearchRecords.length > 0 ? (

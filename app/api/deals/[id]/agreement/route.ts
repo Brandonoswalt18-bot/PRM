@@ -8,11 +8,15 @@ import {
 } from "@/lib/goaccess-store";
 import type { VendorPayoutType } from "@/types/goaccess";
 
-function parseNonNegativeNumber(value: FormDataEntryValue | null, fieldLabel: string) {
+function parseOptionalNonNegativeNumber(
+  value: FormDataEntryValue | null,
+  fieldLabel: string,
+  fallback: number,
+) {
   const raw = value?.toString().trim() ?? "";
 
   if (!raw) {
-    throw new Error(`${fieldLabel} is required.`);
+    return fallback;
   }
 
   const parsed = Number(raw);
@@ -63,9 +67,17 @@ export async function POST(
   }
 
   try {
-    const expectedMonthlyRmr = parseNonNegativeNumber(formData.get("expectedMonthlyRmr"), "Expected monthly RMR");
-    const vendorPayoutRate = parseNonNegativeNumber(formData.get("vendorPayoutRate"), "Vendor payout rate");
-    const vendorPayoutType = parsePayoutType(formData.get("vendorPayoutType"));
+    const expectedMonthlyRmr = parseOptionalNonNegativeNumber(
+      formData.get("expectedMonthlyRmr"),
+      "Expected monthly RMR",
+      deal.expectedMonthlyRmr || deal.monthlyRmr || 0,
+    );
+    const vendorPayoutRate = parseOptionalNonNegativeNumber(
+      formData.get("vendorPayoutRate"),
+      "Vendor payout rate",
+      deal.vendorPayoutRate || 0,
+    );
+    const vendorPayoutType = parsePayoutType(formData.get("vendorPayoutType")) ?? deal.vendorPayoutType;
     const result = await uploadDealerAgreementForDeal(
       id,
       {

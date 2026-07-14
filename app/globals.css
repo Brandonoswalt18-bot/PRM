@@ -4718,6 +4718,17 @@ li + li {
   align-items: start;
 }
 
+.deal-registration-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(260px, 0.65fr);
+  align-items: start;
+  gap: 14px;
+}
+
+.deal-registration-layout > * {
+  min-width: 0;
+}
+
 .admin-dashboard-grid {
   grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
 }
@@ -4875,6 +4886,10 @@ li + li {
   border-top: 1px solid var(--gray-line);
   color: inherit;
   text-decoration: none;
+}
+
+.partner-deal-row {
+  grid-template-columns: minmax(190px, 1fr) auto 24px;
 }
 
 .simple-deal-row:first-child {
@@ -5097,7 +5112,8 @@ li + li {
 
 @media (max-width: 1080px) {
   .simple-dashboard-grid,
-  .admin-dashboard-grid {
+  .admin-dashboard-grid,
+  .deal-registration-layout {
     grid-template-columns: 1fr;
   }
 
@@ -5806,6 +5822,7 @@ li + li {
   box-shadow: 0 8px 24px rgba(0, 32, 96, 0.12);
 }
 
+.session-menu-link,
 .session-signout {
   display: flex;
   align-items: center;
@@ -5820,6 +5837,15 @@ li + li {
   text-decoration: none;
 }
 
+.session-menu-link + .session-signout {
+  margin-top: 4px;
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 7px 7px;
+}
+
+.session-menu-link:hover,
+.session-menu-link:focus-visible,
+.session-menu-link.is-active,
 .session-signout:hover,
 .session-signout:focus-visible {
   background: var(--brand-off-white);
@@ -5835,7 +5861,54 @@ li + li {
     min-height: 54px;
   }
 
+  .session-menu {
+    position: static;
+    margin: 0 5px 5px;
+    box-shadow: none;
+  }
+
+  .session-menu-link,
   .session-signout {
     min-height: 44px;
+  }
+}
+
+/* Partner portal accessibility and responsive polish. */
+.deal-registration-card h2 {
+  max-width: none;
+  font-size: 1.12rem;
+  letter-spacing: -0.01em;
+}
+
+.deal-registration-form input,
+.deal-registration-form select,
+.deal-registration-form textarea {
+  font-size: 16px;
+}
+
+@media (max-width: 760px) {
+  .partner-deal-row .status-pill {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard-metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

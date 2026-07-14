@@ -17,12 +17,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "GoAccess Vendor Portal",
   description:
-    "Apply to become a GoAccess vendor, complete onboarding, register deals, and track monthly recurring revenue.",
+    "Apply to become a GoAccess vendor, complete agreements, register deals, and access partner training.",
   metadataBase: new URL(portalBaseUrl),
   openGraph: {
     title: "GoAccess Vendor Portal",
     description:
-      "GoAccess vendor application, onboarding, deal registration, and recurring revenue tracking.",
+      "GoAccess vendor applications, agreements, deal registration, and partner training.",
     url: portalBaseUrl,
     siteName: "GoAccess Vendor Portal",
     type: "website",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "GoAccess Vendor Portal",
     description:
-      "GoAccess vendor application, onboarding, deal registration, and recurring revenue tracking.",
+      "GoAccess vendor applications, agreements, deal registration, and partner training.",
   },
 };
 

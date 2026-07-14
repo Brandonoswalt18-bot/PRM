@@ -17,9 +17,9 @@ export default async function VendorLearningPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
-        title="Learning"
+        title="Training"
         subtitle="Open the training videos and documents your team needs to start selling and supporting GoAccess."
-        primaryLabel={latestAsset ? "Watch latest training" : "Training library"}
+        primaryLabel={latestAsset ? "Open latest training" : "Training"}
         primaryHref={latestAssetHref}
       />
       <div className="app-content learning-page">

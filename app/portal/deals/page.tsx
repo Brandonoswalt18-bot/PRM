@@ -1,16 +1,35 @@
-import {
-  MetricGrid,
-  TimelineSection,
-} from "@/components/product/product-page-sections";
+import Link from "next/link";
+import { MetricGrid } from "@/components/product/product-page-sections";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
 import { formatVendorDealStatusLabel } from "@/lib/goaccess-copy";
-import { buildVendorDealTimeline } from "@/lib/goaccess-timeline";
-import {
-  formatCurrency,
-  listDeals,
-} from "@/lib/goaccess-store";
+import { listDeals } from "@/lib/goaccess-store";
 import { formatDealLocation } from "@/lib/deal-registration";
+import type { DealStatus } from "@/types/goaccess";
+
+function formatShortDate(value: string) {
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getStatusTone(status: DealStatus) {
+  if (status === "approved" || status === "closed_won" || status === "synced_to_hubspot") {
+    return "status-pill-success";
+  }
+
+  if (status === "rejected" || status === "closed_lost") {
+    return "status-pill-danger";
+  }
+
+  if (status === "submitted" || status === "under_review") {
+    return "status-pill-warning";
+  }
+
+  return "status-pill-neutral";
+}
 
 export default async function PartnerDealsPage() {
   const session = await getWorkspaceSession();
@@ -24,21 +43,18 @@ export default async function PartnerDealsPage() {
       delta: `${deals.filter((deal) => deal.status === "submitted" || deal.status === "under_review").length} still under review`,
     },
     {
+      label: "In review",
+      value: String(deals.filter((deal) => deal.status === "submitted" || deal.status === "under_review").length),
+      delta: "Waiting on a GoAccess decision",
+    },
+    {
       label: "Approved",
-      value: String(deals.filter((deal) => deal.status === "approved" || deal.status === "synced_to_hubspot").length),
-      delta: "Registrations approved by GoAccess",
-    },
-    {
-      label: "Closed won",
-      value: String(deals.filter((deal) => deal.status === "closed_won").length),
-      delta: `${formatCurrency(deals.filter((deal) => deal.status === "closed_won").reduce((sum, deal) => sum + deal.monthlyRmr, 0))} active monthly RMR`,
-    },
-    {
-      label: "In review / declined",
       value: String(
-        deals.filter((deal) => deal.status === "under_review" || deal.status === "rejected").length
+        deals.filter((deal) =>
+          ["approved", "synced_to_hubspot", "closed_won", "closed_lost"].includes(deal.status),
+        ).length,
       ),
-      delta: `${deals.filter((deal) => deal.status === "under_review").length} in review · ${deals.filter((deal) => deal.status === "rejected").length} declined`,
+      delta: `${deals.filter((deal) => deal.status === "closed_won").length} completed`,
     },
   ];
 
@@ -46,63 +62,53 @@ export default async function PartnerDealsPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
-        title="My deals"
-        subtitle="Track each deal from submission through GoAccess review, approval, and recurring revenue."
-        primaryLabel="Register new deal"
-        primaryHref="/portal/links"
+        title="Deals"
+        subtitle="Track each registration from submission through GoAccess review and decision."
+        primaryLabel="Register a deal"
+        primaryHref="/portal/deals/new"
       />
       <div className="app-content">
         <MetricGrid metrics={metrics} />
-        <article className="workspace-card wide-card">
-          <div className="card-header-row">
+        <article className="simple-panel">
+          <div className="simple-panel-header">
             <div>
-              <span className="section-kicker">History</span>
-              <h3>Deal history</h3>
+              <span className="simple-eyebrow">History</span>
+              <h2>Deal history</h2>
               <p>Every deal you submitted through the GoAccess vendor portal.</p>
             </div>
           </div>
           {deals.length > 0 ? (
-            <p className="table-note">Open any deal for its agreement status, expected earnings, and status history.</p>
-          ) : null}
-          <div className="data-table">
-            <div className="table-head table-cols-5">
-              <span>Community</span>
-              <span>Location</span>
-              <span>Submitted</span>
-              <span>Status</span>
-              <span>Detail</span>
+            <div className="simple-deal-list">
+              {deals.map((deal) => (
+                <Link
+                  className="simple-deal-row partner-deal-row"
+                  href={`/portal/deals/${deal.id}`}
+                  key={deal.id}
+                  prefetch={false}
+                >
+                  <div className="simple-deal-main">
+                    <strong>{deal.companyName}</strong>
+                    <span>
+                      {formatDealLocation(deal)} · Submitted {formatShortDate(deal.createdAt)}
+                    </span>
+                  </div>
+                  <span className={`status-pill ${getStatusTone(deal.status)}`}>
+                    {formatVendorDealStatusLabel(deal.status)}
+                  </span>
+                  <span aria-hidden="true" className="simple-row-arrow">→</span>
+                </Link>
+              ))}
             </div>
-            {deals.map((deal) => (
-              <div className="table-row table-cols-5" key={deal.id}>
-                <span>{deal.companyName}</span>
-                <span>{formatDealLocation(deal)}</span>
-                <span>{new Date(deal.createdAt).toLocaleDateString()}</span>
-                <span>{formatVendorDealStatusLabel(deal.status)}</span>
-                <span>
-                  <a href={`/portal/deals/${deal.id}`}>Open</a>
-                </span>
-              </div>
-            ))}
-          </div>
-          {deals.length === 0 ? (
-            <div className="empty-state-card">
-              <span className="section-kicker">No deals yet</span>
-              <h3>Register your first opportunity.</h3>
+          ) : (
+            <div className="simple-empty-state">
+              <h3>Register your first deal</h3>
               <p>Submit a community opportunity and GoAccess will handle the review and next steps.</p>
-              <a className="button button-primary" href="/portal/links">Register a deal</a>
+              <Link className="button button-primary" href="/portal/deals/new">
+                Register a deal
+              </Link>
             </div>
-          ) : null}
+          )}
         </article>
-        <section className="dashboard-grid">
-          {deals.slice(0, 3).map((deal) => (
-            <TimelineSection
-              key={deal.id}
-              title={deal.companyName}
-              description={`${formatDealLocation(deal)} · ${formatVendorDealStatusLabel(deal.status)}`}
-              entries={buildVendorDealTimeline(deal)}
-            />
-          ))}
-        </section>
       </div>
     </>
   );

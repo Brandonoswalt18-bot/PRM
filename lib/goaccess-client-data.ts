@@ -18,6 +18,8 @@ export function toClientApprovedVendor(vendor: ApprovedVendor): ClientApprovedVe
   delete clientVendor.ndaAcceptanceUserAgent;
   delete clientVendor.termsAcceptanceIp;
   delete clientVendor.termsAcceptanceUserAgent;
+  delete clientVendor.signedNdaFileUrl;
+  delete clientVendor.signedNdaBlobPath;
   delete clientVendor.hubspotPartnerId;
   delete clientVendor.hubspotCompanyId;
   delete clientVendor.hubspotCompanySyncStatus;
@@ -38,6 +40,15 @@ export function toClientVendorDealRegistration(
 ): ClientVendorDealRegistration {
   const clientDeal: Partial<DealRegistration> = { ...deal };
   delete clientDeal.estimatedValue;
+  delete clientDeal.monthlyRmr;
+  delete clientDeal.expectedMonthlyRmr;
+  delete clientDeal.vendorPayoutType;
+  delete clientDeal.vendorPayoutRate;
+  delete clientDeal.expectedVendorMonthlyRevenue;
+  delete clientDeal.agreementFileUrl;
+  delete clientDeal.agreementBlobPath;
+  delete clientDeal.signedAgreementFileUrl;
+  delete clientDeal.signedAgreementBlobPath;
   delete clientDeal.hubspotCompanyId;
   delete clientDeal.hubspotContactId;
   delete clientDeal.hubspotDealId;

@@ -19,7 +19,6 @@ const initialState: SupportRequestFormState = {
 const categories: Array<{ value: SupportRequestCategory; label: string }> = [
   { value: "deal_registration", label: "Deal registration" },
   { value: "profile_update", label: "Profile update" },
-  { value: "rmr_question", label: "RMR question" },
   { value: "portal_access", label: "Portal access" },
   { value: "general", label: "General" },
 ];
@@ -74,7 +73,7 @@ export function SupportRequestForm() {
       <div className="card-header-row">
         <div>
           <h3>Support request</h3>
-          <p>Use this for deal questions, profile changes, portal access, or RMR questions.</p>
+          <p>Use this for deal questions, profile changes, portal access, or general help.</p>
         </div>
       </div>
       <form className="cta-form" onSubmit={handleSubmit}>

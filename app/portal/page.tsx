@@ -1,17 +1,9 @@
 import Link from "next/link";
-import { VendorNdaManager } from "@/components/product/vendor-nda-manager";
+import { redirect } from "next/navigation";
 import { WorkspacePageHeader } from "@/components/product/workspace-page-header";
 import { getWorkspaceSession } from "@/lib/auth";
-import { toClientApprovedVendor } from "@/lib/goaccess-client-data";
 import { formatVendorDealStatusLabel } from "@/lib/goaccess-copy";
-import {
-  formatCurrency,
-  getCurrentMonthlyRmrForVendor,
-  getForecastMonthlyRmrForVendor,
-  getVendorById,
-  listDeals,
-  listTrainingAssets,
-} from "@/lib/goaccess-store";
+import { getVendorById, listDeals, listTrainingAssets } from "@/lib/goaccess-store";
 import type { DealStatus } from "@/types/goaccess";
 
 function formatShortDate(value: string) {
@@ -23,7 +15,7 @@ function formatShortDate(value: string) {
 }
 
 function getStatusTone(status: DealStatus) {
-  if (status === "closed_won" || status === "synced_to_hubspot") {
+  if (status === "approved" || status === "closed_won" || status === "synced_to_hubspot") {
     return "status-pill-success";
   }
 
@@ -31,7 +23,7 @@ function getStatusTone(status: DealStatus) {
     return "status-pill-danger";
   }
 
-  if (status === "submitted" || status === "under_review" || status === "approved") {
+  if (status === "submitted" || status === "under_review") {
     return "status-pill-warning";
   }
 
@@ -41,20 +33,24 @@ function getStatusTone(status: DealStatus) {
 export default async function PartnerPortalPage() {
   const session = await getWorkspaceSession();
   const vendorId = session?.vendorId;
-  const [vendor, deals, currentRmr, forecastRmr, trainingAssets] = await Promise.all([
+  const [vendor, deals, trainingAssets] = await Promise.all([
     vendorId ? getVendorById(vendorId) : Promise.resolve(null),
     listDeals(vendorId),
-    vendorId ? getCurrentMonthlyRmrForVendor(vendorId) : Promise.resolve(0),
-    vendorId ? getForecastMonthlyRmrForVendor(vendorId) : Promise.resolve(0),
     listTrainingAssets(),
   ]);
 
+  const legalComplete = vendor?.ndaStatus === "signed" && Boolean(vendor.termsAcceptedAt);
+
+  if (!legalComplete) {
+    redirect("/portal/onboarding");
+  }
+
   const firstName = session?.fullName.split(" ")[0] || "Partner";
-  const ndaComplete = vendor?.ndaStatus === "signed";
-  const termsComplete = Boolean(vendor?.termsAcceptedAt);
-  const legalComplete = ndaComplete && termsComplete;
   const dealsInReview = deals.filter(
     (deal) => deal.status === "submitted" || deal.status === "under_review",
+  ).length;
+  const approvedDeals = deals.filter((deal) =>
+    ["approved", "synced_to_hubspot", "closed_won", "closed_lost"].includes(deal.status),
   ).length;
   const recentDeals = [...deals]
     .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
@@ -65,79 +61,27 @@ export default async function PartnerPortalPage() {
     <>
       <WorkspacePageHeader
         workspace="VENDOR PORTAL"
-        title={legalComplete ? `Welcome back, ${firstName}` : "Complete your vendor agreements"}
-        subtitle={
-          legalComplete
-            ? "Register opportunities and track recurring revenue."
-            : "Review and accept the NDA and Partner Agreement to unlock the portal."
-        }
-        primaryLabel={legalComplete ? "Register a deal" : "Complete agreements"}
-        primaryHref={legalComplete ? "/portal/links" : "/portal/onboarding"}
+        title={`Welcome back, ${firstName}`}
+        subtitle="Register opportunities, follow each review, and access GoAccess training."
+        primaryLabel="Register a deal"
+        primaryHref="/portal/deals/new"
       />
       <div className="app-content simple-dashboard">
-        <section
-          className={`legal-status-banner${legalComplete ? " is-complete" : ""}`}
-          aria-labelledby="legal-status-title"
-        >
-          <div className="legal-status-copy">
-            <span className="simple-eyebrow">Agreements</span>
-            <h2 id="legal-status-title">
-              {legalComplete ? "Your agreements are complete" : "Accept your NDA and Partner Agreement"}
-            </h2>
-            <p>
-              {legalComplete
-                ? "Your legal onboarding is complete and your account is ready for deal registration."
-                : "Both documents are required before your GoAccess partnership can move forward."}
-            </p>
-          </div>
-          <div className="legal-status-actions">
-            <div className="legal-checklist" aria-label="Agreement status">
-              <span className={ndaComplete ? "is-complete" : ""}>
-                <span aria-hidden="true">{ndaComplete ? "✓" : "1"}</span>
-                NDA
-              </span>
-              <span className={termsComplete ? "is-complete" : ""}>
-                <span aria-hidden="true">{termsComplete ? "✓" : "2"}</span>
-                Partner Agreement
-              </span>
-            </div>
-            {!legalComplete ? (
-              <div className="legal-document-links" aria-label="Required legal documents">
-                {vendor?.ndaDocumentUrl ? (
-                  <a className="button button-secondary" href={vendor.ndaDocumentUrl} target="_blank" rel="noreferrer">
-                    View NDA PDF
-                  </a>
-                ) : null}
-                {vendor?.termsDocumentUrl ? (
-                  <a className="button button-secondary" href={vendor.termsDocumentUrl} target="_blank" rel="noreferrer">
-                    View Partner Agreement PDF
-                  </a>
-                ) : null}
-              </div>
-            ) : null}
-            <Link className="button button-secondary" href="/portal/onboarding" prefetch={false}>
-              {legalComplete ? "View agreements" : "Complete agreements"}
-            </Link>
-          </div>
-        </section>
-
-        {legalComplete ? (
-          <>
-        <section className="portal-summary-strip" aria-label="Vendor summary">
-          <Link className="portal-summary-item" href="/portal/earnings" prefetch={false}>
-            <span>Current monthly RMR</span>
-            <strong>{formatCurrency(currentRmr)}</strong>
-            <small>{deals.filter((deal) => deal.status === "closed_won").length} active accounts</small>
-          </Link>
-          <Link className="portal-summary-item" href="/portal/earnings" prefetch={false}>
-            <span>Forecast monthly RMR</span>
-            <strong>{formatCurrency(forecastRmr)}</strong>
-            <small>Approved and active pipeline</small>
-          </Link>
+        <section className="portal-summary-strip" aria-label="Deal summary">
           <Link className="portal-summary-item" href="/portal/deals" prefetch={false}>
             <span>Registered deals</span>
             <strong>{deals.length}</strong>
-            <small>{dealsInReview} waiting for review</small>
+            <small>All submitted opportunities</small>
+          </Link>
+          <Link className="portal-summary-item" href="/portal/deals" prefetch={false}>
+            <span>In review</span>
+            <strong>{dealsInReview}</strong>
+            <small>Waiting on a GoAccess decision</small>
+          </Link>
+          <Link className="portal-summary-item" href="/portal/deals" prefetch={false}>
+            <span>Approved</span>
+            <strong>{approvedDeals}</strong>
+            <small>Approved or completed opportunities</small>
           </Link>
         </section>
 
@@ -147,7 +91,7 @@ export default async function PartnerPortalPage() {
               <div>
                 <span className="simple-eyebrow">Deals</span>
                 <h2>Your recent deals</h2>
-                <p>Track each opportunity from submission through GoAccess review and approval.</p>
+                <p>See the latest status for every opportunity you registered.</p>
               </div>
               <Link href="/portal/deals" className="simple-text-link" prefetch={false}>
                 View all
@@ -159,7 +103,7 @@ export default async function PartnerPortalPage() {
               <div className="simple-deal-list">
                 {recentDeals.map((deal) => (
                   <Link
-                    className="simple-deal-row"
+                    className="simple-deal-row partner-deal-row"
                     href={`/portal/deals/${deal.id}`}
                     key={deal.id}
                     prefetch={false}
@@ -174,10 +118,6 @@ export default async function PartnerPortalPage() {
                     <span className={`status-pill ${getStatusTone(deal.status)}`}>
                       {formatVendorDealStatusLabel(deal.status)}
                     </span>
-                    <div className="simple-deal-value">
-                      <strong>{formatCurrency(deal.expectedMonthlyRmr || deal.monthlyRmr)}</strong>
-                      <span>Monthly RMR</span>
-                    </div>
                     <span className="simple-row-arrow" aria-hidden="true">→</span>
                   </Link>
                 ))}
@@ -185,8 +125,8 @@ export default async function PartnerPortalPage() {
             ) : (
               <div className="simple-empty-state">
                 <h3>Register your first deal</h3>
-                <p>Register your first opportunity and GoAccess will handle the review and next steps.</p>
-                <Link className="button button-primary" href="/portal/links">
+                <p>Add a community opportunity and GoAccess will handle the review.</p>
+                <Link className="button button-primary" href="/portal/deals/new">
                   Register your first deal
                 </Link>
               </div>
@@ -194,28 +134,28 @@ export default async function PartnerPortalPage() {
           </article>
 
           <aside className="simple-panel simple-side-panel" aria-labelledby="partner-flow-title">
-            <span className="simple-eyebrow">How it works</span>
-            <h2 id="partner-flow-title">Three simple steps</h2>
+            <span className="simple-eyebrow">Simple workflow</span>
+            <h2 id="partner-flow-title">What happens next</h2>
             <ol className="simple-step-list">
-              <li className={legalComplete ? "is-complete" : "is-current"}>
-                <span aria-hidden="true">{legalComplete ? "✓" : "1"}</span>
+              <li className="is-current">
+                <span aria-hidden="true">1</span>
                 <div>
-                  <strong>Accept agreements</strong>
-                  <p>Review and accept the NDA and Partner Agreement.</p>
+                  <strong>Register the deal</strong>
+                  <p>Share the community and contact details.</p>
                 </div>
               </li>
-              <li className={legalComplete ? "is-current" : ""}>
+              <li>
                 <span aria-hidden="true">2</span>
                 <div>
-                  <strong>Register deals</strong>
-                  <p>Submit opportunities for GoAccess review.</p>
+                  <strong>GoAccess reviews it</strong>
+                  <p>Our team approves or declines the registration.</p>
                 </div>
               </li>
               <li>
                 <span aria-hidden="true">3</span>
                 <div>
-                  <strong>Track RMR</strong>
-                  <p>See forecast and active recurring revenue.</p>
+                  <strong>Track the status</strong>
+                  <p>Return to Deals for decisions and next steps.</p>
                 </div>
               </li>
             </ol>
@@ -230,7 +170,7 @@ export default async function PartnerPortalPage() {
               <p>Open GoAccess training videos and downloadable guides for your team.</p>
             </div>
             <Link href="/portal/learning" className="simple-text-link" prefetch={false}>
-              View library
+              View training
               <span aria-hidden="true">→</span>
             </Link>
           </div>
@@ -273,12 +213,6 @@ export default async function PartnerPortalPage() {
             </div>
           )}
         </section>
-          </>
-        ) : (
-          <section className="dashboard-grid dashboard-grid-single legal-onboarding-dashboard">
-            <VendorNdaManager vendor={vendor ? toClientApprovedVendor(vendor) : null} />
-          </section>
-        )}
       </div>
     </>
   );

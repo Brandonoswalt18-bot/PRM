@@ -1200,7 +1200,7 @@ export function buildHubSpotDealProperties(
   properties[customDealProperties.registrationStatus as string] = "synced_to_hubspot";
   properties[customDealProperties.registeredAt as string] = payload.deal.createdAt;
 
-  if (monthlyRmrProperty) {
+  if (monthlyRmrProperty && payload.deal.monthlyRmr > 0) {
     properties[monthlyRmrProperty] = String(payload.deal.monthlyRmr);
   }
 
