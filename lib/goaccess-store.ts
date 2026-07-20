@@ -1416,6 +1416,7 @@ async function readSupabaseStore(): Promise<DatabasePortalStore | null> {
   };
 
   if (
+    process.env.NODE_ENV !== "production" &&
     databaseStore.vendorApplications.length === 0 &&
     databaseStore.approvedVendors.length === 0 &&
     databaseStore.deals.length === 0 &&
@@ -1456,18 +1457,8 @@ async function readSupabaseStore(): Promise<DatabasePortalStore | null> {
     seededExtendedData = true;
   }
 
-  if (databaseStore.supportRequests.length === 0 && extendedSeed.supportRequests.length > 0) {
-    databaseStore.supportRequests = extendedSeed.supportRequests;
-    seededExtendedData = true;
-  }
-
   if (databaseStore.trainingAssets.length === 0 && extendedSeed.trainingAssets.length > 0) {
     databaseStore.trainingAssets = extendedSeed.trainingAssets;
-    seededExtendedData = true;
-  }
-
-  if (databaseStore.notifications.length === 0 && extendedSeed.notifications.length > 0) {
-    databaseStore.notifications = extendedSeed.notifications;
     seededExtendedData = true;
   }
 
@@ -2722,9 +2713,18 @@ export async function setVendorPasswordFromInvite(inviteToken: string, password:
 
 export async function verifyVendorPassword(loginIdentifier: string, password: string) {
   const normalizedLogin = loginIdentifier.trim().toLowerCase();
+  const store = await readStore();
+  const normalizedEmail = normalizedLogin.includes("@")
+    ? normalizedLogin
+    : `${normalizedLogin}@goaccess.com`;
   const vendor =
-    (await getVendorByEmail(normalizedLogin)) ??
-    (normalizedLogin === "alex" ? await getVendorById("vendor-unsigned-demo") : null);
+    (normalizedLogin === "alex"
+      ? store.approvedVendors.find((item) => item.id === "vendor-unsigned-demo") ?? null
+      : null) ??
+    store.approvedVendors.find(
+      (item) => item.primaryContactEmail.trim().toLowerCase() === normalizedEmail
+    ) ??
+    null;
 
   if (
     !vendor ||
